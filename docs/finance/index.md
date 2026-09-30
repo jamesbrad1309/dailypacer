@@ -32,8 +32,9 @@ on the existing stack without new infrastructure:
 8. [GraphQL schema](graphql-schema.md): SDL for the BFF's `graphql/finance/`
 9. [Budgets & reports](budgets-and-reports.md): monthly budgets, spend by category, cash flow
 10. [Recurring transactions & CSV import](recurring-and-import.md): getting data in without typing every row
-11. [Frontend](frontend.md): screens, components, Apollo queries, formatting money
-12. [Habits integration](habits-integration.md): no-spend days, savings streaks, shared XP
+11. [Subscriptions](subscriptions.md): confirm-each-charge subscriptions, trials, price history, logos
+12. [Frontend](frontend.md): screens, components, Apollo queries, formatting money
+13. [Habits integration](habits-integration.md): no-spend days, savings streaks, shared XP
 
 ## Suggested build order
 
@@ -44,7 +45,7 @@ on the existing stack without new infrastructure:
 | 2b ✅ | Spend by category this month                                 | "Where did my money go?"          |
 | 3 ✅  | `Budget` + budget-vs-actual view                             | Spending limits                   |
 | 4 ✅  | Transfers (pay off, settle up) and CSV import with dedupe    | Real bank data in minutes         |
-| 5     | `RecurringRule`, `SavingsGoal`                               | Bills and goals                   |
+| 5 🟡  | Subscriptions ✅; auto-posting rules, `SavingsGoal`          | Bills and goals                   |
 | 6     | Habits integration                                           | Features that span both modules   |
 
 ## What's built
@@ -182,6 +183,15 @@ and `currency` + `unconverted` on `NetWorth`, `SpendReport`, `BudgetReport`.
   `previewCsvImport`, `commitCsvImport`, `discardCsvImport`.
 - **Gain and loss colours**: amounts show green `+` for money in and red
   `−` for money out; see [frontend.md](frontend.md#money-in-the-ui).
+
+**Phase 5 (part): Subscriptions**, at `/finance/subscriptions`. See
+[subscriptions.md](subscriptions.md). Tables `subscriptions`,
+`subscription_prices`, `subscription_charges`, `service_logos` (migrations
+`add_subscriptions`, `add_subscription_checks`). API `SubscriptionsService`
+and `LogosService` with the pure, tested `subscription-schedule.util.ts`;
+BFF `graphql/finance/subscriptions.*` and the `/logos/:domain` route; web
+`components/finance/subscriptions/`. Charges due are confirmed from To
+review, which now counts them too.
 
 ## Scope decisions
 

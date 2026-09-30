@@ -37,6 +37,7 @@ Each file below is a short, standalone read.
 - [Finance GraphQL schema](finance/graphql-schema.md) — SDL sketch for the BFF's `graphql/finance/`
 - [Budgets & reports](finance/budgets-and-reports.md) — budget vs actual, spend by category, cash flow
 - [Recurring transactions & CSV import](finance/recurring-and-import.md) — lazy generation, dedupe
+- [Subscriptions](finance/subscriptions.md) — confirm each charge, trials, price history, calendar, cached logos
 - [Finance frontend](finance/frontend.md) — components, money formatting, Apollo pagination, charts
 - [Habits × finance integration](finance/habits-integration.md) — no-spend days, savings streaks, shared XP
 

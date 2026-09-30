@@ -18,7 +18,7 @@ the doc that designs each one.
 | Transactions | 5 | 0 | 1 | Split a transaction (2) |
 | Categories | 2 | 1 | 1 | Custom categories (3), Auto-categorise by payee rule (partly) (3) |
 | Budgets | 3 | 0 | 1 | Alert when a category passes 80% / 100% (2) |
-| Recurring & bills | 0 | 0 | 3 | Recurring transactions (4), Upcoming bills (3) |
+| Recurring & bills | 7 | 1 | 0 | Recurring transactions that post themselves, e.g. rent and salary (partly) (4) |
 | Savings goals | 0 | 0 | 3 | Create a goal (3), Track progress (3) |
 | Reports & insights | 2 | 0 | 3 | Cash flow (4), Top payees (2) |
 | Languages & currency | 2 | 0 | 0 | — |
@@ -65,9 +65,15 @@ the doc that designs each one.
 |  | ✅ | **Budget vs actual** progress bars, coloured by pace ("68% spent, 50% of the month gone") | 4 | One `groupBy` per month + pace colouring, see [budgets-and-reports.md](budgets-and-reports.md). Status colour + icon + label, and an "on pace today" tick. |
 |  | ✅ | **Rollover**: carry unspent budget into next month | 2 | Computed over a bounded window, not stored. 12-month window; an overspend never carries. |
 |  | ⬜ | **Alert when a category passes 80% / 100%** | 2 | Pace status shows "over", but there are no threshold alerts. In-app only; notifications are out of scope |
-| **Recurring & bills** | ⬜ | **Recurring transactions** (rent, salary, subscriptions) generated on schedule | 4 | Lazy, idempotent catch-up, see [recurring-and-import.md](recurring-and-import.md) |
-|  | ⬜ | **Upcoming bills** for the next 30 days | 3 | Card and IOU due dates are in "Coming up"; recurring bills aren't. Same schedule walker, read-only for future dates |
-|  | ⬜ | **Subscription audit**: list every recurring expense with its yearly cost | 3 | List active `RecurringRule`s × occurrences per year |
+| **Recurring & bills** | 🟡 | **Recurring transactions** (rent, salary, subscriptions) generated on schedule | 4 | Built as subscriptions that ask each time: a due charge waits in To review until confirmed, see [subscriptions.md](subscriptions.md). Missing: rules that post themselves (rent, salary), see [recurring-and-import.md](recurring-and-import.md) |
+|  | ✅ | **Upcoming bills** for the next 30 days | 3 | Subscriptions' Upcoming tab (60 days) and "still to pay in the next 30 days". Card and IOU due dates stay in "Coming up" on Money setup |
+|  | ✅ | **Subscription audit**: list every recurring expense with its yearly cost | 3 | Per month and per year totals in the main currency, and ≈ monthly cost for yearly plans. `subscriptionSummary` |
+|  | ✅ | **Confirm or skip each charge**, with the amount actually taken | 3 | Confirm logs a transaction (idempotent); Skip for a charge not taken or already logged; Undo on both. Shown in To review |
+|  | ✅ | **Free trials**: "trial ends 5 Oct, then £11.99 / month" | 3 | `trialEndsOn`; the first charge after it is marked |
+|  | ✅ | **Charge calendar**: which day each subscription hits | 3 | Month grid with logos; choose a day for its charges and amounts |
+|  | ✅ | **Price changes with history**, entered ahead if known | 2 | `SubscriptionPrice(effectiveFrom)`; each charge costs the price in effect on its date |
+|  | ✅ | **Pause or cancel** without losing history, including a cancellation that takes effect later | 2 | `pausedAt`, `endsOn`; both undoable |
+|  | ✅ | **Pick from a list of services with their logos** | 2 | ~80 built-in services (incl. Vietnamese), icons fetched once from the website and cached, see [subscriptions.md](subscriptions.md#the-service-list-and-logos) |
 | **Savings goals** | ⬜ | **Create a goal** (target amount, optional deadline, linked account) | 3 | `SavingsGoal` model, see [data-model.md](data-model.md) |
 |  | ⬜ | **Track progress** with "on track / behind" based on the deadline | 3 | `SavingsGoal.onTrack`, see [graphql-schema.md](graphql-schema.md) |
 |  | ⬜ | **Required monthly saving** to reach the goal on time | 2 | `requiredPerMonthMinor` |

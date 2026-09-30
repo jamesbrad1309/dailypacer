@@ -6,6 +6,7 @@ Three multi-stage Dockerfiles (api, bff, web), an nginx **gateway**, and
 ```
 browser → :8080 gateway ─┬─ /graphql  → bff:4000 → api:3000 → postgres:5432
                          ├─ /uploads/ → bff:4000 (streamed file uploads, e.g. CSV import)
+                         ├─ /logos/   → bff:4000 (cached subscription logos)
                          └─ /*        → web:80 (static SPA)
 ```
 
@@ -104,10 +105,10 @@ custom image to build. It:
 
 | Does | How |
 | ---- | --- |
-| Routes `/graphql` and `/uploads/` → `bff:4000`, everything else → `web:80` | `upstream` blocks; keepalive connections to the BFF. `/uploads/` has `proxy_request_buffering off`, so files stream through |
+| Routes `/graphql`, `/uploads/` and `/logos/` → `bff:4000`, everything else → `web:80` | `upstream` blocks; keepalive connections to the BFF. `/uploads/` has `proxy_request_buffering off`, so files stream through |
 | Assigns a **request id** | Keeps the client's `X-Request-Id` or generates `$request_id`; forwards it upstream and returns it in the response |
 | Writes a **JSON access log** | `reqId`, status, duration, upstream time, the same field style as the pino logs |
-| **Rate-limits** `/graphql` and `/uploads/` | 20 req/s per IP (burst 40 for GraphQL, 10 for uploads); returns 429 |
+| **Rate-limits** `/graphql`, `/uploads/` and `/logos/` | 20 req/s per IP (burst 40 for GraphQL, 10 for uploads, 60 for logos); returns 429 |
 | Basic hardening | 2 MB body limit (the CSV upload cap; the BFF keeps GraphQL bodies to 1 MB), gzip, `nosniff`, `Referrer-Policy` |
 | Health | `GET /healthz`, answered by nginx itself |
 
@@ -142,7 +143,7 @@ and one API access line per REST call, all with `trace-me`. See
   Compose reuses it, and new code never reaches the containers. Use
   `docker compose up --build` after changing code.
 - **502 on `localhost:5173`.** That's the Vite dev server, not Docker. It
-  proxies `/graphql` and `/uploads` to `localhost:4000`, which isn't published when the BFF
+  proxies `/graphql`, `/uploads` and `/logos` to `localhost:4000`, which isn't published when the BFF
   runs in Docker. Open `http://localhost:8080` instead, or point the dev
   server at the gateway: `BFF_URL=http://localhost:8080 pnpm dev:web`.
 
