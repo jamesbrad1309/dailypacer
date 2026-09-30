@@ -90,8 +90,8 @@ model JournalEntry {
 
 // ─── Finance ─────────────────────────────────────────────────────────────────
 // All amounts are integer minor units (pence): see docs/finance/money-handling.md.
-// Recurring rules and savings goals come in later phases
-// (docs/finance/index.md) and add their own tables then.
+// Savings goals come in a later phase (docs/finance/index.md) and add their
+// own tables then. Subscriptions are at the end of this section.
 
 enum AccountType {
   CURRENT
@@ -154,6 +154,7 @@ model Account {
   transactions  Transaction[]
   presets       QuickPreset[]
   monthlyTotals MonthlyTotal[]
+  subscriptions Subscription[]
 
   @@map("accounts")
 }
@@ -180,6 +181,7 @@ model Category {
   presets       QuickPreset[]
   monthlyTotals MonthlyTotal[]
   budgets       Budget[]
+  subscriptions Subscription[]
 
   @@unique([parentId, name])
   @@map("categories")
@@ -208,6 +210,9 @@ model Transaction {
   metadata    Json      @default("{}")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  /// Set when this transaction is a confirmed subscription charge.
+  subscriptionCharge SubscriptionCharge?
 
   @@unique([accountId, importHash])
   @@index([accountId, date])
@@ -323,4 +328,105 @@ model ExchangeRate {
   @@id([date, code])
   @@index([code, date])
   @@map("exchange_rates")
+}
+
+// ─── Subscriptions ───────────────────────────────────────────────────────────
+// Repeating charges the user confirms one at a time: nothing reaches an
+// account until a due charge is confirmed, which creates a real transaction.
+// Charge dates are computed from the schedule (finance/subscription-schedule.util.ts),
+// never stored ahead of time. See docs/finance/subscriptions.md.
+
+enum BillingInterval {
+  WEEK
+  MONTH
+  YEAR
+}
+
+model Subscription {
+  id            String          @id @default(uuid())
+  name          String
+  /// Built-in catalog key ("netflix", finance/subscription-catalog.ts); null for a custom service.
+  serviceKey    String?
+  /// The website its logo comes from: "netflix.com".
+  domain        String?
+  /// Where charges are taken from; amounts are in this account's currency.
+  accountId     String
+  account       Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  categoryId    String?
+  category      Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  /// Every `intervalCount` weeks, months or years.
+  interval      BillingInterval @default(MONTH)
+  intervalCount Int             @default(1)
+  /// A charge date every later one counts from (after any free trial). The
+  /// 31st in a short month falls on its last day.
+  firstChargeOn DateTime        @db.Date
+  /// Display only: "trial ends in 3 days, then £9.99/mo".
+  trialEndsOn   DateTime?       @db.Date
+  /// Charges due before this day are never asked about: the day it was
+  /// added, resumed or reactivated. Keeps an old subscription from asking
+  /// about years of past charges.
+  askFrom       DateTime        @db.Date
+  /// Paused: no charges are due until it's resumed.
+  pausedAt      DateTime?
+  /// Cancelled: no charges on or after this day. Can be in the future
+  /// ("cancelled, runs until 15 Oct").
+  endsOn        DateTime?       @db.Date
+  note          String?
+  metadata      Json            @default("{}")
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  prices  SubscriptionPrice[]
+  charges SubscriptionCharge[]
+
+  @@map("subscriptions")
+}
+
+/// Price history: a charge costs the price in effect on its date, so a
+/// price rise can be entered ahead of time.
+model SubscriptionPrice {
+  id             String       @id @default(uuid())
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  /// Positive, in the account's currency.
+  amountMinor    Int
+  effectiveFrom  DateTime     @db.Date
+  createdAt      DateTime     @default(now())
+
+  @@unique([subscriptionId, effectiveFrom])
+  @@map("subscription_prices")
+}
+
+enum ChargeOutcome {
+  CONFIRMED
+  SKIPPED
+}
+
+/// A due charge the user has answered. Due charges without a row are pending.
+model SubscriptionCharge {
+  id             String        @id @default(uuid())
+  subscriptionId String
+  subscription   Subscription  @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  dueOn          DateTime      @db.Date
+  outcome        ChargeOutcome
+  /// The transaction a confirmation created. Deleting it (e.g. Undo) deletes
+  /// this row too, so the charge is pending again.
+  transactionId  String?       @unique
+  transaction    Transaction?  @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
+
+  @@unique([subscriptionId, dueOn])
+  @@map("subscription_charges")
+}
+
+/// Each service's icon, fetched once from a favicon service and kept here so
+/// the browser never calls a third party. `data` is null when no provider had
+/// one; that's retried after a week (finance/logos.service.ts).
+model ServiceLogo {
+  domain      String   @id
+  data        Bytes?
+  contentType String?
+  fetchedAt   DateTime @default(now())
+
+  @@map("service_logos")
 }

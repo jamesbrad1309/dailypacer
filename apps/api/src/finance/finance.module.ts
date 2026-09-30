@@ -11,11 +11,15 @@ import { CurrenciesController } from "#finance/currencies.controller";
 import { CurrenciesService } from "#finance/currencies.service";
 import { ExchangeRatesService } from "#finance/exchange-rates.service";
 import { ImportService } from "#finance/import.service";
+import { LogosController } from "#finance/logos.controller";
+import { LogosService } from "#finance/logos.service";
 import { MonthlyTotalsService } from "#finance/monthly-totals.service";
 import { QuickLogController } from "#finance/quick-log.controller";
 import { QuickLogService } from "#finance/quick-log.service";
 import { ReportsController } from "#finance/reports.controller";
 import { ReportsService } from "#finance/reports.service";
+import { SubscriptionsController } from "#finance/subscriptions.controller";
+import { SubscriptionsService } from "#finance/subscriptions.service";
 import { TransactionsController } from "#finance/transactions.controller";
 import { TransactionsService } from "#finance/transactions.service";
 
@@ -23,7 +27,8 @@ import { TransactionsService } from "#finance/transactions.service";
  * One module for all of finance: accounts, transactions, budgets and
  * reports are tightly coupled. Built so far (docs/finance/index.md): accounts
  * and reconciling (phase 1), transactions and quick log (phase 2), and spend
- * by category from the `monthly_totals` aggregate (phase 2b), budgets (phase 3).
+ * by category from the `monthly_totals` aggregate (phase 2b), budgets (phase 3),
+ * and subscriptions with confirm-each-charge and cached logos.
  */
 @Module({
   controllers: [
@@ -35,6 +40,8 @@ import { TransactionsService } from "#finance/transactions.service";
     BudgetsController,
     CurrenciesController,
     CsvUploadsController,
+    SubscriptionsController,
+    LogosController,
   ],
   providers: [
     AccountsService,
@@ -48,6 +55,8 @@ import { TransactionsService } from "#finance/transactions.service";
     ExchangeRatesService,
     ImportService,
     CsvUploadsService,
+    SubscriptionsService,
+    LogosService,
   ],
 })
 export class FinanceModule {}

@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestj
 import type { Transaction } from "@prisma/client";
 import { ZodValidationPipe } from "#common/http/zod-validation.pipe";
 import { toIsoDate } from "#finance/calendar.util";
+import { todaySchema } from "#finance/dto/subscription.dto";
 import {
   type CreateTransactionInput,
   type CreateTransferInput,
@@ -12,6 +13,7 @@ import {
   listTransactionsSchema,
   updateTransactionSchema,
 } from "#finance/dto/transaction.dto";
+import { SubscriptionsService } from "#finance/subscriptions.service";
 import { TransactionsService } from "#finance/transactions.service";
 
 /** `date` is a `@db.Date` column: "YYYY-MM-DD" on the wire, like habit entries. */
@@ -21,7 +23,10 @@ export function toTransactionDto(t: Transaction) {
 
 @Controller("transactions")
 export class TransactionsController {
-  constructor(private readonly transactions: TransactionsService) {}
+  constructor(
+    private readonly transactions: TransactionsService,
+    private readonly subscriptions: SubscriptionsService,
+  ) {}
 
   /**
    * `GET /transactions?accountId&categoryId&from&to&search&uncategorised&first&after`:
@@ -33,9 +38,20 @@ export class TransactionsController {
     return { items: page.items.map(toTransactionDto), nextCursor: page.nextCursor };
   }
 
+  /**
+   * `GET /transactions/to-review-count?today=YYYY-MM-DD`: the "To review"
+   * inbox holds uncategorised transactions and subscription charges waiting
+   * to be confirmed.
+   */
   @Get("to-review-count")
-  async toReviewCount() {
-    return { count: await this.transactions.toReviewCount() };
+  async toReviewCount(
+    @Query(new ZodValidationPipe(todaySchema.partial())) query: { today?: string },
+  ) {
+    const [uncategorised, charges] = await Promise.all([
+      this.transactions.toReviewCount(),
+      this.subscriptions.pendingCount(query.today ?? toIsoDate(new Date())),
+    ]);
+    return { count: uncategorised + charges, uncategorised, charges };
   }
 
   @Get(":id")
