@@ -401,7 +401,8 @@ extend type Query {
   categories: [Category!]!
   """Newest first."""
   transactions(filter: TransactionFilter, first: Int = 50, after: String): TransactionPage!
-  toReviewCount: Int!
+  """The "To review" inbox: uncategorised transactions plus subscription charges to confirm. `today` is the user's YYYY-MM-DD."""
+  toReviewCount(today: String): Int!
   """hour (0–23), dayOfWeek (0 = Sunday) and utcOffsetMinutes (Date.getTimezoneOffset()) are the user's local time."""
   quickLogContext(hour: Int!, dayOfWeek: Int!, utcOffsetMinutes: Int = 0): QuickLogContext!
 }

@@ -6,6 +6,7 @@ import type {
   ApiCategory,
   ApiHabitEntry,
   ApiHabitStats,
+  ApiSubscription,
 } from "#clients/api-types";
 
 /**
@@ -23,6 +24,11 @@ export interface Loaders {
   /** A transaction list resolves `account` and `category` per row; these batch them. */
   accountById: DataLoader<string, ApiAccount>;
   categoryById: DataLoader<string, ApiCategory>;
+  /**
+   * Every subscription (ended ones too) as of a given day, fetched once per
+   * request: a charge list resolves `subscription` for every row.
+   */
+  subscriptionsOn: DataLoader<string, Map<string, ApiSubscription>>;
 }
 
 function idsParam(ids: readonly string[]): string {
@@ -64,5 +70,16 @@ export function createLoaders(api: ApiClient, today: string): Loaders {
       const byId = new Map(categories.map((c) => [c.id, c]));
       return ids.map((id) => byId.get(id) ?? new Error(`No category ${id}`));
     }),
+
+    subscriptionsOn: new DataLoader(async (days) =>
+      Promise.all(
+        days.map(async (day) => {
+          const subs = await api.get<ApiSubscription[]>(
+            `/subscriptions?today=${encodeURIComponent(day)}&includeEnded=true`,
+          );
+          return new Map(subs.map((s) => [s.id, s]));
+        }),
+      ),
+    ),
   };
 }

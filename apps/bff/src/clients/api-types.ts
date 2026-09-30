@@ -174,6 +174,40 @@ export interface ApiTransaction {
   updatedAt: string;
 }
 
+export interface ApiSubscription {
+  id: string;
+  name: string;
+  serviceKey: string | null;
+  domain: string | null;
+  accountId: string;
+  categoryId: string | null;
+  interval: "WEEK" | "MONTH" | "YEAR";
+  intervalCount: number;
+  firstChargeOn: string;
+  trialEndsOn: string | null;
+  endsOn: string | null;
+  pausedAt: string | null;
+  note: string | null;
+  createdAt: string;
+  status: "active" | "trial" | "paused" | "ending" | "ended";
+  currency: string;
+  amountMinor: number;
+  nextChargeOn: string | null;
+  monthlyMinor: number;
+  yearlyMinor: number;
+  prices: { amountMinor: number; effectiveFrom: string }[];
+}
+
+export interface ApiSubscriptionCharge {
+  subscriptionId: string;
+  dueOn: string;
+  amountMinor: number;
+  currency: string;
+  status: "pending" | "confirmed" | "skipped" | "upcoming";
+  transactionId: string | null;
+  afterTrial: boolean;
+}
+
 export interface ApiTransactionPage {
   items: ApiTransaction[];
   nextCursor: string | null;

@@ -8,6 +8,7 @@ import { httpLogger, logger } from "#common/logger/logger";
 import { type GraphQLContext, buildContext } from "#graphql/context";
 import { loggingPlugin } from "#graphql/logging.plugin";
 import { executableSchema } from "#graphql/schema";
+import { serviceLogo } from "#routes/logos";
 import { uploadTransactionsCsv } from "#routes/uploads";
 
 /**
@@ -28,8 +29,9 @@ async function bootstrap() {
     res.json({ status: "ok" });
   });
 
-  // The one non-GraphQL route: a CSV upload, streamed to the API untouched.
+  // The non-GraphQL routes: file bodies, which GraphQL is a poor fit for.
   app.post("/uploads/transactions-csv", uploadTransactionsCsv);
+  app.get("/logos/:domain", serviceLogo);
 
   const httpServer = createServer(app);
 

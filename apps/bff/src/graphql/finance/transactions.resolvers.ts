@@ -42,8 +42,12 @@ export default {
         })}`,
       );
     },
-    toReviewCount: async (_: unknown, __: unknown, ctx: GraphQLContext) =>
-      (await ctx.api.get<{ count: number }>("/transactions/to-review-count")).count,
+    toReviewCount: async (_: unknown, args: { today?: string | null }, ctx: GraphQLContext) =>
+      (
+        await ctx.api.get<{ count: number }>(
+          `/transactions/to-review-count${queryString({ today: args.today })}`,
+        )
+      ).count,
   },
   Mutation: {
     createTransaction: (_: unknown, args: { input: unknown }, ctx: GraphQLContext) =>

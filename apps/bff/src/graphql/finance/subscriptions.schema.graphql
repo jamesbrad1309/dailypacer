@@ -1,0 +1,171 @@
+"""A service from the built-in list, to start a subscription from."""
+type SubscriptionService {
+  key: ID!
+  name: String!
+  domain: String!
+  """Our own URL for its logo (fetched once from the website's icon and cached)."""
+  logoUrl: String!
+}
+
+enum BillingInterval {
+  WEEK
+  MONTH
+  YEAR
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  """In a free trial: the first charge is when it ends."""
+  TRIAL
+  PAUSED
+  """Cancelled, but runs until `endsOn`."""
+  ENDING
+  ENDED
+}
+
+type SubscriptionPrice {
+  amountMinor: Int!
+  """YYYY-MM-DD: charges on or after this day cost this much."""
+  effectiveFrom: String!
+}
+
+"""
+A repeating charge. Due charges wait in the "To review" inbox until
+confirmed (which logs a transaction) or skipped. Amounts are in the
+account's currency.
+"""
+type Subscription {
+  id: ID!
+  name: String!
+  """Built-in service key ("netflix"), or null for a custom one."""
+  serviceKey: String
+  """Its website, where the logo comes from: "netflix.com"."""
+  domain: String
+  logoUrl: String
+  account: Account!
+  category: Category
+  interval: BillingInterval!
+  """Every N weeks, months or years."""
+  intervalCount: Int!
+  """YYYY-MM-DD: the charge every later one counts from."""
+  firstChargeOn: String!
+  trialEndsOn: String
+  """Cancelled: no charges on or after this day."""
+  endsOn: String
+  """ISO timestamp."""
+  pausedAt: String
+  note: String
+  status: SubscriptionStatus!
+  currency: String!
+  """The next charge's price (today's once it has ended)."""
+  amountMinor: Int!
+  """The next charge not yet confirmed or skipped; null when paused or ended."""
+  nextChargeOn: String
+  """The cost spread per month and per year, at the current price."""
+  monthlyMinor: Int!
+  yearlyMinor: Int!
+  """Newest first."""
+  prices: [SubscriptionPrice!]!
+  createdAt: String!
+}
+
+enum ChargeStatus {
+  """Due and waiting to be confirmed or skipped."""
+  PENDING
+  CONFIRMED
+  SKIPPED
+  UPCOMING
+}
+
+type SubscriptionCharge {
+  """Stable per charge: subscription id + due date."""
+  id: ID!
+  subscription: Subscription!
+  """YYYY-MM-DD"""
+  dueOn: String!
+  amountMinor: Int!
+  currency: String!
+  status: ChargeStatus!
+  """Set when confirmed: the transaction it logged."""
+  transactionId: ID
+  """The first paid charge after a free trial."""
+  afterTrial: Boolean!
+}
+
+type SubscriptionSummary {
+  """The main currency every amount is in."""
+  currency: String!
+  """Currencies left out for want of an exchange rate."""
+  unconverted: [String!]!
+  activeCount: Int!
+  monthlyMinor: Int!
+  yearlyMinor: Int!
+  """Charges still to pay: overdue ones plus the next 30 days."""
+  next30DaysMinor: Int!
+  pendingCount: Int!
+}
+
+input CreateSubscriptionInput {
+  name: String!
+  serviceKey: String
+  """A website or URL; stored as its hostname."""
+  domain: String
+  accountId: ID!
+  """Left out: the service's usual category (or Subscriptions). Null: none."""
+  categoryId: ID
+  """Positive, in the account's currency."""
+  amountMinor: Int!
+  interval: BillingInterval = MONTH
+  intervalCount: Int = 1
+  """YYYY-MM-DD. After a free trial, the day it ends."""
+  nextChargeOn: String!
+  trialEndsOn: String
+  note: String
+}
+
+"""Only the fields given change. The price changes through changeSubscriptionPrice, to keep its history."""
+input UpdateSubscriptionInput {
+  name: String
+  domain: String
+  accountId: ID
+  categoryId: ID
+  interval: BillingInterval
+  intervalCount: Int
+  nextChargeOn: String
+  trialEndsOn: String
+  note: String
+}
+
+extend type Query {
+  """The built-in list; `search` matches names, websites and aliases, accents optional."""
+  subscriptionServices(search: String): [SubscriptionService!]!
+  """By name. `today` is the user's YYYY-MM-DD, as for every query here."""
+  subscriptions(today: String!, includeEnded: Boolean = false): [Subscription!]!
+  subscription(id: ID!, today: String!): Subscription!
+  """Every charge from `from` to `to` (inclusive), oldest first."""
+  subscriptionCharges(from: String!, to: String!, today: String!): [SubscriptionCharge!]!
+  """Due charges waiting for an answer, oldest first."""
+  pendingSubscriptionCharges(today: String!): [SubscriptionCharge!]!
+  subscriptionSummary(today: String!): SubscriptionSummary!
+}
+
+extend type Mutation {
+  createSubscription(input: CreateSubscriptionInput!, today: String!): Subscription!
+  updateSubscription(id: ID!, input: UpdateSubscriptionInput!, today: String!): Subscription!
+  """A new price from `effectiveFrom`; earlier charges keep the old one."""
+  changeSubscriptionPrice(id: ID!, amountMinor: Int!, effectiveFrom: String!, today: String!): Subscription!
+  pauseSubscription(id: ID!, today: String!): Subscription!
+  """Charges that fell due while paused aren't asked about."""
+  resumeSubscription(id: ID!, today: String!): Subscription!
+  """No charges on or after `endsOn`."""
+  cancelSubscription(id: ID!, endsOn: String!, today: String!): Subscription!
+  reactivateSubscription(id: ID!, today: String!): Subscription!
+  """Its transactions stay."""
+  deleteSubscription(id: ID!): Boolean!
+  """Logs the charge as a transaction. `amountMinor` / `date` when they differ from the listed price and due date."""
+  confirmSubscriptionCharge(subscriptionId: ID!, dueOn: String!, amountMinor: Int, date: String): Transaction!
+  """Not charged, or logged some other way."""
+  skipSubscriptionCharge(subscriptionId: ID!, dueOn: String!): Boolean!
+  """Undo: back to pending. A confirmed charge's transaction is deleted."""
+  reopenSubscriptionCharge(subscriptionId: ID!, dueOn: String!): Boolean!
+}
