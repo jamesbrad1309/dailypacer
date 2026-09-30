@@ -4,7 +4,7 @@ Uses the same format as the habit [use cases](../domain/use-cases.md).
 **Impact score** (1–5): `5` core loop · `4` used daily or weekly ·
 `3` meaningfully improves UX · `2` edge case / power user · `1` speculative.
 **Status**: ✅ built · 🟡 partly built (the note says what's missing) ·
-⬜ not built yet, as of 2026-09-26 (phases 1–4, see [index.md](index.md#whats-built)).
+⬜ not built yet, as of 2026-09-30 (phases 1–4, see [index.md](index.md#whats-built)).
 Re-verify against the code before trusting a ⬜. Rows are grouped by
 category and sorted by impact within each group, and **Notes** link to
 the doc that designs each one.
@@ -15,7 +15,7 @@ the doc that designs each one.
 | ---- | :-: | :-: | :-: | ----------------------- |
 | Account setup | 12 | 0 | 0 | — |
 | Quick log | 10 | 1 | 0 | Open quick log from anywhere (partly) (5) |
-| Transactions | 3 | 1 | 2 | Full transaction form (partly) (4), Split a transaction (2) |
+| Transactions | 5 | 0 | 1 | Split a transaction (2) |
 | Categories | 2 | 1 | 1 | Custom categories (3), Auto-categorise by payee rule (partly) (3) |
 | Budgets | 3 | 0 | 1 | Alert when a category passes 80% / 100% (2) |
 | Recurring & bills | 0 | 0 | 3 | Recurring transactions (4), Upcoming bills (3) |
@@ -51,12 +51,12 @@ the doc that designs each one.
 |  | ✅ | **Evening catch-up mode**: several entries in a row with the keypad kept open | 3 | See [quick-log.md](quick-log.md). "Log several (stay open)" shows today's entries under the sheet. |
 |  | ✅ | **"Save as preset?"** suggested after 3 repeats in 30 days | 2 | `QuickLogPayload.suggestPreset` |
 |  | ✅ | **No duplicate logs** from double taps or retries | 2 | `Transaction.clientId` upsert. Verified: 10 identical concurrent requests → 1 transaction. |
-| **Transactions** | 🟡 | **Full transaction form** (payee, note, tags, any date) for when quick log isn't enough | 4 | Built: amount, date, account, category, payee, note. Missing: tags in the form (the API accepts them). `createTransaction`, see [graphql-schema.md](graphql-schema.md) |
+| **Transactions** | ✅ | **Full transaction form** (payee, note, tags, any date) for when quick log isn't enough | 4 | Amount, date, account, category, payee, note and tags. `createTransaction`, see [graphql-schema.md](graphql-schema.md) |
 |  | ✅ | **Edit or delete a transaction** | 4 | Deleting one leg of a transfer deletes both. Delete is undoable from a toast. |
 |  | ✅ | **Transfer between accounts** without it counting as spending | 4 | Two rows sharing `transferId`, see [data-model.md](data-model.md). Cross-currency transfers take the amount received, pre-filled from today's rate. Idempotent via `clientId`. |
 |  | ✅ | **Search and filter** by date range, account, category, payee or text | 3 | `TransactionFilter` + cursor pagination, see [graphql-schema.md](graphql-schema.md). Month, account, category and payee/note search, all in the URL. |
 |  | ⬜ | **Split a transaction** across categories (e.g. one supermarket receipt covering groceries and household) | 2 | Deferred: `TransactionSplit` table, see [data-model.md](data-model.md) |
-|  | ⬜ | **Tag transactions** ("holiday-2026", "work-expense") alongside the category | 2 | Stored and accepted by the API; no UI yet. `Transaction.tags` string array |
+|  | ✅ | **Tag transactions** ("holiday-2026", "work-expense") alongside the category | 2 | Tags field in the full form (commas, spaces or `#`; lowercased, `lib/tags.ts`), shown as `#tag` in the list. Editable on transfers and adjustments too. No filter by tag yet. `Transaction.tags` string array |
 | **Categories** | ✅ | **Default category set** seeded on first run (Groceries, Rent, Transport, Eating out…) | 4 | `CategoriesService.seedDefaults()` on module init, see [backend-module.md](backend-module.md). 15 categories with English + Vietnamese parser aliases; names translated via `metadata.key`. |
 |  | ✅ | **Category aliases** for the one-line parser ("latte", "starbucks" → Coffee) | 2 | `Category.metadata.aliases` |
 |  | ⬜ | **Custom categories** with icon and colour, grouped under parents ("Food › Eating out") | 3 | `POST /categories` exists; no UI and no parent/child yet. Self-relation `Category.parent` |

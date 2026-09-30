@@ -18,9 +18,9 @@ improves UX · `2` edge case / power-user · `1` speculative.
 
 | Area | Built | Open | Top open item (impact) |
 | ---- | :---: | :--: | ---------------------- |
-| Habit management | 6 | 2 | Unarchive / view archived habits (2) |
-| Daily tracking | 4 | 1 | Add a note to today's entry (2) |
-| Dashboard & gamification | 3 | 1 | See longest streak / total completions per habit (2) |
+| Habit management | 7 | 1 | Attach arbitrary custom fields to a habit (1) |
+| Daily tracking | 5 | 0 | — |
+| Dashboard & gamification | 4 | 0 | — |
 | Calendar | 2 | 1 | Week or month calendar view (2) |
 | History & review | 0 | 2 | View a single habit's full entry history (2) |
 | Motivation & rewards | 0 | 5 | Streak freeze (3) |
@@ -28,7 +28,7 @@ improves UX · `2` edge case / power-user · `1` speculative.
 | Insights | 0 | 4 | Best / worst weekday per habit (3) |
 | Journaling & mood | 7 | 4 | Which events drive which feelings (3) |
 | Cross-module (habits × finance) | 0 | 5 | "No-spend day" habit auto-checked from transactions (3) |
-| **Finance** (separate doc) | 31 | 21 | Transfers, recurring bills, CSV import (3 partly built), see [finance/use-cases.md](../finance/use-cases.md) |
+| **Finance** (separate doc) | 37 | 14 | Recurring transactions, cash flow, PWA shortcut (1 partly built), see [finance/use-cases.md](../finance/use-cases.md) |
 
 ## Use cases
 
@@ -40,17 +40,17 @@ improves UX · `2` edge case / power-user · `1` speculative.
 |  | ✅ | **Set a start time** for the day-calendar view | 3 | `Habit.startTime` ("HH:mm") |
 |  | ✅ | **Archive a habit** (soft-delete, keeps history) | 3 | `Mutation.archiveHabit` |
 |  | ✅ | **Pause a habit** (skip it without archiving) | 3 | `Mutation.pauseHabit`/`resumeHabit`; excluded from `todayHabits` and the day view while paused |
-|  | ⬜ | **Unarchive / view archived habits** | 2 | Backend done (`unarchiveHabit`, `archivedHabits` query) — no frontend UI yet |
+|  | ✅ | **Unarchive / view archived habits** | 2 | Collapsible "Archived habits" list under the dashboard (`archivedHabits`, fetched only when opened), Restore calls `unarchiveHabit` |
 |  | ⬜ | **Attach arbitrary custom fields to a habit** | 1 | Backend accepts `metadata` JSON on create — no UI to add/edit it |
 | **Daily tracking** | ✅ | **See which habits are due today** | 5 | `Query.todayHabits`; day view applies the same `isDueOn` filter client-side |
 |  | ✅ | **Check a habit off for today** | 5 | `Mutation.upsertHabitEntry` (`completed: true`) |
 |  | ✅ | **Log a quantitative value for today** | 4 | `Mutation.upsertHabitEntry` (`value: 5`) |
 |  | ✅ | **Re-check/correct today's entry without duplicating** | 3 | Upsert on `(habitId, date)` by design |
-|  | ⬜ | **Add a note to today's entry** | 2 | Backend field exists (`note`) — no note input in either UI view |
+|  | ✅ | **Add a note to today's entry** | 2 | Note field on the dashboard card, saved on blur via `upsertHabitEntry` (value and completion kept; `""` clears). Not in the day view |
 | **Dashboard & gamification** | ✅ | **See aggregate level/XP/streak stats across all habits** | 4 | `Query.dashboardStats`, `StatTiles` + the sidebar's level card |
 |  | ✅ | **See per-habit streak, points, and level** | 4 | `Habit.currentStreak`/`points`/`level`, shown as card badges |
 |  | ✅ | **See a GitHub-style contribution heatmap per habit** | 3 | `Habit.heatmap`, `HeatmapGrid` (120-day window) |
-|  | ⬜ | **See longest streak / total completions per habit** | 2 | Queried (`longestStreak`, `totalCompletions`) but not displayed in either view yet |
+|  | ✅ | **See longest streak / total completions per habit** | 2 | "Best 12d · 48 check-ins in 120 days" under the card's heatmap |
 | **Calendar** | ✅ | **Day view: today's due habits on a time-of-day timeline** | 4 | `DayCalendar`, positions habits by `startTime`; untimed habits in a checkable "Anytime today" list beside it |
 |  | ✅ | **Check a habit off directly from the day view** | 4 | Same `upsertHabitEntry` mutation as the dashboard card |
 |  | ⬜ | **Week or month calendar view** | 2 | Only a single day view exists so far |
