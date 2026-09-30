@@ -11,6 +11,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { Amount } from "#components/finance/Amount";
+import { PendingCharges } from "#components/finance/subscriptions/PendingCharges";
 import { CsvImportDialog } from "#components/finance/transactions/CsvImportDialog";
 import { TransactionForm } from "#components/finance/transactions/TransactionForm";
 import { TransferDialog } from "#components/finance/transactions/TransferDialog";
@@ -36,7 +37,14 @@ import type {
 import { useCategoryName } from "#hooks/useCategoryName";
 import { useCurrencies } from "#hooks/useCurrencies";
 import { useUndoableDelete } from "#hooks/useUndoableDelete";
-import { addMonths, currentMonth, formatDayHeading, formatMonth, monthRange } from "#lib/dates";
+import {
+  addMonths,
+  currentMonth,
+  formatDayHeading,
+  formatMonth,
+  monthRange,
+  todayIsoDate,
+} from "#lib/dates";
 import { formatMoney } from "#lib/money";
 import { toast } from "#lib/toast";
 import { cn } from "#lib/utils";
@@ -87,7 +95,9 @@ export function TransactionsView({ search, onSearchChange }: Props) {
     variables: { filter, first: PAGE_SIZE },
     notifyOnNetworkStatusChange: true,
   });
-  const { data: reviewData } = useQuery<{ toReviewCount: number }>(TO_REVIEW_COUNT_QUERY);
+  const { data: reviewData } = useQuery<{ toReviewCount: number }>(TO_REVIEW_COUNT_QUERY, {
+    variables: { today: todayIsoDate() },
+  });
   const { data: categoriesData } = useQuery<{ categories: Category[] }>(CATEGORIES_QUERY);
   const { data: accountsData } = useQuery<AccountsData>(ACCOUNTS_QUERY);
   const categories = categoriesData?.categories ?? [];
@@ -280,7 +290,10 @@ export function TransactionsView({ search, onSearchChange }: Props) {
 
       {error && <p className="text-destructive">{error.message}</p>}
 
-      {!loading && items.length === 0 && (
+      {/* The inbox also holds subscription charges waiting to be confirmed. */}
+      {review && <PendingCharges />}
+
+      {!loading && items.length === 0 && !(review && toReview > 0) && (
         <div className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">
           {review ? (
             <>

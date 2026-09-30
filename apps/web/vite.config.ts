@@ -22,6 +22,8 @@ export default defineConfig({
       "/graphql": process.env.BFF_URL ?? "http://localhost:4000",
       // CSV uploads (a plain multipart route on the BFF, streamed to the API).
       "/uploads": process.env.BFF_URL ?? "http://localhost:4000",
+      // Subscription logos (cached by the API, passed through by the BFF).
+      "/logos": process.env.BFF_URL ?? "http://localhost:4000",
     },
   },
 });

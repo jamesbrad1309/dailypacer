@@ -17,6 +17,7 @@ import { Route as FinanceAccountsRouteImport } from './routes/finance/accounts'
 import { Route as FinanceBudgetsRouteImport } from './routes/finance/budgets'
 import { Route as FinanceCurrenciesRouteImport } from './routes/finance/currencies'
 import { Route as FinanceSpendingRouteImport } from './routes/finance/spending'
+import { Route as FinanceSubscriptionsRouteImport } from './routes/finance/subscriptions'
 import { Route as FinanceTransactionsRouteImport } from './routes/finance/transactions'
 import { Route as HabitsIndexRouteImport } from './routes/habits/index'
 import { Route as HabitsTodayRouteImport } from './routes/habits/today'
@@ -61,6 +62,11 @@ const FinanceSpendingRoute = FinanceSpendingRouteImport.update({
   path: '/finance/spending',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FinanceSubscriptionsRoute = FinanceSubscriptionsRouteImport.update({
+  id: '/finance/subscriptions',
+  path: '/finance/subscriptions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FinanceTransactionsRoute = FinanceTransactionsRouteImport.update({
   id: '/finance/transactions',
   path: '/finance/transactions',
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/finance/budgets': typeof FinanceBudgetsRoute
   '/finance/currencies': typeof FinanceCurrenciesRoute
   '/finance/spending': typeof FinanceSpendingRoute
+  '/finance/subscriptions': typeof FinanceSubscriptionsRoute
   '/finance/transactions': typeof FinanceTransactionsRoute
   '/habits/today': typeof HabitsTodayRoute
   '/finance/': typeof FinanceIndexRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/finance/budgets': typeof FinanceBudgetsRoute
   '/finance/currencies': typeof FinanceCurrenciesRoute
   '/finance/spending': typeof FinanceSpendingRoute
+  '/finance/subscriptions': typeof FinanceSubscriptionsRoute
   '/finance/transactions': typeof FinanceTransactionsRoute
   '/habits/today': typeof HabitsTodayRoute
   '/finance': typeof FinanceIndexRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/finance/budgets': typeof FinanceBudgetsRoute
   '/finance/currencies': typeof FinanceCurrenciesRoute
   '/finance/spending': typeof FinanceSpendingRoute
+  '/finance/subscriptions': typeof FinanceSubscriptionsRoute
   '/finance/transactions': typeof FinanceTransactionsRoute
   '/habits/today': typeof HabitsTodayRoute
   '/finance/': typeof FinanceIndexRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/finance/budgets'
     | '/finance/currencies'
     | '/finance/spending'
+    | '/finance/subscriptions'
     | '/finance/transactions'
     | '/habits/today'
     | '/finance/'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/finance/budgets'
     | '/finance/currencies'
     | '/finance/spending'
+    | '/finance/subscriptions'
     | '/finance/transactions'
     | '/habits/today'
     | '/finance'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/finance/budgets'
     | '/finance/currencies'
     | '/finance/spending'
+    | '/finance/subscriptions'
     | '/finance/transactions'
     | '/habits/today'
     | '/finance/'
@@ -167,6 +179,7 @@ export interface RootRouteChildren {
   FinanceBudgetsRoute: typeof FinanceBudgetsRoute
   FinanceCurrenciesRoute: typeof FinanceCurrenciesRoute
   FinanceSpendingRoute: typeof FinanceSpendingRoute
+  FinanceSubscriptionsRoute: typeof FinanceSubscriptionsRoute
   FinanceTransactionsRoute: typeof FinanceTransactionsRoute
   HabitsTodayRoute: typeof HabitsTodayRoute
   FinanceIndexRoute: typeof FinanceIndexRoute
@@ -231,6 +244,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FinanceSpendingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/finance/subscriptions': {
+      id: '/finance/subscriptions'
+      path: '/finance/subscriptions'
+      fullPath: '/finance/subscriptions'
+      preLoaderRoute: typeof FinanceSubscriptionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/finance/transactions': {
       id: '/finance/transactions'
       path: '/finance/transactions'
@@ -263,6 +283,7 @@ const rootRouteChildren: RootRouteChildren = {
   FinanceBudgetsRoute: FinanceBudgetsRoute,
   FinanceCurrenciesRoute: FinanceCurrenciesRoute,
   FinanceSpendingRoute: FinanceSpendingRoute,
+  FinanceSubscriptionsRoute: FinanceSubscriptionsRoute,
   FinanceTransactionsRoute: FinanceTransactionsRoute,
   HabitsTodayRoute: HabitsTodayRoute,
   FinanceIndexRoute: FinanceIndexRoute,

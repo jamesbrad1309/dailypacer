@@ -10,6 +10,7 @@ export const shell = {
     transactions: "Transactions",
     spending: "Spending",
     budgets: "Budgets",
+    subscriptions: "Subscriptions",
     currencies: "Currencies",
     comingSoonItem: "{{label}} (coming soon)",
     toReview: "{{count}} to review",
@@ -26,6 +27,7 @@ export const shell = {
     },
     spending: { title: "Spending", subtitle: "Where the money went, by category." },
     budgets: { title: "Budgets", subtitle: "Monthly limits, and how the month is pacing." },
+    subscriptions: { title: "Subscriptions", subtitle: "What's charged, when, and how much." },
     currencies: {
       title: "Currencies",
       subtitle: "The currencies you use, and the one totals are shown in.",

@@ -392,3 +392,66 @@ export interface CsvImportPreview {
   }[];
   problems: { line: number; reason: "date" | "amount"; value: string }[];
 }
+
+export type BillingInterval = "WEEK" | "MONTH" | "YEAR";
+export type SubscriptionStatus = "ACTIVE" | "TRIAL" | "PAUSED" | "ENDING" | "ENDED";
+export type ChargeStatus = "PENDING" | "CONFIRMED" | "SKIPPED" | "UPCOMING";
+
+export interface SubscriptionService {
+  key: string;
+  name: string;
+  domain: string;
+  logoUrl: string;
+}
+
+export interface Subscription {
+  id: string;
+  name: string;
+  serviceKey: string | null;
+  domain: string | null;
+  /** Our own /logos/<domain> URL; null without a website. */
+  logoUrl: string | null;
+  account: Pick<Account, "id" | "name" | "currency">;
+  category: Category | null;
+  interval: BillingInterval;
+  intervalCount: number;
+  /** YYYY-MM-DD dates. */
+  firstChargeOn: string;
+  trialEndsOn: string | null;
+  endsOn: string | null;
+  /** ISO timestamp. */
+  pausedAt: string | null;
+  note: string | null;
+  status: SubscriptionStatus;
+  /** The account's currency; every amount here is in it. */
+  currency: string;
+  amountMinor: number;
+  nextChargeOn: string | null;
+  monthlyMinor: number;
+  yearlyMinor: number;
+  /** Newest first. */
+  prices: { amountMinor: number; effectiveFrom: string }[];
+}
+
+export interface SubscriptionCharge {
+  id: string;
+  dueOn: string;
+  amountMinor: number;
+  currency: string;
+  status: ChargeStatus;
+  transactionId: string | null;
+  afterTrial: boolean;
+  subscription: Pick<Subscription, "id" | "name" | "logoUrl"> & {
+    account: Pick<Account, "id" | "name">;
+  };
+}
+
+export interface SubscriptionSummary {
+  currency: string;
+  unconverted: string[];
+  activeCount: number;
+  monthlyMinor: number;
+  yearlyMinor: number;
+  next30DaysMinor: number;
+  pendingCount: number;
+}

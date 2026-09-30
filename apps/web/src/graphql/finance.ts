@@ -135,7 +135,7 @@ export const RECONCILE_ACCOUNT_MUTATION = gql`
   }
 `;
 
-const CATEGORY_FIELDS = gql`
+export const CATEGORY_FIELDS = gql`
   fragment CategoryFields on Category {
     id
     name
@@ -208,9 +208,10 @@ export const TODAY_LOGS_QUERY = gql`
   }
 `;
 
+/** Uncategorised transactions plus subscription charges waiting to be confirmed. */
 export const TO_REVIEW_COUNT_QUERY = gql`
-  query ToReviewCount {
-    toReviewCount
+  query ToReviewCount($today: String) {
+    toReviewCount(today: $today)
   }
 `;
 

@@ -8,6 +8,7 @@ import {
   NotebookPen,
   PiggyBank,
   Receipt,
+  Repeat,
 } from "lucide-react";
 import type { shell } from "#i18n/en/shell";
 import type { FileRouteTypes } from "../routeTree.gen";
@@ -59,6 +60,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "transactions", icon: Receipt, to: "/finance/transactions", badge: "toReview" },
       { label: "spending", icon: ChartBar, to: "/finance/spending" },
       { label: "budgets", icon: PiggyBank, to: "/finance/budgets" },
+      { label: "subscriptions", icon: Repeat, to: "/finance/subscriptions" },
       { label: "currencies", icon: Coins, to: "/finance/currencies" },
     ],
   },

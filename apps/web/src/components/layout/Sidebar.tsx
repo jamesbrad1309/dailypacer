@@ -6,6 +6,7 @@ import { Progress } from "#components/ui/progress";
 import { TO_REVIEW_COUNT_QUERY } from "#graphql/finance";
 import { DASHBOARD_STATS_QUERY } from "#graphql/habits";
 import type { DashboardStatsData } from "#graphql/types";
+import { todayIsoDate } from "#lib/dates";
 import { levelTitle } from "#lib/levels";
 import { COMING_SOON, NAV_GROUPS } from "#lib/navigation";
 import { cn } from "#lib/utils";
@@ -120,7 +121,9 @@ export function Sidebar({ collapsed = false, onNavigate }: Props) {
 /** How many quick logs are waiting for a category; hidden at zero. */
 function ToReviewBadge({ collapsed }: { collapsed: boolean }) {
   const { t } = useTranslation();
-  const { data } = useQuery<{ toReviewCount: number }>(TO_REVIEW_COUNT_QUERY);
+  const { data } = useQuery<{ toReviewCount: number }>(TO_REVIEW_COUNT_QUERY, {
+    variables: { today: todayIsoDate() },
+  });
   const count = data?.toReviewCount ?? 0;
   if (count === 0) return null;
   if (collapsed) {

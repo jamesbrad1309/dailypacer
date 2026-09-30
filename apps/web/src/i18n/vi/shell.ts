@@ -11,6 +11,7 @@ export const shell: typeof en = {
     transactions: "Giao dịch",
     spending: "Chi tiêu",
     budgets: "Ngân sách",
+    subscriptions: "Gói đăng ký",
     currencies: "Tiền tệ",
     comingSoonItem: "{{label}} (sắp ra mắt)",
     toReview: "{{count}} mục cần xem lại",
@@ -32,6 +33,10 @@ export const shell: typeof en = {
     budgets: {
       title: "Ngân sách",
       subtitle: "Hạn mức hằng tháng, và tốc độ chi tiêu trong tháng.",
+    },
+    subscriptions: {
+      title: "Gói đăng ký",
+      subtitle: "Khoản nào bị trừ, khi nào và bao nhiêu.",
     },
     currencies: {
       title: "Tiền tệ",
