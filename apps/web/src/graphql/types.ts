@@ -8,6 +8,7 @@ export interface HabitEntry {
   id: string;
   value: number | null;
   completed: boolean;
+  note: string | null;
 }
 
 export interface HeatmapDay {
@@ -38,6 +39,15 @@ export interface Habit {
 
 export interface HabitsData {
   habits: Habit[];
+}
+
+export type ArchivedHabit = Pick<Habit, "id" | "name" | "icon"> & {
+  /** ISO timestamp. */
+  archivedAt: string;
+};
+
+export interface ArchivedHabitsData {
+  archivedHabits: ArchivedHabit[];
 }
 
 export interface DashboardStats {
@@ -215,6 +225,7 @@ export interface Transaction {
   amountMinor: number;
   payee: string | null;
   note: string | null;
+  tags: string[];
   /** quick | form | import | recurring | adjustment */
   source: string;
   isTransfer: boolean;

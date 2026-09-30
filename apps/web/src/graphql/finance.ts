@@ -163,6 +163,7 @@ const TRANSACTION_FIELDS = gql`
     amountMinor
     payee
     note
+    tags
     source
     isTransfer
     transferAccount {

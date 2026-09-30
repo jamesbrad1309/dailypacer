@@ -20,6 +20,7 @@ const HABIT_FIELDS = gql`
       id
       value
       completed
+      note
     }
     heatmap {
       date
@@ -34,6 +35,18 @@ export const HABITS_QUERY = gql`
   query Habits {
     habits {
       ...HabitFields
+    }
+  }
+`;
+
+/** Lean on purpose: the archived list shows a name and a Restore button, not stats. */
+export const ARCHIVED_HABITS_QUERY = gql`
+  query ArchivedHabits {
+    archivedHabits {
+      id
+      name
+      icon
+      archivedAt
     }
   }
 `;
@@ -80,6 +93,7 @@ export const UPSERT_HABIT_ENTRY_MUTATION = gql`
       date
       value
       completed
+      note
     }
   }
 `;
@@ -87,6 +101,14 @@ export const UPSERT_HABIT_ENTRY_MUTATION = gql`
 export const ARCHIVE_HABIT_MUTATION = gql`
   mutation ArchiveHabit($id: ID!) {
     archiveHabit(id: $id) {
+      id
+    }
+  }
+`;
+
+export const UNARCHIVE_HABIT_MUTATION = gql`
+  mutation UnarchiveHabit($id: ID!) {
+    unarchiveHabit(id: $id) {
       id
     }
   }

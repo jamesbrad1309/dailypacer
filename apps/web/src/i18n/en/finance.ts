@@ -246,9 +246,9 @@ export const finance = {
     form: {
       addTitle: "Add transaction",
       editTitle: "Edit transaction",
-      lockedTransfer: "This is a transfer: only the payee and note can change.",
+      lockedTransfer: "This is a transfer: only the payee, note and tags can change.",
       lockedAdjustment:
-        "This is a balance adjustment from Update balance: only the payee and note can change.",
+        "This is a balance adjustment from Update balance: only the payee, note and tags can change.",
       moneyInOrOut: "Money in or out",
       expense: "Expense",
       income: "Income",
@@ -258,6 +258,8 @@ export const finance = {
       category: "Category",
       payee: "Payee",
       note: "Note",
+      tags: "Tags",
+      tagsPlaceholder: "holiday-2026, work-expense",
       enterAmount: "Enter an amount, like 12.50",
       chooseAccount: "Choose an account",
     },

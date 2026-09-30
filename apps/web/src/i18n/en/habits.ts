@@ -22,6 +22,16 @@ export const habits = {
     pause: "Pause",
     confirmArchive: "Confirm archive",
     doneOn: "{{date}} — done",
+    note: "Note for today",
+    notePlaceholder: "Add a note for today…",
+    best: "Best {{count}}d",
+    checkIns_one: "{{count}} check-in in 120 days",
+    checkIns_other: "{{count}} check-ins in 120 days",
+  },
+  archived: {
+    title: "Archived habits",
+    none: "No archived habits.",
+    when: "Archived {{when}}",
   },
   edit: {
     title: "Edit habit",

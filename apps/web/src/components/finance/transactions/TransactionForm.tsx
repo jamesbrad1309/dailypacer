@@ -24,6 +24,7 @@ import type { AccountsData, Category, Transaction } from "#graphql/types";
 import { useCategoryName } from "#hooks/useCategoryName";
 import { todayIsoDate } from "#lib/dates";
 import { parseMoneyInput, toMoneyInput } from "#lib/money";
+import { formatTags, parseTags } from "#lib/tags";
 import { cn } from "#lib/utils";
 
 interface Props {
@@ -39,7 +40,7 @@ const selectClass =
   "flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50";
 
 /**
- * The full form: any date, any account, payee and note. Quick log covers the
+ * The full form: any date, any account, payee, note and tags. Quick log covers the
  * everyday case; this is for corrections and the odd back-dated entry.
  */
 export function TransactionForm({ open, onOpenChange, transaction, onDelete }: Props) {
@@ -61,6 +62,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: P
     categoryId: transaction?.category?.id ?? "",
     payee: transaction?.payee ?? "",
     note: transaction?.note ?? "",
+    tags: formatTags(transaction?.tags ?? []),
   });
   const [draft, setDraft] = useState(initial);
   const [error, setError] = useState<string | null>(null);
@@ -93,7 +95,11 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: P
     if (!locked && !amount) return setError(t("finance.transactions.form.enterAmount"));
     if (!draft.accountId) return setError(t("finance.transactions.form.chooseAccount"));
 
-    const words = { payee: draft.payee.trim() || null, note: draft.note.trim() || null };
+    const words = {
+      payee: draft.payee.trim() || null,
+      note: draft.note.trim() || null,
+      tags: parseTags(draft.tags),
+    };
     const input = locked
       ? words
       : {
@@ -229,6 +235,20 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: P
                 onChange={(e) => set("note", e.target.value)}
               />
             </Field>
+            <Field
+              label={t("finance.transactions.form.tags")}
+              id="tx-tags"
+              optional
+              className="sm:col-span-2"
+            >
+              <Input
+                id="tx-tags"
+                autoComplete="off"
+                placeholder={t("finance.transactions.form.tagsPlaceholder")}
+                value={draft.tags}
+                onChange={(e) => set("tags", e.target.value)}
+              />
+            </Field>
           </div>
 
           {error && (
@@ -270,16 +290,18 @@ function Field({
   label,
   id,
   optional,
+  className,
   children,
 }: {
   label: string;
   id: string;
   optional?: boolean;
+  className?: string;
   children: ReactNode;
 }) {
   const { t } = useTranslation();
   return (
-    <div className="flex flex-col gap-2">
+    <div className={cn("flex flex-col gap-2", className)}>
       <Label htmlFor={id} className="flex items-baseline gap-1.5">
         {label}
         {optional && (

@@ -23,6 +23,16 @@ export const habits: typeof en = {
     pause: "Tạm dừng",
     confirmArchive: "Xác nhận lưu trữ",
     doneOn: "{{date}} — đã xong",
+    note: "Ghi chú hôm nay",
+    notePlaceholder: "Thêm ghi chú cho hôm nay…",
+    best: "Dài nhất {{count}} ngày",
+    checkIns_one: "{{count}} lần trong 120 ngày",
+    checkIns_other: "{{count}} lần trong 120 ngày",
+  },
+  archived: {
+    title: "Thói quen đã lưu trữ",
+    none: "Không có thói quen nào đã lưu trữ.",
+    when: "Đã lưu trữ {{when}}",
   },
   edit: {
     title: "Sửa thói quen",

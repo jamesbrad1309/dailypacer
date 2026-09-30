@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "#components/ui/card";
 import { Checkbox } from "#components/ui/checkbox";
 import { Input } from "#components/ui/input";
 import {
+  ARCHIVED_HABITS_QUERY,
   ARCHIVE_HABIT_MUTATION,
   DASHBOARD_STATS_QUERY,
   HABITS_QUERY,
@@ -34,8 +35,12 @@ export function HabitCard({ habit }: { habit: Habit }) {
   const refetchQueries = [{ query: DASHBOARD_STATS_QUERY }];
   // Archiving removes a row from the `habits` list query's array, which
   // normalization also can't do on its own (it only updates existing
-  // entities, never a list's membership) — refetch the list for that one.
-  const refetchList = [...refetchQueries, { query: HABITS_QUERY }];
+  // entities, never a list's membership) — refetch both lists it moves between.
+  const refetchList = [
+    ...refetchQueries,
+    { query: HABITS_QUERY },
+    { query: ARCHIVED_HABITS_QUERY },
+  ];
 
   const [upsertEntry] = useMutation(UPSERT_HABIT_ENTRY_MUTATION, { refetchQueries });
   const [pauseHabit] = useMutation(PAUSE_HABIT_MUTATION, { refetchQueries });
@@ -120,7 +125,28 @@ export function HabitCard({ habit }: { habit: Habit }) {
           </div>
         ) : null}
 
+        <Input
+          aria-label={t("habits.card.note")}
+          placeholder={t("habits.card.notePlaceholder")}
+          maxLength={2000}
+          className="h-8 text-sm"
+          defaultValue={entry?.note ?? ""}
+          disabled={habit.paused}
+          onBlur={(e) => {
+            const note = e.target.value.trim();
+            if (note === (entry?.note ?? "")) return;
+            // Upsert keeps the entry's value and completion when they're
+            // left out, and "" clears the note (null would mean "unchanged").
+            upsertEntry({ variables: { input: { habitId: habit.id, date: todayIso(), note } } });
+          }}
+        />
+
         <HeatmapGrid days={habit.heatmap} />
+
+        <p className="text-xs text-muted-foreground">
+          {t("habits.card.best", { count: habit.longestStreak })} ·{" "}
+          {t("habits.card.checkIns", { count: habit.totalCompletions })}
+        </p>
 
         <div className="flex justify-end gap-1 border-t pt-2">
           <EditHabitDialog habit={habit} />

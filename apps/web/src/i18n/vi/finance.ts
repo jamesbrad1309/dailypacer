@@ -246,9 +246,9 @@ export const finance: typeof en = {
     form: {
       addTitle: "Thêm giao dịch",
       editTitle: "Sửa giao dịch",
-      lockedTransfer: "Đây là một khoản chuyển tiền: chỉ có thể sửa người nhận và ghi chú.",
+      lockedTransfer: "Đây là một khoản chuyển tiền: chỉ có thể sửa người nhận, ghi chú và thẻ.",
       lockedAdjustment:
-        "Đây là khoản điều chỉnh từ Cập nhật số dư: chỉ có thể sửa người nhận và ghi chú.",
+        "Đây là khoản điều chỉnh từ Cập nhật số dư: chỉ có thể sửa người nhận, ghi chú và thẻ.",
       moneyInOrOut: "Tiền vào hay ra",
       expense: "Khoản chi",
       income: "Khoản thu",
@@ -258,6 +258,8 @@ export const finance: typeof en = {
       category: "Danh mục",
       payee: "Người nhận",
       note: "Ghi chú",
+      tags: "Thẻ",
+      tagsPlaceholder: "du-lich-2026, cong-tac",
       enterAmount: "Nhập một số tiền, vd. 12.50",
       chooseAccount: "Chọn một tài khoản",
     },

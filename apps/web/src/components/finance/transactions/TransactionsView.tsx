@@ -400,12 +400,14 @@ function TransactionRow({
         name: tx.transferAccount?.name ?? tx.payee ?? "",
       })
     : (tx.payee ?? tx.note ?? categoryName(tx.category));
+  const tags = tx.tags.map((tag) => `#${tag}`);
   const detail = tx.isTransfer
-    ? [tx.note, t("finance.transfer.title"), tx.account.name].filter(Boolean)
+    ? [tx.note, t("finance.transfer.title"), tx.account.name, ...tags].filter(Boolean)
     : [
         tx.payee && tx.note,
         !review && (tx.category ? categoryName(tx.category) : t("finance.toReview")),
         tx.account.name,
+        ...tags,
       ].filter(Boolean);
 
   return (

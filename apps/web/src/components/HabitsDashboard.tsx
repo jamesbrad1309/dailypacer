@@ -1,5 +1,6 @@
 import { useQuery } from "@apollo/client/react";
 import { useTranslation } from "react-i18next";
+import { ArchivedHabits } from "#components/ArchivedHabits";
 import { CreateHabitForm } from "#components/CreateHabitForm";
 import { HabitList } from "#components/HabitList";
 import { StatTiles } from "#components/StatTiles";
@@ -26,6 +27,7 @@ export function HabitsDashboard() {
           <CreateHabitForm className="w-full sm:w-auto sm:min-w-[28rem]" />
         </div>
         <HabitList />
+        <ArchivedHabits />
       </section>
     </div>
   );
