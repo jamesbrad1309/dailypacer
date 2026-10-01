@@ -9,5 +9,7 @@ export default {
       args: { month: string; accountId?: string | null },
       ctx: GraphQLContext,
     ) => ctx.api.get<unknown>(`/reports/spend-by-category${queryString(args)}`),
+    cashFlow: (_: unknown, args: { to: string; months?: number }, ctx: GraphQLContext) =>
+      ctx.api.get<unknown>(`/reports/cash-flow${queryString(args)}`),
   },
 };

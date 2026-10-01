@@ -169,6 +169,7 @@ export interface ApiTransaction {
   importHash: string | null;
   clientId: string | null;
   source: string;
+  status: "CLEARED" | "PENDING";
   metadata: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
@@ -177,6 +178,8 @@ export interface ApiTransaction {
 export interface ApiSubscription {
   id: string;
   name: string;
+  isIncome: boolean;
+  autoLog: boolean;
   serviceKey: string | null;
   domain: string | null;
   accountId: string;
@@ -205,6 +208,7 @@ export interface ApiSubscriptionCharge {
   currency: string;
   status: "pending" | "confirmed" | "skipped" | "upcoming";
   transactionId: string | null;
+  transactionPending: boolean;
   afterTrial: boolean;
 }
 

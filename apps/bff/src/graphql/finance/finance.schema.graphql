@@ -183,6 +183,13 @@ type Category {
   key: String
 }
 
+enum TransactionStatus {
+  """Gone through (the default)."""
+  CLEARED
+  """Expected but not confirmed yet: counts in balances, waits in "To review"."""
+  PENDING
+}
+
 type Transaction {
   id: ID!
   account: Account!
@@ -201,6 +208,7 @@ type Transaction {
   transferAccount: Account
   """quick | form | import | recurring | adjustment | transfer"""
   source: String!
+  status: TransactionStatus!
   """ISO timestamp it was logged."""
   createdAt: String!
 }
@@ -221,8 +229,10 @@ input TransactionFilter {
   """Matches payee or note, case-insensitively."""
   search: String
   includeTransfers: Boolean = true
-  """The "To review" inbox."""
+  """Uncategorised (non-transfer) only."""
   uncategorisedOnly: Boolean = false
+  """The whole "To review" inbox: uncategorised or pending."""
+  toReviewOnly: Boolean = false
 }
 
 input CreateTransactionInput {
@@ -234,6 +244,8 @@ input CreateTransactionInput {
   payee: String
   note: String
   tags: [String!]
+  """Default CLEARED."""
+  status: TransactionStatus
 }
 
 """Only the fields given change; null clears categoryId, payee or note."""
@@ -245,6 +257,8 @@ input UpdateTransactionInput {
   payee: String
   note: String
   tags: [String!]
+  """CLEARED confirms a pending transaction."""
+  status: TransactionStatus
 }
 
 """Money between two of your accounts: a card payment, savings, settling an IOU."""
@@ -458,9 +472,29 @@ type SpendReport {
   categories: [CategorySpend!]!
 }
 
+type CashFlowMonth {
+  """YYYY-MM"""
+  month: String!
+  """Net money in under income categories."""
+  inMinor: Int!
+  """Spending (out minus refunds): the same figure as SpendReport.spentMinor."""
+  outMinor: Int!
+  """in − out: positive when the month saved money."""
+  netMinor: Int!
+}
+
+type CashFlowReport {
+  currency: String!
+  unconverted: [String!]!
+  """Oldest first; every month in the range, empty ones included."""
+  months: [CashFlowMonth!]!
+}
+
 extend type Query {
   """month is YYYY-MM in the user's calendar; optionally one account only."""
   spendByCategory(month: String!, accountId: ID): SpendReport!
+  """Money in vs out for `months` months ending with `to` (YYYY-MM)."""
+  cashFlow(to: String!, months: Int = 12): CashFlowReport!
 }
 
 # ─── Budgets (phase 3) ───────────────────────────────────────────────────────

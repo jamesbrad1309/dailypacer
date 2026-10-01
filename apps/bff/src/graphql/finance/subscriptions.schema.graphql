@@ -37,6 +37,10 @@ account's currency.
 type Subscription {
   id: ID!
   name: String!
+  """Money in (a salary): positive amounts, left out of the cost totals."""
+  isIncome: Boolean!
+  """Each charge is logged by itself on its date as a PENDING transaction, to confirm later."""
+  autoLog: Boolean!
   """Built-in service key ("netflix"), or null for a custom one."""
   serviceKey: String
   """Its website, where the logo comes from: "netflix.com"."""
@@ -88,10 +92,13 @@ type SubscriptionCharge {
   status: ChargeStatus!
   """Set when confirmed: the transaction it logged."""
   transactionId: ID
+  """That transaction is still PENDING (auto-logged and not confirmed yet)."""
+  transactionPending: Boolean!
   """The first paid charge after a free trial."""
   afterTrial: Boolean!
 }
 
+"""Costs only: money-in subscriptions are left out."""
 type SubscriptionSummary {
   """The main currency every amount is in."""
   currency: String!
@@ -121,6 +128,8 @@ input CreateSubscriptionInput {
   nextChargeOn: String!
   trialEndsOn: String
   note: String
+  isIncome: Boolean = false
+  autoLog: Boolean = false
 }
 
 """Only the fields given change. The price changes through changeSubscriptionPrice, to keep its history."""
@@ -134,6 +143,8 @@ input UpdateSubscriptionInput {
   nextChargeOn: String
   trialEndsOn: String
   note: String
+  isIncome: Boolean
+  autoLog: Boolean
 }
 
 extend type Query {

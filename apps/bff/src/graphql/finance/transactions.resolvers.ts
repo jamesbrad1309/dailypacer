@@ -12,6 +12,7 @@ interface TransactionFilter {
   search?: string | null;
   includeTransfers?: boolean | null;
   uncategorisedOnly?: boolean | null;
+  toReviewOnly?: boolean | null;
 }
 
 /**
@@ -37,6 +38,7 @@ export default {
           search: f.search || null,
           includeTransfers: f.includeTransfers,
           uncategorised: f.uncategorisedOnly,
+          toReview: f.toReviewOnly,
           first: args.first,
           after: args.after,
         })}`,
