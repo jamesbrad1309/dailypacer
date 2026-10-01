@@ -1,7 +1,8 @@
-import { Body, Controller, Get, HttpCode, Post, Put, Query } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, Post, Put, Query, UseInterceptors } from "@nestjs/common";
 import { ZodValidationPipe } from "#common/http/zod-validation.pipe";
 import { type BudgetReport, BudgetsService } from "#finance/budgets.service";
 import { toIsoDate } from "#finance/calendar.util";
+import { CatchUpInterceptor } from "#finance/catch-up.interceptor";
 import {
   type BudgetReportInput,
   type RemoveBudgetInput,
@@ -11,6 +12,8 @@ import {
   setBudgetSchema,
 } from "#finance/dto/budget.dto";
 
+// Auto-logged charges are brought up to date before every request here.
+@UseInterceptors(CatchUpInterceptor)
 @Controller("budgets")
 export class BudgetsController {
   constructor(private readonly budgets: BudgetsService) {}

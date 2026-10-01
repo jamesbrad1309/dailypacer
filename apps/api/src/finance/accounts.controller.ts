@@ -7,12 +7,14 @@ import {
   Post,
   Put,
   Query,
+  UseInterceptors,
 } from "@nestjs/common";
 import type { Account } from "@prisma/client";
 import { ZodValidationPipe } from "#common/http/zod-validation.pipe";
 import type { AccountMetrics } from "#finance/account-metrics.util";
 import { AccountsService, type NetWorth } from "#finance/accounts.service";
 import { fromIsoDate, toIsoDate } from "#finance/calendar.util";
+import { CatchUpInterceptor } from "#finance/catch-up.interceptor";
 import {
   type CreateAccountInput,
   type ReconcileAccountInput,
@@ -41,6 +43,8 @@ function toAccountDto(account: Account) {
  * Routes without an id (`balances`, `net-worth`, `reorder`) are declared
  * before `:id` so Nest doesn't match them as ids.
  */
+// Auto-logged charges are brought up to date before every request here.
+@UseInterceptors(CatchUpInterceptor)
 @Controller("accounts")
 export class AccountsController {
   constructor(private readonly accounts: AccountsService) {}

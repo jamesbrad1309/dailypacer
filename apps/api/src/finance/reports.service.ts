@@ -29,6 +29,24 @@ export interface SpendReport {
   categories: CategorySpend[];
 }
 
+export interface CashFlowMonth {
+  /** "YYYY-MM" */
+  month: string;
+  /** Net money in under income categories. */
+  inMinor: number;
+  /** Spending: out minus refunds, the same figure as the Spending page. */
+  outMinor: number;
+  /** in − out: positive when the month saved money. */
+  netMinor: number;
+}
+
+export interface CashFlowReport {
+  currency: string;
+  unconverted: string[];
+  /** Oldest first, every month in the range even when it's empty. */
+  months: CashFlowMonth[];
+}
+
 /** The date a month's figures convert at: its last day, or today while it's still going. */
 export function rateDate(month: string): string {
   const [y, m] = month.split("-").map(Number);
@@ -39,9 +57,13 @@ export function rateDate(month: string): string {
 
 /** "2026-09" → "2026-08". */
 export function previousMonth(month: string): string {
+  return shiftMonth(month, -1);
+}
+
+/** "2026-09" shifted by `months`: −3 → "2026-06". */
+export function shiftMonth(month: string, months: number): string {
   const [y, m] = month.split("-").map(Number);
-  const date = new Date(Date.UTC(y, m - 2, 1));
-  return date.toISOString().slice(0, 7);
+  return new Date(Date.UTC(y, m - 1 + months, 1)).toISOString().slice(0, 7);
 }
 
 /**
@@ -121,5 +143,49 @@ export class ReportsService {
       incomeMinor,
       categories,
     };
+  }
+
+  /**
+   * Money in vs out per month, for `months` months up to and including
+   * `to`. Same rules as spendByCategory: transfers and balance adjustments
+   * don't count, refunds reduce spending, income categories are money in.
+   */
+  async cashFlow(to: string, months: number): Promise<CashFlowReport> {
+    const from = shiftMonth(to, -(months - 1));
+    const rows = await this.prisma.monthlyTotal.findMany({
+      where: { month: { gte: fromIsoDate(`${from}-01`), lte: fromIsoDate(`${to}-01`) } },
+      include: {
+        category: { select: { kind: true } },
+        account: { select: { currency: true } },
+      },
+    });
+    const ctx = await this.currencies.conversionContext();
+    const unconverted = new Set<string>();
+
+    const byMonth = new Map<string, CashFlowMonth>();
+    for (let i = 0; i < months; i++) {
+      const month = shiftMonth(from, i);
+      byMonth.set(month, { month, inMinor: 0, outMinor: 0, netMinor: 0 });
+    }
+    for (const row of rows) {
+      const month = toIsoDate(row.month).slice(0, 7);
+      const net = toMainMinor(
+        ctx,
+        row.outflowMinor - row.inflowMinor,
+        row.account.currency,
+        rateDate(month),
+      );
+      if (net === null) {
+        unconverted.add(row.account.currency);
+        continue;
+      }
+      const entry = byMonth.get(month);
+      if (!entry) continue;
+      if (row.category?.kind === "income") entry.inMinor -= net;
+      else entry.outMinor += net;
+    }
+    const list = [...byMonth.values()];
+    for (const m of list) m.netMinor = m.inMinor - m.outMinor;
+    return { currency: ctx.main, unconverted: [...unconverted].sort(), months: list };
   }
 }

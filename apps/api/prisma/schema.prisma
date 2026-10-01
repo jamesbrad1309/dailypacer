@@ -187,6 +187,15 @@ model Category {
   @@map("categories")
 }
 
+enum TransactionStatus {
+  /// Gone through: the default.
+  CLEARED
+  /// Expected but not confirmed yet (an auto-logged bill, a card hold). Counts
+  /// in balances and reports like any other, and waits in "To review" until
+  /// confirmed.
+  PENDING
+}
+
 model Transaction {
   id          String    @id @default(uuid())
   accountId   String
@@ -207,6 +216,7 @@ model Transaction {
   clientId    String?   @unique
   /// "quick" | "form" | "import" | "recurring" | "adjustment" | "transfer"
   source      String    @default("form")
+  status      TransactionStatus @default(CLEARED)
   metadata    Json      @default("{}")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -218,6 +228,7 @@ model Transaction {
   @@index([accountId, date])
   @@index([categoryId, date])
   @@index([transferId])
+  @@index([status])
   @@map("transactions")
 }
 
@@ -349,6 +360,15 @@ model Subscription {
   serviceKey    String?
   /// The website its logo comes from: "netflix.com".
   domain        String?
+  /// Money in (a salary) rather than a charge: confirmed amounts are positive
+  /// and it's left out of the cost totals.
+  isIncome      Boolean         @default(false)
+  /// Log each charge by itself on its date, as a PENDING transaction, instead
+  /// of asking first. The user then confirms it once it has gone through.
+  autoLog       Boolean         @default(false)
+  /// The last day auto-logging has run up to, so it never logs a date twice
+  /// (and an auto-logged transaction the user deleted stays deleted).
+  autoLoggedThrough DateTime?   @db.Date
   /// Where charges are taken from; amounts are in this account's currency.
   accountId     String
   account       Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)

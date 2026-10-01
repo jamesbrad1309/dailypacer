@@ -1,5 +1,6 @@
-import { Body, Controller, Delete, Get, Param, Post, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Query, UseInterceptors } from "@nestjs/common";
 import { ZodValidationPipe } from "#common/http/zod-validation.pipe";
+import { CatchUpInterceptor } from "#finance/catch-up.interceptor";
 import {
   type CreateQuickPresetInput,
   type QuickLogContextInput,
@@ -11,6 +12,8 @@ import {
 import { QuickLogService } from "#finance/quick-log.service";
 import { toTransactionDto } from "#finance/transactions.controller";
 
+// Auto-logged charges are brought up to date before every request here.
+@UseInterceptors(CatchUpInterceptor)
 @Controller("quick-log")
 export class QuickLogController {
   constructor(private readonly quickLog: QuickLogService) {}

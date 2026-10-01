@@ -59,6 +59,8 @@ export type ChargeStatus = "pending" | "confirmed" | "skipped" | "upcoming";
 export interface SubscriptionView {
   id: string;
   name: string;
+  isIncome: boolean;
+  autoLog: boolean;
   serviceKey: string | null;
   domain: string | null;
   accountId: string;
@@ -91,6 +93,8 @@ export interface ChargeView {
   status: ChargeStatus;
   /** Set when confirmed: the transaction it created. */
   transactionId: string | null;
+  /** That transaction is still PENDING (auto-logged, not confirmed yet). */
+  transactionPending: boolean;
   /** The first paid charge after a free trial. */
   afterTrial: boolean;
 }
@@ -100,10 +104,11 @@ export interface SubscriptionSummary {
   currency: string;
   /** Currencies left out for want of a rate. */
   unconverted: string[];
+  /** Costs only: money-in subscriptions (a salary) are left out of these. */
   activeCount: number;
   monthlyMinor: number;
   yearlyMinor: number;
-  /** Pending and upcoming charges from today through the next 29 days. */
+  /** Unpaid charges: overdue ones plus the next 30 days. */
   next30DaysMinor: number;
   pendingCount: number;
 }
@@ -146,6 +151,11 @@ function status(sub: Subscription, today: string): SubscriptionStatus {
   return "active";
 }
 
+/** A charge's transaction amount: money out is negative, a money-in subscription positive. */
+function signedFor(sub: Subscription, amountMinor: number): number {
+  return sub.isIncome ? amountMinor : -amountMinor;
+}
+
 function isUniqueViolation(err: unknown): boolean {
   return err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002";
 }
@@ -183,7 +193,9 @@ export class SubscriptionsService {
     const categoryId =
       input.categoryId !== undefined
         ? input.categoryId
-        : await this.categoryIdForKey(service?.categoryKey ?? "subscriptions");
+        : await this.categoryIdForKey(
+            service?.categoryKey ?? (input.isIncome ? "salary" : "subscriptions"),
+          );
     if (categoryId) await this.assertCategory(categoryId);
 
     const created = await this.prisma.subscription.create({
@@ -193,6 +205,8 @@ export class SubscriptionsService {
         domain: input.domain !== undefined ? input.domain : (service?.domain ?? null),
         accountId: input.accountId,
         categoryId,
+        isIncome: input.isIncome,
+        autoLog: input.autoLog,
         interval: input.interval,
         intervalCount: input.intervalCount,
         firstChargeOn: fromIsoDate(input.nextChargeOn),
@@ -227,6 +241,8 @@ export class SubscriptionsService {
         domain: input.domain,
         accountId: input.accountId,
         categoryId: input.categoryId,
+        isIncome: input.isIncome,
+        autoLog: input.autoLog,
         interval: input.interval,
         intervalCount: input.intervalCount,
         firstChargeOn: input.nextChargeOn ? fromIsoDate(input.nextChargeOn) : undefined,
@@ -310,7 +326,7 @@ export class SubscriptionsService {
       this.prisma.subscription.findMany({ include: { prices: true, account: true } }),
       this.prisma.subscriptionCharge.findMany({
         where: { dueOn: { gte: fromIsoDate(from), lte: fromIsoDate(to) } },
-        include: { transaction: { select: { amountMinor: true } } },
+        include: { transaction: { select: { amountMinor: true, status: true } } },
       }),
     ]);
     const byKey = new Map(answered.map((c) => [`${c.subscriptionId}|${toIsoDate(c.dueOn)}`, c]));
@@ -322,11 +338,14 @@ export class SubscriptionsService {
       const firstAfterTrial = sub.trialEndsOn
         ? nextCharge(schedule(sub), toIsoDate(sub.trialEndsOn))
         : null;
+      const autoLoggedThrough = iso(sub.autoLoggedThrough);
       for (const dueOn of chargesBetween(schedule(sub), from, to)) {
         const charge = byKey.get(`${sub.id}|${dueOn}`);
         let chargeStatus: ChargeStatus;
         if (charge) chargeStatus = charge.outcome === "CONFIRMED" ? "confirmed" : "skipped";
         else if (dueOn < askFrom) continue;
+        // Auto-logging covered this date, but its transaction was deleted: it didn't happen.
+        else if (autoLoggedThrough && dueOn <= autoLoggedThrough) chargeStatus = "skipped";
         else if (dueOn <= today) {
           if (dueOn > lastPending) continue;
           chargeStatus = "pending";
@@ -340,6 +359,86 @@ export class SubscriptionsService {
     return result.sort(
       (a, b) => a.dueOn.localeCompare(b.dueOn) || a.subscriptionId.localeCompare(b.subscriptionId),
     );
+  }
+
+  /**
+   * Auto-logging, run before finance requests (finance/catch-up.interceptor.ts)
+   * instead of on a timer: every due charge of an auto-log subscription,
+   * up to `today`, becomes a PENDING transaction. Idempotent: each
+   * subscription is locked while it's caught up, and `autoLoggedThrough`
+   * moves to today in the same database transaction, so concurrent or
+   * repeated runs log nothing twice. Returns how many were logged.
+   */
+  async catchUp(today: string): Promise<number> {
+    const due = await this.prisma.subscription.findMany({
+      where: {
+        autoLog: true,
+        OR: [{ autoLoggedThrough: null }, { autoLoggedThrough: { lt: fromIsoDate(today) } }],
+      },
+      select: { id: true },
+    });
+    let logged = 0;
+    for (const { id } of due) logged += await this.autoLogOne(id, today);
+    if (logged) log.info({ logged, today }, "auto-logged subscription charges");
+    return logged;
+  }
+
+  private async autoLogOne(id: string, today: string): Promise<number> {
+    return this.prisma.$transaction(async (tx) => {
+      // A concurrent catch-up waits here, then finds autoLoggedThrough already moved.
+      await tx.$queryRaw`SELECT "id" FROM "subscriptions" WHERE "id" = ${id} FOR UPDATE`;
+      const sub = await tx.subscription.findUnique({
+        where: { id },
+        include: { prices: true, account: true, charges: { select: { dueOn: true } } },
+      });
+      const through = iso(sub?.autoLoggedThrough ?? null);
+      if (!sub?.autoLog || (through && through >= today)) return 0;
+
+      // Never before it was added, the last run, or the account's opening day.
+      const start = [
+        toIsoDate(sub.askFrom),
+        through ? this.addDays(through, 1) : "",
+        toIsoDate(sub.account.openingBalanceDate),
+      ].sort()[2];
+      const end = lastAskable(sub, today);
+      const answered = new Set(sub.charges.map((c) => toIsoDate(c.dueOn)));
+      let logged = 0;
+      if (start <= end && !sub.account.archivedAt) {
+        for (const dueOn of chargesBetween(schedule(sub), start, end)) {
+          if (answered.has(dueOn)) continue;
+          const clientId = `subscription:${id}:${dueOn}`;
+          const transaction =
+            (await tx.transaction.findUnique({ where: { clientId } })) ??
+            (await this.transactions.createIn(
+              tx,
+              {
+                accountId: sub.accountId,
+                categoryId: sub.categoryId,
+                date: dueOn,
+                amountMinor: signedFor(sub, priceOn(prices(sub), dueOn)),
+                payee: sub.name,
+                status: "PENDING",
+              },
+              "recurring",
+              clientId,
+            ));
+          await tx.subscriptionCharge.create({
+            data: {
+              subscriptionId: id,
+              dueOn: fromIsoDate(dueOn),
+              outcome: "CONFIRMED",
+              transactionId: transaction.id,
+            },
+          });
+          logged++;
+        }
+      }
+      await tx.subscription.update({
+        where: { id },
+        data: { autoLoggedThrough: fromIsoDate(today) },
+      });
+      return logged;
+    });
   }
 
   /** Due charges nobody has answered yet, oldest first. */
@@ -378,7 +477,7 @@ export class SubscriptionsService {
             accountId: sub.accountId,
             categoryId: sub.categoryId,
             date: input.date ?? input.dueOn,
-            amountMinor: -(input.amountMinor ?? priceOn(prices(sub), input.dueOn)),
+            amountMinor: signedFor(sub, input.amountMinor ?? priceOn(prices(sub), input.dueOn)),
             payee: sub.name,
           },
           "recurring",
@@ -449,9 +548,12 @@ export class SubscriptionsService {
       return converted ?? 0;
     };
 
-    const active = subs.filter((s) => s.status !== "paused" && s.status !== "ended");
+    const costs = new Set(subs.filter((s) => !s.isIncome).map((s) => s.id));
+    const active = subs.filter(
+      (s) => costs.has(s.id) && s.status !== "paused" && s.status !== "ended",
+    );
     const due = [...pending.filter((c) => c.dueOn < today), ...upcoming].filter(
-      (c) => c.status === "pending" || c.status === "upcoming",
+      (c) => costs.has(c.subscriptionId) && (c.status === "pending" || c.status === "upcoming"),
     );
     return {
       currency: ctx.main,
@@ -472,6 +574,8 @@ export class SubscriptionsService {
     return {
       id: sub.id,
       name: sub.name,
+      isIncome: sub.isIncome,
+      autoLog: sub.autoLog,
       serviceKey: sub.serviceKey,
       domain: sub.domain,
       accountId: sub.accountId,
@@ -498,7 +602,9 @@ export class SubscriptionsService {
     sub: Loaded,
     dueOn: string,
     chargeStatus: ChargeStatus,
-    charge: (SubscriptionCharge & { transaction: { amountMinor: number } | null }) | undefined,
+    charge:
+      | (SubscriptionCharge & { transaction: { amountMinor: number; status: string } | null })
+      | undefined,
     firstAfterTrial: string | null,
   ): ChargeView {
     return {
@@ -511,6 +617,7 @@ export class SubscriptionsService {
       currency: sub.account.currency,
       status: chargeStatus,
       transactionId: charge?.transactionId ?? null,
+      transactionPending: charge?.transaction?.status === "PENDING",
       afterTrial: dueOn === firstAfterTrial,
     };
   }

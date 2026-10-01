@@ -14,6 +14,11 @@ import { MonthlyTotalsService } from "#finance/monthly-totals.service";
 
 const log = scopedLogger("TransactionsService");
 
+/** The "To review" inbox: uncategorised money (not transfers), or anything still pending. */
+const TO_REVIEW: Prisma.TransactionWhereInput = {
+  OR: [{ categoryId: null, transferId: null }, { status: "PENDING" }],
+};
+
 export interface TransactionPage {
   items: Transaction[];
   /** Opaque; pass back as `after`. Null when there are no more rows. */
@@ -86,6 +91,7 @@ export class TransactionsService {
     if (input.from) where.push({ date: { gte: fromIsoDate(input.from) } });
     if (input.to) where.push({ date: { lte: fromIsoDate(input.to) } });
     if (input.uncategorised) where.push({ categoryId: null, transferId: null });
+    if (input.toReview) where.push(TO_REVIEW);
     if (!input.includeTransfers) where.push({ transferId: null });
     if (input.search) {
       where.push({
@@ -114,9 +120,9 @@ export class TransactionsService {
     return transaction;
   }
 
-  /** Uncategorised, non-transfer transactions: the "To review" inbox. */
+  /** The "To review" inbox: uncategorised (non-transfer) or pending transactions. */
   toReviewCount(): Promise<number> {
-    return this.prisma.transaction.count({ where: { categoryId: null, transferId: null } });
+    return this.prisma.transaction.count({ where: TO_REVIEW });
   }
 
   /** `clientId` makes quick log's saves idempotent (see QuickLogService.quickLog). */
@@ -127,23 +133,9 @@ export class TransactionsService {
   ): Promise<Transaction> {
     await this.assertWritable(input.accountId, input.date);
     await this.assertCategory(input.categoryId);
-    const transaction = await this.prisma.$transaction(async (tx) => {
-      const created = await tx.transaction.create({
-        data: {
-          accountId: input.accountId,
-          categoryId: input.categoryId ?? null,
-          date: fromIsoDate(input.date),
-          amountMinor: input.amountMinor,
-          payee: input.payee ?? null,
-          note: input.note ?? null,
-          tags: input.tags ?? [],
-          source,
-          clientId,
-        },
-      });
-      await this.totals.apply(tx, [{ row: created, sign: 1 }]);
-      return created;
-    });
+    const transaction = await this.prisma.$transaction((tx) =>
+      this.createIn(tx, input, source, clientId),
+    );
     log.info(
       { transactionId: transaction.id, accountId: input.accountId, amountMinor: input.amountMinor },
       "transaction created",
@@ -185,6 +177,7 @@ export class TransactionsService {
           payee: input.payee,
           note: input.note,
           tags: input.tags,
+          status: input.status,
         },
       });
       await this.totals.apply(tx, [
@@ -304,6 +297,35 @@ export class TransactionsService {
    * Balances sum every transaction from the opening balance on, so nothing
    * may be dated before an account's opening date (docs/finance/backend-module.md).
    */
+  /**
+   * Creates a transaction and its monthly totals inside the caller's
+   * database transaction. The caller has already checked the account and
+   * category (see `create`, and SubscriptionsService's auto-log).
+   */
+  async createIn(
+    tx: Prisma.TransactionClient,
+    input: CreateTransactionInput,
+    source: string,
+    clientId?: string,
+  ): Promise<Transaction> {
+    const created = await tx.transaction.create({
+      data: {
+        accountId: input.accountId,
+        categoryId: input.categoryId ?? null,
+        date: fromIsoDate(input.date),
+        amountMinor: input.amountMinor,
+        payee: input.payee ?? null,
+        note: input.note ?? null,
+        tags: input.tags ?? [],
+        status: input.status ?? "CLEARED",
+        source,
+        clientId,
+      },
+    });
+    await this.totals.apply(tx, [{ row: created, sign: 1 }]);
+    return created;
+  }
+
   async assertWritable(accountId: string, date: string): Promise<Account> {
     const account = await this.prisma.account.findUnique({ where: { id: accountId } });
     if (!account) throw new BadRequestException(`Account ${accountId} not found`);

@@ -9,9 +9,11 @@ import {
   Patch,
   Post,
   Query,
+  UseInterceptors,
 } from "@nestjs/common";
 import { ZodValidationPipe } from "#common/http/zod-validation.pipe";
 import { toIsoDate } from "#finance/calendar.util";
+import { CatchUpInterceptor } from "#finance/catch-up.interceptor";
 import {
   type CancelInput,
   type ChangePriceInput,
@@ -49,6 +51,8 @@ const todayPipe = new ZodValidationPipe(todaySchema.partial());
 const today = (query: { today?: string }) => query.today ?? toIsoDate(new Date());
 const id = new ParseUUIDPipe();
 
+// Auto-logged charges are brought up to date before every request here.
+@UseInterceptors(CatchUpInterceptor)
 @Controller("subscriptions")
 export class SubscriptionsController {
   constructor(private readonly subscriptions: SubscriptionsService) {}

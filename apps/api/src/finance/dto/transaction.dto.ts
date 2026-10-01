@@ -14,6 +14,8 @@ export const createTransactionSchema = z.object({
   payee: optionalText(200),
   note: optionalText(1000),
   tags: z.array(z.string().trim().min(1).max(50)).max(20).optional(),
+  /** PENDING: expected but not gone through yet; waits in "To review". Default CLEARED. */
+  status: z.enum(["CLEARED", "PENDING"]).optional(),
 });
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;
 
@@ -33,8 +35,10 @@ export const listTransactionsSchema = z.object({
   from: isoDate.optional(),
   to: isoDate.optional(),
   search: z.string().trim().max(100).optional(),
-  /** The "To review" inbox: no category, not a transfer. */
+  /** No category, not a transfer. */
   uncategorised: flag,
+  /** The whole "To review" inbox: uncategorised or pending. */
+  toReview: flag,
   /** Default true. */
   includeTransfers: z
     .enum(["true", "false"])

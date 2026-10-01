@@ -42,6 +42,10 @@ export const createSubscriptionSchema = z.object({
   nextChargeOn: isoDate,
   trialEndsOn: isoDate.nullable().optional(),
   note: optionalText(500),
+  /** Money in (a salary): confirmed amounts are positive, left out of cost totals. */
+  isIncome: z.boolean().default(false),
+  /** Log each charge by itself on its date as a PENDING transaction, instead of asking. */
+  autoLog: z.boolean().default(false),
   /** The client's calendar day: charges before it are never asked about. */
   today: isoDate,
 });
@@ -50,6 +54,7 @@ export type CreateSubscriptionInput = z.infer<typeof createSubscriptionSchema>;
 /** Only the fields sent change. The price has its own endpoint, to keep history. */
 export const updateSubscriptionSchema = createSubscriptionSchema
   .omit({ amountMinor: true, today: true })
+  .extend({ isIncome: z.boolean().optional(), autoLog: z.boolean().optional() })
   .partial();
 export type UpdateSubscriptionInput = z.infer<typeof updateSubscriptionSchema>;
 
