@@ -6,6 +6,8 @@ const SUBSCRIPTION_FIELDS = gql`
   fragment SubscriptionFields on Subscription {
     id
     name
+    isIncome
+    autoLog
     serviceKey
     domain
     logoUrl
@@ -45,11 +47,13 @@ const CHARGE_FIELDS = gql`
     currency
     status
     transactionId
+    transactionPending
     afterTrial
     subscription {
       id
       name
       logoUrl
+      isIncome
       account {
         id
         name

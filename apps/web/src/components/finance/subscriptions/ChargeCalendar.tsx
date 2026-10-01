@@ -2,12 +2,14 @@ import { useQuery } from "@apollo/client/react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { MONEY_IN_CLASS } from "#components/finance/Amount";
 import { ServiceLogo } from "#components/finance/subscriptions/ServiceLogo";
 import { Button } from "#components/ui/button";
 import { Card } from "#components/ui/card";
 import { SUBSCRIPTION_CHARGES_QUERY } from "#graphql/subscriptions";
 import type { ChargeStatus, SubscriptionCharge } from "#graphql/types";
 import { useCurrencies } from "#hooks/useCurrencies";
+import { chargeAmount } from "#lib/cadence";
 import {
   addDays,
   addMonths,
@@ -65,10 +67,10 @@ export function ChargeCalendar({ month, onMonthChange }: Props) {
         ? today
         : (charges[0]?.dueOn ?? from);
 
-  /** Adds up amounts in the main currency; charges without a rate are left out. */
+  /** Adds up costs in the main currency; money in and charges without a rate are left out. */
   const total = (list: SubscriptionCharge[]) =>
     list
-      .filter((c) => c.status !== "SKIPPED")
+      .filter((c) => c.status !== "SKIPPED" && !c.subscription.isIncome)
       .reduce((sum, c) => sum + (toMain(c.amountMinor, c.currency) ?? 0), 0);
 
   // Whole weeks, Monday first, covering the month.
@@ -204,17 +206,20 @@ export function ChargeCalendar({ month, onMonthChange }: Props) {
                   <span className="block truncate text-sm font-medium">{c.subscription.name}</span>
                   <span className="block truncate text-xs text-muted-foreground">
                     {c.subscription.account.name} ·{" "}
-                    {t(`finance.subscriptions.calendar.chargeStatus.${c.status}`)}
+                    {c.transactionPending
+                      ? t("finance.subscriptions.calendar.loggedPending")
+                      : t(`finance.subscriptions.calendar.chargeStatus.${c.status}`)}
                     {c.afterTrial && ` · ${t("finance.subscriptions.afterTrial")}`}
                   </span>
                 </span>
                 <span
                   className={cn(
                     "text-sm font-medium tabular-nums",
+                    c.subscription.isIncome && MONEY_IN_CLASS,
                     c.status === "SKIPPED" && "text-muted-foreground line-through",
                   )}
                 >
-                  {formatMoney(c.amountMinor, c.currency)}
+                  {chargeAmount(c.amountMinor, c.currency, c.subscription.isIncome)}
                 </span>
               </li>
             ))}

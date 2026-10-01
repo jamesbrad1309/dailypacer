@@ -1,9 +1,11 @@
 import { useQuery } from "@apollo/client/react";
 import { Link } from "@tanstack/react-router";
-import { ChartBar, ChevronLeft, ChevronRight, Table2, TriangleAlert } from "lucide-react";
+import { ChartBar, ChevronLeft, ChevronRight, Table2 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { moneyToneClass } from "#components/finance/Amount";
+import { CashFlowChart } from "#components/finance/reports/CashFlowChart";
+import { UnconvertedNote } from "#components/finance/reports/UnconvertedNote";
 import { Button } from "#components/ui/button";
 import { Card, CardContent } from "#components/ui/card";
 import { ACCOUNTS_QUERY, SPEND_BY_CATEGORY_QUERY } from "#graphql/finance";
@@ -155,6 +157,8 @@ export function SpendingView({ search, onSearchChange }: Props) {
           )}
         </>
       )}
+
+      <CashFlowChart month={month} onSelectMonth={(next) => onSearchChange({ month: next })} />
     </div>
   );
 }
@@ -415,17 +419,5 @@ function SpendTable({ report, currency, month, previous }: ChartProps) {
         </tfoot>
       </table>
     </div>
-  );
-}
-
-/** Spending in currencies with no exchange rate yet is left out of the totals: say so. */
-export function UnconvertedNote({ codes }: { codes: string[] }) {
-  const { t } = useTranslation();
-  if (codes.length === 0) return null;
-  return (
-    <p className="flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400">
-      <TriangleAlert className="size-3.5 shrink-0" aria-hidden />
-      {t("finance.currencies.notConverted", { codes: codes.join(", ") })}
-    </p>
   );
 }

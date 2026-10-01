@@ -72,7 +72,12 @@ export const TRANSACTIONS_REFETCH = [
   "QuickLogContext",
   "TodayLogs",
   "SpendByCategory",
+  "CashFlow",
   "Budget",
+  // A transaction can be a subscription charge: deleting or confirming it changes those views.
+  "SubscriptionCharges",
+  "PendingSubscriptionCharges",
+  "SubscriptionSummary",
 ];
 
 export const CREATE_ACCOUNT_MUTATION = gql`
@@ -165,6 +170,7 @@ const TRANSACTION_FIELDS = gql`
     note
     tags
     source
+    status
     isTransfer
     transferAccount {
       id
@@ -315,6 +321,21 @@ export const DISMISS_PRESET_SUGGESTION_MUTATION = gql`
 `;
 
 /** Read from the `monthly_totals` aggregate: a handful of rows per month. */
+export const CASH_FLOW_QUERY = gql`
+  query CashFlow($to: String!, $months: Int) {
+    cashFlow(to: $to, months: $months) {
+      currency
+      unconverted
+      months {
+        month
+        inMinor
+        outMinor
+        netMinor
+      }
+    }
+  }
+`;
+
 export const SPEND_BY_CATEGORY_QUERY = gql`
   ${CATEGORY_FIELDS}
   query SpendByCategory($month: String!, $accountId: ID) {

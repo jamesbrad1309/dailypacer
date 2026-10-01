@@ -2,7 +2,8 @@ import { useQuery } from "@apollo/client/react";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { UnconvertedNote } from "#components/finance/reports/SpendingView";
+import { MONEY_IN_CLASS } from "#components/finance/Amount";
+import { UnconvertedNote } from "#components/finance/reports/UnconvertedNote";
 import { ChargeCalendar } from "#components/finance/subscriptions/ChargeCalendar";
 import { PendingCharges } from "#components/finance/subscriptions/PendingCharges";
 import { ServiceLogo } from "#components/finance/subscriptions/ServiceLogo";
@@ -16,7 +17,7 @@ import {
   SUBSCRIPTION_SUMMARY_QUERY,
 } from "#graphql/subscriptions";
 import type { Subscription, SubscriptionCharge, SubscriptionSummary } from "#graphql/types";
-import { cadenceText } from "#lib/cadence";
+import { cadenceText, chargeAmount } from "#lib/cadence";
 import { addDays, currentMonth, formatDayHeading, formatShortDate, todayIsoDate } from "#lib/dates";
 import { formatMoney } from "#lib/money";
 import { cn } from "#lib/utils";
@@ -219,8 +220,13 @@ function UpcomingList() {
                       {t("finance.subscriptions.afterTrial")}
                     </Badge>
                   )}
-                  <span className="text-sm font-medium tabular-nums">
-                    {formatMoney(c.amountMinor, c.currency)}
+                  <span
+                    className={cn(
+                      "text-sm font-medium tabular-nums",
+                      c.subscription.isIncome && MONEY_IN_CLASS,
+                    )}
+                  >
+                    {chargeAmount(c.amountMinor, c.currency, c.subscription.isIncome)}
                   </span>
                 </li>
               ))}
@@ -253,6 +259,11 @@ function SubscriptionRow({ sub, onOpen }: { sub: Subscription; onOpen: () => voi
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2">
             <span className="truncate text-sm font-medium">{sub.name}</span>
+            {sub.autoLog && (
+              <Badge variant="outline" className="shrink-0">
+                {t("finance.subscriptions.autoLogs")}
+              </Badge>
+            )}
             {sub.status !== "ACTIVE" && (
               <Badge
                 variant={sub.status === "TRIAL" ? "secondary" : "outline"}
@@ -265,8 +276,15 @@ function SubscriptionRow({ sub, onOpen }: { sub: Subscription; onOpen: () => voi
             )}
           </span>
           <span className="block truncate text-xs text-muted-foreground">
-            {cadenceText(t, sub.amountMinor, sub.currency, sub.interval, sub.intervalCount)} ·{" "}
-            {sub.account.name}
+            {cadenceText(
+              t,
+              sub.amountMinor,
+              sub.currency,
+              sub.interval,
+              sub.intervalCount,
+              sub.isIncome,
+            )}{" "}
+            · {sub.account.name}
           </span>
         </span>
         <span className="shrink-0 text-right">

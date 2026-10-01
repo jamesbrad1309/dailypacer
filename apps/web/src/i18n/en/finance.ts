@@ -236,7 +236,7 @@ export const finance = {
     category: "Category",
     nothingToReview: "Nothing to review",
     nothingToReviewBody:
-      "Quick logs saved without a category, and subscription charges to confirm, land here.",
+      "Quick logs without a category, pending transactions and subscription charges to confirm land here.",
     noMatches: "No transactions match.",
     nothingIn: "Nothing logged in {{month}}.",
     logHint: "Press <kbd>n</kbd> or the ➕ button to log an expense.",
@@ -244,12 +244,18 @@ export const finance = {
     categorise: "Categorise…",
     categoryFor: "Category for {{title}}",
     deleted: "{{amount}} deleted",
+    pending: {
+      badge: "Pending",
+      confirm: "Confirm",
+      confirmed: "{{name}} confirmed",
+    },
     form: {
       addTitle: "Add transaction",
       editTitle: "Edit transaction",
-      lockedTransfer: "This is a transfer: only the payee, note and tags can change.",
+      lockedTransfer:
+        "This is a transfer: only the payee, note, tags and pending status can change.",
       lockedAdjustment:
-        "This is a balance adjustment from Update balance: only the payee, note and tags can change.",
+        "This is a balance adjustment from Update balance: only the payee, note, tags and pending status can change.",
       moneyInOrOut: "Money in or out",
       expense: "Expense",
       income: "Income",
@@ -261,11 +267,26 @@ export const finance = {
       note: "Note",
       tags: "Tags",
       tagsPlaceholder: "holiday-2026, work-expense",
+      pending: "Pending: hasn't gone through yet",
+      pendingHint: "It counts in balances now, and waits in To review until you confirm it.",
       enterAmount: "Enter an amount, like 12.50",
       chooseAccount: "Choose an account",
     },
   },
   spending: {
+    cashFlow: {
+      title: "Cash flow",
+      subtitle: "Money in vs money out, the 12 months to {{month}}",
+      in: "Money in",
+      out: "Money out",
+      net: "Net",
+      saved: "Saved {{amount}} over 12 months",
+      overspent: "Spent {{amount}} more than came in over 12 months",
+      average: "Average month: {{in}} in, {{out}} out",
+      empty: "Nothing logged in these 12 months yet.",
+      month: "Month",
+      screenReaderMonth: "{{month}}: {{in}} in, {{out}} out, net {{net}}",
+    },
     spentIn: "Spent in {{month}}",
     vs: "vs {{month}}",
     more: "↑ {{amount}} more",
@@ -462,6 +483,7 @@ export const finance = {
     },
     afterTrial: "First charge after trial",
     showEnded: "Show ended",
+    autoLogs: "Auto-logs",
     noUpcoming: "Nothing due in the next 60 days.",
     pending: {
       title: "Charges to confirm",
@@ -478,6 +500,7 @@ export const finance = {
       dayCharges_one: "{{count}} charge, {{amount}}",
       dayCharges_other: "{{count}} charges, {{amount}}",
       none: "No charges this month.",
+      loggedPending: "logged, pending",
       chargeStatus: {
         PENDING: "to confirm",
         CONFIRMED: "confirmed",
@@ -519,6 +542,11 @@ export const finance = {
       chooseAccount: "Choose the account it's charged to",
       enterDate: "Choose the next charge date",
       noAccounts: "Add an account first: subscriptions are charged to one.",
+      isIncome: "It's money in (e.g. salary)",
+      isIncomeHint: "Logged as income, and left out of what subscriptions cost.",
+      autoLog: "Log it automatically",
+      autoLogHint:
+        "Each charge is logged by itself on its date as Pending. Confirm it in To review once it has gone through.",
     },
     manage: {
       priceTitle: "Price",

@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
   ArrowLeftRight,
+  Check,
   ChevronLeft,
   ChevronRight,
   FileUp,
@@ -13,6 +14,7 @@ import { Trans, useTranslation } from "react-i18next";
 import { Amount } from "#components/finance/Amount";
 import { PendingCharges } from "#components/finance/subscriptions/PendingCharges";
 import { CsvImportDialog } from "#components/finance/transactions/CsvImportDialog";
+import { PendingBadge } from "#components/finance/transactions/PendingBadge";
 import { TransactionForm } from "#components/finance/transactions/TransactionForm";
 import { TransferDialog } from "#components/finance/transactions/TransferDialog";
 import { Button } from "#components/ui/button";
@@ -68,7 +70,7 @@ export const PAGE_SIZE = 50;
 
 /** The variables TRANSACTIONS_QUERY runs with; the route's loader uses the same ones. */
 export function transactionFilter(search: TransactionsSearch): TransactionFilter {
-  if (search.view === "review") return { uncategorisedOnly: true };
+  if (search.view === "review") return { toReviewOnly: true };
   const { from, to } = monthRange(search.month ?? currentMonth());
   return {
     from,
@@ -139,6 +141,24 @@ export function TransactionsView({ search, onSearchChange }: Props) {
     try {
       await updateTransaction({ variables: { id: tx.id, input: { categoryId } } });
       setRefocus({ index, doneId: tx.id });
+    } catch (err) {
+      toast(err instanceof Error ? err.message : t("common.couldntSave"));
+    }
+  }
+
+  /** A pending transaction has gone through: it leaves the inbox (unless it's also uncategorised). */
+  async function confirmPending(tx: Transaction) {
+    try {
+      await updateTransaction({ variables: { id: tx.id, input: { status: "CLEARED" } } });
+      toast(t("finance.transactions.pending.confirmed", { name: tx.payee ?? "" }).trim(), {
+        actions: [
+          {
+            label: t("common.undo"),
+            onClick: () =>
+              updateTransaction({ variables: { id: tx.id, input: { status: "PENDING" } } }),
+          },
+        ],
+      });
     } catch (err) {
       toast(err instanceof Error ? err.message : t("common.couldntSave"));
     }
@@ -352,6 +372,7 @@ export function TransactionsView({ search, onSearchChange }: Props) {
                       setEditing(tx);
                     }}
                     onCategorise={(categoryId) => categorise(tx, categoryId)}
+                    onConfirm={() => confirmPending(tx)}
                   />
                 ))}
               </ul>
@@ -397,12 +418,14 @@ function TransactionRow({
   review,
   onOpen,
   onCategorise,
+  onConfirm,
 }: {
   transaction: Transaction;
   categories: Category[];
   review: boolean;
   onOpen: () => void;
   onCategorise: (categoryId: string) => void;
+  onConfirm: () => void;
 }) {
   const { t } = useTranslation();
   const categoryName = useCategoryName();
@@ -418,7 +441,12 @@ function TransactionRow({
     ? [tx.note, t("finance.transfer.title"), tx.account.name, ...tags].filter(Boolean)
     : [
         tx.payee && tx.note,
-        !review && (tx.category ? categoryName(tx.category) : t("finance.toReview")),
+        // The inbox's own picker stands in for "To review"; a pending row shows its category.
+        review
+          ? tx.category && categoryName(tx.category)
+          : tx.category
+            ? categoryName(tx.category)
+            : t("finance.toReview"),
         tx.account.name,
         ...tags,
       ].filter(Boolean);
@@ -437,7 +465,10 @@ function TransactionRow({
           {tx.isTransfer ? <ArrowLeftRight className="size-3.5" /> : (tx.category?.icon ?? "•")}
         </span>
         <span className="min-w-0">
-          <span className="block truncate text-sm font-medium">{title}</span>
+          <span className="flex items-center gap-2">
+            <span className="truncate text-sm font-medium">{title}</span>
+            {tx.status === "PENDING" && <PendingBadge />}
+          </span>
           <span
             className={cn(
               "block truncate text-xs text-muted-foreground",
@@ -449,7 +480,13 @@ function TransactionRow({
         </span>
       </button>
 
-      {review && (
+      {review && tx.status === "PENDING" && (
+        <Button size="sm" variant="outline" className="h-8" onClick={onConfirm}>
+          <Check className="size-3.5" /> {t("finance.transactions.pending.confirm")}
+        </Button>
+      )}
+
+      {review && !tx.category && !tx.isTransfer && (
         <select
           aria-label={t("finance.transactions.categoryFor", { title })}
           data-categorise={tx.id}

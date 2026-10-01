@@ -217,6 +217,8 @@ export interface Category {
   key: string | null;
 }
 
+export type TransactionStatus = "CLEARED" | "PENDING";
+
 export interface Transaction {
   id: string;
   /** "YYYY-MM-DD" */
@@ -228,6 +230,8 @@ export interface Transaction {
   tags: string[];
   /** quick | form | import | recurring | adjustment */
   source: string;
+  /** PENDING: logged but not confirmed as gone through; waits in "To review". */
+  status: TransactionStatus;
   isTransfer: boolean;
   /** For a transfer: the other account. */
   transferAccount: Pick<Account, "id" | "name" | "currency"> | null;
@@ -244,6 +248,8 @@ export interface TransactionFilter {
   search?: string | null;
   includeTransfers?: boolean;
   uncategorisedOnly?: boolean;
+  /** The whole "To review" inbox: uncategorised or pending. */
+  toReviewOnly?: boolean;
 }
 
 export interface TransactionsData {
@@ -283,6 +289,21 @@ export interface CategorySpend {
   spentMinor: number;
   previousSpentMinor: number;
   transactionCount: number;
+}
+
+export interface CashFlowMonth {
+  /** YYYY-MM */
+  month: string;
+  inMinor: number;
+  outMinor: number;
+  netMinor: number;
+}
+
+export interface CashFlowReport {
+  currency: string;
+  unconverted: string[];
+  /** Oldest first. */
+  months: CashFlowMonth[];
 }
 
 export interface SpendReport {
@@ -407,6 +428,10 @@ export interface SubscriptionService {
 export interface Subscription {
   id: string;
   name: string;
+  /** Money in (a salary): positive amounts, left out of cost totals. */
+  isIncome: boolean;
+  /** Charges are logged by themselves as PENDING transactions. */
+  autoLog: boolean;
   serviceKey: string | null;
   domain: string | null;
   /** Our own /logos/<domain> URL; null without a website. */
@@ -440,8 +465,10 @@ export interface SubscriptionCharge {
   currency: string;
   status: ChargeStatus;
   transactionId: string | null;
+  /** The logged transaction is still PENDING. */
+  transactionPending: boolean;
   afterTrial: boolean;
-  subscription: Pick<Subscription, "id" | "name" | "logoUrl"> & {
+  subscription: Pick<Subscription, "id" | "name" | "logoUrl" | "isIncome"> & {
     account: Pick<Account, "id" | "name">;
   };
 }

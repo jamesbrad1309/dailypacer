@@ -12,7 +12,7 @@ import { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { MONEY_OUT_CLASS } from "#components/finance/Amount";
 import { BudgetDialog } from "#components/finance/budgets/BudgetDialog";
-import { UnconvertedNote } from "#components/finance/reports/SpendingView";
+import { UnconvertedNote } from "#components/finance/reports/UnconvertedNote";
 import { Button } from "#components/ui/button";
 import { Card } from "#components/ui/card";
 import { BUDGET_QUERY, CATEGORIES_QUERY } from "#graphql/finance";

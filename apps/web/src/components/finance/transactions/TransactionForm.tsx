@@ -63,6 +63,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: P
     payee: transaction?.payee ?? "",
     note: transaction?.note ?? "",
     tags: formatTags(transaction?.tags ?? []),
+    pending: transaction?.status === "PENDING",
   });
   const [draft, setDraft] = useState(initial);
   const [error, setError] = useState<string | null>(null);
@@ -99,6 +100,7 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: P
       payee: draft.payee.trim() || null,
       note: draft.note.trim() || null,
       tags: parseTags(draft.tags),
+      status: draft.pending ? "PENDING" : "CLEARED",
     };
     const input = locked
       ? words
@@ -250,6 +252,21 @@ export function TransactionForm({ open, onOpenChange, transaction, onDelete }: P
               />
             </Field>
           </div>
+
+          <label className="flex cursor-pointer items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={draft.pending}
+              onChange={(e) => set("pending", e.target.checked)}
+              className="mt-0.5 accent-primary"
+            />
+            <span>
+              {t("finance.transactions.form.pending")}
+              <span className="block text-xs text-muted-foreground">
+                {t("finance.transactions.form.pendingHint")}
+              </span>
+            </span>
+          </label>
 
           {error && (
             <p role="alert" className="text-sm text-destructive">

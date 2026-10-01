@@ -236,7 +236,7 @@ export const finance: typeof en = {
     category: "Danh mục",
     nothingToReview: "Không có gì cần xem lại",
     nothingToReviewBody:
-      "Các khoản ghi nhanh chưa có danh mục, và các khoản gói đăng ký cần xác nhận, sẽ nằm ở đây.",
+      "Các khoản ghi nhanh chưa có danh mục, giao dịch đang chờ và các khoản gói đăng ký cần xác nhận sẽ nằm ở đây.",
     noMatches: "Không có giao dịch phù hợp.",
     nothingIn: "Chưa ghi khoản nào trong {{month}}.",
     logHint: "Nhấn <kbd>n</kbd> hoặc nút ➕ để ghi một khoản chi.",
@@ -244,12 +244,18 @@ export const finance: typeof en = {
     categorise: "Phân loại…",
     categoryFor: "Danh mục cho {{title}}",
     deleted: "Đã xóa {{amount}}",
+    pending: {
+      badge: "Đang chờ",
+      confirm: "Xác nhận",
+      confirmed: "Đã xác nhận {{name}}",
+    },
     form: {
       addTitle: "Thêm giao dịch",
       editTitle: "Sửa giao dịch",
-      lockedTransfer: "Đây là một khoản chuyển tiền: chỉ có thể sửa người nhận, ghi chú và thẻ.",
+      lockedTransfer:
+        "Đây là một khoản chuyển tiền: chỉ có thể sửa người nhận, ghi chú, thẻ và trạng thái chờ.",
       lockedAdjustment:
-        "Đây là khoản điều chỉnh từ Cập nhật số dư: chỉ có thể sửa người nhận, ghi chú và thẻ.",
+        "Đây là khoản điều chỉnh từ Cập nhật số dư: chỉ có thể sửa người nhận, ghi chú, thẻ và trạng thái chờ.",
       moneyInOrOut: "Tiền vào hay ra",
       expense: "Khoản chi",
       income: "Khoản thu",
@@ -261,11 +267,26 @@ export const finance: typeof en = {
       note: "Ghi chú",
       tags: "Thẻ",
       tagsPlaceholder: "du-lich-2026, cong-tac",
+      pending: "Đang chờ: chưa thực sự được trừ/nhận",
+      pendingHint: "Vẫn được tính vào số dư, và nằm ở mục Cần xem lại cho đến khi bạn xác nhận.",
       enterAmount: "Nhập một số tiền, vd. 12.50",
       chooseAccount: "Chọn một tài khoản",
     },
   },
   spending: {
+    cashFlow: {
+      title: "Dòng tiền",
+      subtitle: "Tiền vào so với tiền ra, 12 tháng đến {{month}}",
+      in: "Tiền vào",
+      out: "Tiền ra",
+      net: "Chênh lệch",
+      saved: "Tiết kiệm được {{amount}} trong 12 tháng",
+      overspent: "Chi nhiều hơn thu {{amount}} trong 12 tháng",
+      average: "Trung bình mỗi tháng: vào {{in}}, ra {{out}}",
+      empty: "Chưa có gì được ghi trong 12 tháng này.",
+      month: "Tháng",
+      screenReaderMonth: "{{month}}: vào {{in}}, ra {{out}}, chênh lệch {{net}}",
+    },
     spentIn: "Đã chi trong {{month}}",
     vs: "so với {{month}}",
     more: "↑ nhiều hơn {{amount}}",
@@ -463,6 +484,7 @@ export const finance: typeof en = {
     },
     afterTrial: "Lần trừ tiền đầu sau dùng thử",
     showEnded: "Hiện gói đã kết thúc",
+    autoLogs: "Tự động ghi",
     noUpcoming: "Không có khoản nào đến hạn trong 60 ngày tới.",
     pending: {
       title: "Khoản cần xác nhận",
@@ -479,6 +501,7 @@ export const finance: typeof en = {
       dayCharges_one: "{{count}} khoản, {{amount}}",
       dayCharges_other: "{{count}} khoản, {{amount}}",
       none: "Không có khoản nào trong tháng này.",
+      loggedPending: "đã ghi, đang chờ",
       chargeStatus: {
         PENDING: "cần xác nhận",
         CONFIRMED: "đã xác nhận",
@@ -520,6 +543,11 @@ export const finance: typeof en = {
       chooseAccount: "Chọn tài khoản bị trừ tiền",
       enterDate: "Chọn ngày trừ tiền tới",
       noAccounts: "Hãy thêm một tài khoản trước: gói đăng ký được trừ từ một tài khoản.",
+      isIncome: "Đây là tiền vào (vd. lương)",
+      isIncomeHint: "Ghi là thu nhập, và không tính vào chi phí gói đăng ký.",
+      autoLog: "Tự động ghi",
+      autoLogHint:
+        "Mỗi lần đến hạn sẽ tự được ghi với trạng thái Đang chờ. Xác nhận trong mục Cần xem lại khi tiền đã thực sự được trừ/nhận.",
     },
     manage: {
       priceTitle: "Giá",

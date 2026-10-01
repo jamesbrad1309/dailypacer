@@ -182,7 +182,6 @@ function SubscriptionForm({
   const { data: accountsData } = useQuery<AccountsData>(ACCOUNTS_QUERY);
   const { data: categoriesData } = useQuery<{ categories: Category[] }>(CATEGORIES_QUERY);
   const accounts = accountsData?.accounts ?? [];
-  const categories = (categoriesData?.categories ?? []).filter((c) => c.kind === "expense");
   const custom = !subscription && !service;
 
   const [draft, setDraft] = useState(() => ({
@@ -198,7 +197,12 @@ function SubscriptionForm({
     // "" = let the API choose the service's usual category.
     categoryId: subscription?.category?.id ?? "",
     note: subscription?.note ?? "",
+    isIncome: subscription?.isIncome ?? false,
+    autoLog: subscription?.autoLog ?? false,
   }));
+  const categories = (categoriesData?.categories ?? []).filter(
+    (c) => c.kind === (draft.isIncome ? "income" : "expense"),
+  );
   const [error, setError] = useState<string | null>(null);
   const set = <K extends keyof typeof draft>(key: K, value: (typeof draft)[K]) =>
     setDraft((d) => ({ ...d, [key]: value }));
@@ -230,6 +234,8 @@ function SubscriptionForm({
       intervalCount: Math.min(52, Math.max(1, Number(draft.intervalCount) || 1)),
       trialEndsOn: draft.trial ? draft.trialEndsOn : null,
       note: draft.note.trim() || null,
+      isIncome: draft.isIncome,
+      autoLog: draft.autoLog,
       // Adding: leave it out for the service's usual category. Editing: "" clears it.
       ...(draft.categoryId || subscription ? { categoryId: draft.categoryId || null } : {}),
       ...(custom || subscription ? { domain: draft.domain.trim() || null } : {}),
@@ -357,6 +363,15 @@ function SubscriptionForm({
         </fieldset>
       </div>
 
+      {custom || subscription?.isIncome ? (
+        <Toggle
+          checked={draft.isIncome}
+          onChange={(isIncome) => setDraft((d) => ({ ...d, isIncome, categoryId: "" }))}
+          label={t("finance.subscriptions.dialog.isIncome")}
+          hint={t("finance.subscriptions.dialog.isIncomeHint")}
+        />
+      ) : null}
+
       <label className="flex cursor-pointer items-start gap-2 text-sm">
         <input
           type="checkbox"
@@ -433,6 +448,13 @@ function SubscriptionForm({
           />
         </Field>
       </div>
+
+      <Toggle
+        checked={draft.autoLog}
+        onChange={(autoLog) => set("autoLog", autoLog)}
+        label={t("finance.subscriptions.dialog.autoLog")}
+        hint={t("finance.subscriptions.dialog.autoLogHint")}
+      />
 
       {error && (
         <p role="alert" className="text-sm text-destructive">
@@ -653,6 +675,33 @@ function ManageSubscription({
         )}
       </div>
     </div>
+  );
+}
+
+function Toggle({
+  checked,
+  onChange,
+  label,
+  hint,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  label: string;
+  hint: string;
+}) {
+  return (
+    <label className="flex cursor-pointer items-start gap-2 text-sm">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="mt-0.5 accent-primary"
+      />
+      <span>
+        {label}
+        <span className="block text-xs text-muted-foreground">{hint}</span>
+      </span>
+    </label>
   );
 }
 
