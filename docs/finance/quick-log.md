@@ -103,8 +103,12 @@ The fastest flow is useless if opening it takes 3 taps:
 - **Deep link** `/log?amount=3.40&category=coffee` works with phone home-screen
   shortcuts and iOS Shortcuts/Siri ("log coffee three forty"). This needs
   the router change mentioned in [frontend.md](frontend.md).
-- **Installable PWA** with a manifest `shortcuts` entry, so "Log expense"
-  appears when you long-press the app icon (Android and desktop Chrome).
+- **Installable app** (built): `apps/web/public/manifest.webmanifest` has
+  `shortcuts` for "Log an expense" (`/log`) and "Charges to confirm", shown
+  when you long-press the installed app's icon on Android or right-click it
+  on desktop Chrome/Edge. iOS doesn't support manifest shortcuts; use the
+  deep link from an iOS Shortcut instead. Icons are `icon.svg` rendered to
+  192/512 px PNGs.
 
 ## Evening catch-up mode
 

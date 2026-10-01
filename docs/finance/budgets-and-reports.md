@@ -133,21 +133,12 @@ months). Don't store a running balance.
 | Query               | Implementation                                                                 |
 | ------------------- | ------------------------------------------------------------------------------ |
 | `spendByCategory`   | **Built.** `ReportsService.spendByCategory` reads `monthly_totals` for the month and the one before; refunds reduce a category's spend (`outflow − inflow`), income categories go to `incomeMinor` |
-| `cashFlow(months)`  | Sum `inflowMinor` / `outflowMinor` per month from `monthly_totals` (no `date_trunc` over transactions needed) |
+| `cashFlow(to, months)` | **Built.** `ReportsService.cashFlow` reads `monthly_totals` for the range: income categories are money in, everything else is money out net of refunds (the same figure as `spendByCategory.spentMinor`), each month converted at its own rate. Empty months are included. Shown on Spending as paired columns with a table view |
 | Month-over-month    | Built into `spendByCategory` (`previousSpentMinor` per category)               |
 | `netWorthMinor`     | Sum of the balance loader over all non-archived accounts. Liabilities are already negative |
 
-```ts
-// reports.service.ts: cashFlow via $queryRaw (sketch)
-const rows = await this.prisma.$queryRaw<{ month: Date; income: bigint; expense: bigint }[]>`
-  SELECT date_trunc('month', date) AS month,
-         SUM(CASE WHEN "amountMinor" > 0 THEN "amountMinor" ELSE 0 END) AS income,
-         SUM(CASE WHEN "amountMinor" < 0 THEN -"amountMinor" ELSE 0 END) AS expense
-  FROM transactions
-  WHERE "transferId" IS NULL AND date >= ${since}
-  GROUP BY 1 ORDER BY 1`;
-```
-
-Postgres `SUM` over `integer` returns `bigint`, which Prisma gives back as
-a JS `BigInt`. Convert it with `Number(...)` before returning it, because
-GraphQL `Int` can't serialise `BigInt`.
+Cash flow doesn't scan transactions: the sketch that grouped `transactions`
+by `date_trunc('month')` was replaced by the `monthly_totals` rows that are
+already there, which also keeps transfers and balance adjustments out and
+makes money out agree with the Spending page. Pending transactions count,
+as they do in balances.

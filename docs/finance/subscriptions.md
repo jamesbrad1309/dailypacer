@@ -53,6 +53,31 @@ inbox count includes them) and at the top of the Subscriptions page.
 | Totals | Per month and per year at current prices, in the main currency (`subscriptionSummary`), plus what's still to pay over the next 30 days |
 | Calendar | A month grid of logos per day; a pending charge has an amber ring, a skipped one is greyed out |
 
+## Auto-log and pending transactions
+
+Some charges don't need asking about: rent, a salary. Turn on **Log it
+automatically** and each charge is logged by itself on its date as a
+**Pending** transaction, with no prompt. Confirm it in To review once it has
+actually gone through (editing the amount if it differed), or delete it if it
+didn't happen.
+
+- **`Transaction.status`** is `CLEARED` (default) or `PENDING`, and any
+  transaction can be marked pending from the full form. A pending one counts
+  in balances, budgets and reports like any other (it's money you expect to
+  move), shows a Pending badge, and waits in **To review** until confirmed
+  (`updateTransaction(status: CLEARED)`, with Undo).
+- **Catch-up** (`SubscriptionsService.catchUp`) runs before every finance
+  request through `CatchUpInterceptor`, using the client's `?today=` when
+  there is one. It's lazy like the rest of recurring generation: there's no
+  cron job. Each subscription is caught up under a row lock (`SELECT … FOR
+  UPDATE`) and `autoLoggedThrough` moves to today in the same database
+  transaction, so ten concurrent requests log each charge once (checked).
+- **Deleting an auto-logged transaction means it didn't happen**: the date is
+  covered by `autoLoggedThrough`, so it isn't logged again and shows as
+  skipped.
+- **Money in** (`isIncome`, e.g. a salary): amounts are positive, the default
+  category is Salary, and it's left out of the cost totals.
+
 ## The service list and logos
 
 - **Catalog**: `finance/subscription-catalog.ts`, about 80 services with a
@@ -95,10 +120,8 @@ REST action; `toReviewCount(today)`. `SubscriptionCharge.id` is
 
 ## Not built yet
 
-- **Auto-posting** (rent, salary): a rule that logs itself without asking,
-  as designed in [recurring-and-import.md](recurring-and-import.md#recurring-rules).
-  It could be a flag on `Subscription`.
-- **Matching an imported CSV row** to a pending charge. For now, Skip a
-  charge the import already logged.
+- **Matching an imported CSV row** to a pending charge or a pending
+  auto-logged transaction. For now, Skip the charge (or delete the pending
+  transaction) when the import already logged it.
 - **Notifications** before a charge or a trial ends (notifications are out
   of scope in v1).

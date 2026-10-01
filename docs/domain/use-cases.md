@@ -28,7 +28,7 @@ improves UX · `2` edge case / power-user · `1` speculative.
 | Insights | 0 | 4 | Best / worst weekday per habit (3) |
 | Journaling & mood | 7 | 4 | Which events drive which feelings (3) |
 | Cross-module (habits × finance) | 0 | 5 | "No-spend day" habit auto-checked from transactions (3) |
-| **Finance** (separate doc) | 46 | 13 | Cash flow, savings goals, auto-posting recurring rules (3 partly built), see [finance/use-cases.md](../finance/use-cases.md) |
+| **Finance** (separate doc) | 50 | 10 | Savings goals, custom categories, payee rules (1 partly built), see [finance/use-cases.md](../finance/use-cases.md) |
 
 ## Use cases
 

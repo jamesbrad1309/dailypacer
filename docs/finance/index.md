@@ -45,7 +45,7 @@ on the existing stack without new infrastructure:
 | 2b ✅ | Spend by category this month                                 | "Where did my money go?"          |
 | 3 ✅  | `Budget` + budget-vs-actual view                             | Spending limits                   |
 | 4 ✅  | Transfers (pay off, settle up) and CSV import with dedupe    | Real bank data in minutes         |
-| 5 🟡  | Subscriptions ✅; auto-posting rules, `SavingsGoal`          | Bills and goals                   |
+| 5 🟡  | Subscriptions, auto-log, pending transactions, cash flow ✅; `SavingsGoal` | Bills and goals |
 | 6     | Habits integration                                           | Features that span both modules   |
 
 ## What's built
@@ -192,6 +192,14 @@ and `LogosService` with the pure, tested `subscription-schedule.util.ts`;
 BFF `graphql/finance/subscriptions.*` and the `/logos/:domain` route; web
 `components/finance/subscriptions/`. Charges due are confirmed from To
 review, which now counts them too.
+
+**Also built:** auto-log subscriptions (rent, salary) and pending
+transactions (`Transaction.status`, migration
+`add_transaction_status_and_auto_log`), see
+[subscriptions.md](subscriptions.md#auto-log-and-pending-transactions);
+cash flow on Spending (`cashFlow`, see
+[budgets-and-reports.md](budgets-and-reports.md#reports)); and an app
+manifest with a "Log an expense" shortcut, so the app can be installed.
 
 ## Scope decisions
 
