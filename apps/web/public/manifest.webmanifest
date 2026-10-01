@@ -1,0 +1,33 @@
+{
+  "name": "LifeOS",
+  "short_name": "LifeOS",
+  "description": "Habits, journal and money in one place.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#1a1a1a",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Log an expense",
+      "short_name": "Log",
+      "description": "Open quick log: amount, then one tap on a category.",
+      "url": "/log",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Charges to confirm",
+      "short_name": "To review",
+      "description": "Subscription charges and uncategorised logs waiting for you.",
+      "url": "/finance/transactions?view=review",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}
