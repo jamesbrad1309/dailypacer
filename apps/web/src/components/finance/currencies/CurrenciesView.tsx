@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@apollo/client/react";
 import { ExternalLink, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ListSkeleton } from "#components/layout/Skeletons";
 import { Button } from "#components/ui/button";
 import { Card, CardContent } from "#components/ui/card";
 import { Input } from "#components/ui/input";
@@ -49,7 +50,7 @@ export function CurrenciesView() {
   const [toAdd, setToAdd] = useState("");
 
   if (error) return <p className="text-destructive">{error.message}</p>;
-  if (!data) return null;
+  if (!data) return <ListSkeleton />;
 
   const { currencies, rates } = data.currencySettings;
   const main = currencies.find((c) => c.isMain)?.code ?? "GBP";

@@ -2,6 +2,7 @@ import { useQuery } from "@apollo/client/react";
 import { CheckCircle2, Flame, type LucideIcon, Medal, Star, Target } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { StatTilesSkeleton } from "#components/layout/Skeletons";
 import { Card, CardContent } from "#components/ui/card";
 import { Progress } from "#components/ui/progress";
 import { DASHBOARD_STATS_QUERY, HABITS_QUERY } from "#graphql/habits";
@@ -41,6 +42,7 @@ export function StatTiles() {
   const { data: statsData } = useQuery<DashboardStatsData>(DASHBOARD_STATS_QUERY);
   const { data: habitsData } = useQuery<HabitsData>(HABITS_QUERY);
   const stats = statsData?.dashboardStats;
+  if (!stats) return <StatTilesSkeleton />;
 
   const today = new Date();
   const due = (habitsData?.habits ?? []).filter((h) => !h.paused && isDueOn(h.schedule, today));

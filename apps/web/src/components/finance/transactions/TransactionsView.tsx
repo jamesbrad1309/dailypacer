@@ -17,6 +17,7 @@ import { CsvImportDialog } from "#components/finance/transactions/CsvImportDialo
 import { PendingBadge } from "#components/finance/transactions/PendingBadge";
 import { TransactionForm } from "#components/finance/transactions/TransactionForm";
 import { TransferDialog } from "#components/finance/transactions/TransferDialog";
+import { ListSkeleton } from "#components/layout/Skeletons";
 import { Button } from "#components/ui/button";
 import { Card } from "#components/ui/card";
 import { Input } from "#components/ui/input";
@@ -312,6 +313,8 @@ export function TransactionsView({ search, onSearchChange }: Props) {
 
       {/* The inbox also holds subscription charges waiting to be confirmed. */}
       {review && <PendingCharges />}
+
+      {loading && items.length === 0 && <ListSkeleton />}
 
       {!loading && items.length === 0 && !(review && toReview > 0) && (
         <div className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">

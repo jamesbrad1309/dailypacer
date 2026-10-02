@@ -4,6 +4,7 @@ import { Trans, useTranslation } from "react-i18next";
 import { type ComposerHandle, JournalComposer } from "#components/journal/JournalComposer";
 import { JournalEntryItem } from "#components/journal/JournalEntryItem";
 import { WeekStrip } from "#components/journal/WeekStrip";
+import { JournalEntriesSkeleton } from "#components/layout/Skeletons";
 import { Button } from "#components/ui/button";
 import { Card, CardContent } from "#components/ui/card";
 import {
@@ -130,7 +131,7 @@ export function JournalView({ date, onDateChange }: Props) {
           </CardContent>
         </Card>
 
-        {loading && !data && <p className="text-muted-foreground">{t("common.loading")}</p>}
+        {loading && !data && <JournalEntriesSkeleton />}
         {error && <p className="text-destructive">{error.message}</p>}
 
         {!loading && entries.length === 0 && (

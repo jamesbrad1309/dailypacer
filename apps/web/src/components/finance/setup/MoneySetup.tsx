@@ -10,6 +10,7 @@ import {
   TransferDialog,
   type TransferPreset,
 } from "#components/finance/transactions/TransferDialog";
+import { ListSkeleton } from "#components/layout/Skeletons";
 import { Button } from "#components/ui/button";
 import { Card, CardContent } from "#components/ui/card";
 import {
@@ -60,7 +61,7 @@ export function MoneySetup() {
   }
 
   if (error) return <p className="text-destructive">{error.message}</p>;
-  if (!data) return null;
+  if (!data) return <ListSkeleton />;
 
   const { accounts, archivedAccounts, netWorth } = data;
 

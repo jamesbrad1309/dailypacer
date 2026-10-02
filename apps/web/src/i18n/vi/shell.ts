@@ -6,7 +6,9 @@ export const shell: typeof en = {
     groups: { habits: "Thói quen", mind: "Tâm trí", money: "Tài chính", comingSoon: "Sắp ra mắt" },
     dashboard: "Tổng quan",
     today: "Hôm nay",
+    history: "Lịch sử",
     journal: "Nhật ký",
+    journalCalendar: "Lịch nhật ký",
     accounts: "Tài khoản",
     transactions: "Giao dịch",
     spending: "Chi tiêu",
@@ -18,11 +20,17 @@ export const shell: typeof en = {
     mainLabel: "Chính",
   },
   pages: {
+    habitDetail: { title: "Thói quen", subtitle: "Mọi lần đánh dấu, theo từng ngày." },
     dashboard: { title: "Tổng quan", subtitle: "Giữ vững chuỗi ngày của bạn." },
     today: { title: "Hôm nay", subtitle: "Việc cần làm, theo từng giờ." },
+    history: { title: "Lịch sử", subtitle: "30 ngày qua, theo từng thói quen." },
     journal: {
       title: "Nhật ký",
       subtitle: "Bạn đã làm gì, cảm thấy ra sao, và điều gì đã xảy ra.",
+    },
+    journalCalendar: {
+      title: "Lịch nhật ký",
+      subtitle: "Nhìn lại cả tháng, và tìm những ngày bạn chưa viết.",
     },
     accounts: { title: "Tài khoản", subtitle: "Tiền của bạn ở đâu, và bạn đang nợ gì." },
     transactions: {
@@ -68,8 +76,13 @@ export const shell: typeof en = {
       "Bậc thầy thói quen",
     ],
   },
+  crash: {
+    title: "Đã xảy ra lỗi",
+    body: "LifeOS gặp lỗi không mong muốn. Dữ liệu của bạn vẫn an toàn: hãy tải lại trang để tiếp tục.",
+    details: "Chi tiết lỗi",
+    reload: "Tải lại",
+  },
   route: {
-    loading: "Đang tải…",
     error: "Đã xảy ra lỗi khi tải trang này.",
     tryAgain: "Thử lại",
     notFound: "Không có trang nào ở đây.",

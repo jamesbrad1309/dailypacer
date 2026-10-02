@@ -2,6 +2,7 @@ import { ApolloProvider } from "@apollo/client/react";
 import { RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { AppErrorBoundary } from "#components/layout/AppErrorBoundary";
 import "./index.css";
 // Before anything renders: sets the language (saved, else the browser's).
 import "#i18n/i18n";
@@ -16,8 +17,10 @@ if (!rootElement) throw new Error("#root element not found");
 
 createRoot(rootElement).render(
   <StrictMode>
-    <ApolloProvider client={apolloClient}>
-      <RouterProvider router={router} />
-    </ApolloProvider>
+    <AppErrorBoundary>
+      <ApolloProvider client={apolloClient}>
+        <RouterProvider router={router} />
+      </ApolloProvider>
+    </AppErrorBoundary>
   </StrictMode>,
 );

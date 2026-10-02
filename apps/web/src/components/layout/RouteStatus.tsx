@@ -1,18 +1,6 @@
 import { type ErrorComponentProps, Link, useRouter } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "#components/ui/button";
-
-/** Shown in the content area while a slow route loader is still running. */
-export function RoutePending() {
-  const { t } = useTranslation();
-  return (
-    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-      <Loader2 className="size-4 animate-spin" />
-      {t("shell.route.loading")}
-    </div>
-  );
-}
 
 /** A route's loader or component threw: keep the shell, offer a retry. */
 export function RouteError({ error, reset }: ErrorComponentProps) {

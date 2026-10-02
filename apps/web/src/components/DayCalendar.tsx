@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from "@apollo/client/react";
 import { useTranslation } from "react-i18next";
+import { DayCalendarSkeleton } from "#components/layout/Skeletons";
 import { Card, CardContent, CardHeader, CardTitle } from "#components/ui/card";
 import { Checkbox } from "#components/ui/checkbox";
 import { Progress } from "#components/ui/progress";
@@ -109,7 +110,7 @@ export function DayCalendar() {
   const { t } = useTranslation();
   const { data, loading, error } = useQuery<HabitsData>(HABITS_QUERY);
 
-  if (loading) return <p className="text-muted-foreground">{t("common.loading")}</p>;
+  if (loading) return <DayCalendarSkeleton />;
   if (error) return <p className="text-destructive">{error.message}</p>;
 
   const today = new Date();

@@ -1,6 +1,7 @@
 import type { ApolloClient } from "@apollo/client";
 import { createRouter } from "@tanstack/react-router";
-import { RouteError, RoutePending } from "#components/layout/RouteStatus";
+import { RouteError } from "#components/layout/RouteStatus";
+import { PageSkeleton } from "#components/layout/Skeletons";
 import type { shell } from "#i18n/en/shell";
 import { apolloClient } from "#lib/apollo-client";
 import { routeTree } from "./routeTree.gen";
@@ -19,7 +20,9 @@ export const router = createRouter({
   // Apollo owns caching and invalidation (refetchQueries after mutations);
   // the router shouldn't keep its own copy of loader results on top.
   defaultPreloadStaleTime: 0,
-  defaultPendingComponent: RoutePending,
+  // A page-shaped placeholder while a slow loader runs; routes with a
+  // distinctive layout set their own `pendingComponent`.
+  defaultPendingComponent: PageSkeleton,
   defaultErrorComponent: RouteError,
   // Pages scroll inside the shell's <main id="main">, not the window: new
   // pages start at its top, back/forward restores where you were.

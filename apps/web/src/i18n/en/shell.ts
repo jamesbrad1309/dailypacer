@@ -5,7 +5,9 @@ export const shell = {
     groups: { habits: "Habits", mind: "Mind", money: "Money", comingSoon: "Coming soon" },
     dashboard: "Dashboard",
     today: "Today",
+    history: "History",
     journal: "Journal",
+    journalCalendar: "Journal calendar",
     accounts: "Accounts",
     transactions: "Transactions",
     spending: "Spending",
@@ -17,9 +19,15 @@ export const shell = {
     mainLabel: "Main",
   },
   pages: {
+    habitDetail: { title: "Habit", subtitle: "Every check-in, day by day." },
     dashboard: { title: "Dashboard", subtitle: "Keep your streaks alive." },
     today: { title: "Today", subtitle: "What's due, hour by hour." },
+    history: { title: "History", subtitle: "The last 30 days, habit by habit." },
     journal: { title: "Journal", subtitle: "What you did, felt, and what happened." },
+    journalCalendar: {
+      title: "Journal calendar",
+      subtitle: "Look back over the month, and spot the days you skipped.",
+    },
     accounts: { title: "Accounts", subtitle: "Where your money lives, and what you owe." },
     transactions: {
       title: "Transactions",
@@ -58,8 +66,13 @@ export const shell = {
       "Habit Master",
     ],
   },
+  crash: {
+    title: "Something went wrong",
+    body: "LifeOS hit an unexpected error. Your data is safe: reload to carry on.",
+    details: "Error details",
+    reload: "Reload",
+  },
   route: {
-    loading: "Loading…",
     error: "Something went wrong loading this page.",
     tryAgain: "Try again",
     notFound: "There's no page here.",

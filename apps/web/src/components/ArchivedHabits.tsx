@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from "@apollo/client/react";
 import { ChevronDown, RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { ListSkeleton } from "#components/layout/Skeletons";
 import { Button } from "#components/ui/button";
 import {
   ARCHIVED_HABITS_QUERY,
@@ -47,7 +48,7 @@ export function ArchivedHabits() {
 
       {open &&
         (loading ? (
-          <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+          <ListSkeleton rows={2} />
         ) : error ? (
           <p className="text-sm text-destructive">{error.message}</p>
         ) : !habits.length ? (
