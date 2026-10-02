@@ -1,0 +1,113 @@
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+"""A list of tasks with a key prefix: "Grocery list" / GRO → GRO-1, GRO-2…"""
+type TodoList {
+  id: ID!
+  name: String!
+  """2–6 uppercase letters/digits. Changing it re-keys every task; numbers stay."""
+  prefix: String!
+  """The number the next task added to (or moved into) this list gets."""
+  nextNumber: Int!
+  """The Inbox catches tasks added without a list and can't be deleted."""
+  isInbox: Boolean!
+  position: Float!
+  openCount: Int!
+  doneCount: Int!
+  createdAt: String!
+}
+
+"""A trimmed TodoList, embedded in each task."""
+type TaskList {
+  id: ID!
+  name: String!
+  prefix: String!
+  isInbox: Boolean!
+}
+
+type Task {
+  id: ID!
+  """"<list prefix>-<number>", e.g. GRO-12."""
+  key: String!
+  number: Int!
+  listId: ID!
+  list: TaskList!
+  title: String!
+  notes: String
+  status: TaskStatus!
+  position: Float!
+  """YYYY-MM-DD it's planned for (any list), or null."""
+  plannedFor: String
+  completedAt: String
+  createdAt: String!
+}
+
+type TodayTasks {
+  """Planned for today, from every list."""
+  today: [Task!]!
+  """Planned for an earlier day and still not done."""
+  earlier: [Task!]!
+}
+
+type ListBoard {
+  list: TodoList!
+  """Every open task, and the most recently completed `doneLimit` done ones."""
+  tasks: [Task!]!
+  doneTotal: Int!
+}
+
+input CreateTodoListInput {
+  name: String!
+  """Suggested from the name when left out."""
+  prefix: String
+}
+
+input UpdateTodoListInput {
+  name: String
+  prefix: String
+  position: Float
+}
+
+input CreateTaskInput {
+  title: String!
+  notes: String
+  """The Inbox when left out."""
+  listId: ID
+  plannedFor: String
+  status: TaskStatus
+}
+
+"""Only the fields sent change; null clears notes or plannedFor."""
+input UpdateTaskInput {
+  title: String
+  notes: String
+  plannedFor: String
+  status: TaskStatus
+  position: Float
+  """Moving lists gives the task the new list's next number."""
+  listId: ID
+}
+
+extend type Query {
+  todoLists: [TodoList!]!
+  """A suggested free prefix for a list name."""
+  suggestListPrefix(name: String!): String!
+  listBoard(listId: ID!, doneLimit: Int = 50): ListBoard!
+  """`today` is the user's local day."""
+  todayTasks(today: String!): TodayTasks!
+  taskByKey(key: String!): Task!
+}
+
+extend type Mutation {
+  createTodoList(input: CreateTodoListInput!): TodoList!
+  updateTodoList(id: ID!, input: UpdateTodoListInput!): TodoList!
+  """Deletes the list and its tasks. Returns its id."""
+  deleteTodoList(id: ID!): ID!
+  createTask(input: CreateTaskInput!): Task!
+  updateTask(id: ID!, input: UpdateTaskInput!): Task!
+  """Returns the deleted task's id."""
+  deleteTask(id: ID!): ID!
+}

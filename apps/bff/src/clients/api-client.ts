@@ -99,6 +99,10 @@ function toGraphQLError(status: number, body: ApiErrorBody): GraphQLError {
   if (status === 404) {
     return new GraphQLError(message ?? "Not found", { extensions: { code: "NOT_FOUND" } });
   }
+  // A clash the user can fix, such as a list prefix that's already taken.
+  if (status === 409) {
+    return new GraphQLError(message ?? "Conflict", { extensions: { code: "CONFLICT" } });
+  }
   // 5xx and anything unexpected: don't pass internal API messages to the client.
   return new GraphQLError("Upstream API error", {
     extensions: { code: "UPSTREAM_ERROR", status },
