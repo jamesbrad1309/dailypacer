@@ -53,6 +53,15 @@ export class JournalController {
     return this.journalService.summarize(assertIsoDate("from", from), assertIsoDate("to", to));
   }
 
+  /**
+   * `GET /journal-entries/first-date` — `{ date }` of the earliest entry (null
+   * when there are none), so the calendar doesn't call days before it "missed".
+   */
+  @Get("first-date")
+  async firstDate(): Promise<{ date: string | null }> {
+    return { date: await this.journalService.firstDate() };
+  }
+
   @Post()
   async create(@Body(new ZodValidationPipe(journalEntrySchema)) input: JournalEntryInput) {
     return toEntryDto(await this.journalService.create(input));

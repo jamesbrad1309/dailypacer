@@ -10,6 +10,10 @@ datasource db {
 model Habit {
   id          String    @id @default(uuid())
   name        String
+  /// Free-text "why / how" shown under the name on the dashboard card.
+  description String?
+  /// Lowercased, de-duplicated labels ("health", "morning") for filtering.
+  tags        String[]  @default([])
   icon        String?
   color       String?
   unit        String?

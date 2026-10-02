@@ -24,6 +24,8 @@ export interface JournalDaySummary {
   eventCount: number;
   /** Emotion words logged that day, in time order — the frontend maps them to emoji/valence. */
   emotions: string[];
+  /** The same FEELING entries with their 1–5 intensity (null if unset), for the mood score. */
+  feelings: { emotion: string; intensity: number | null }[];
 }
 
 /** "Standup ran late #work #Team" → ["work", "team"]. */
@@ -44,6 +46,15 @@ export class JournalService {
     });
   }
 
+  /** "YYYY-MM-DD" of the earliest entry, or null before anything is written. */
+  async firstDate(): Promise<string | null> {
+    const first = await this.prisma.journalEntry.findFirst({
+      select: { date: true },
+      orderBy: { date: "asc" },
+    });
+    return first ? first.date.toISOString().slice(0, 10) : null;
+  }
+
   async summarize(from: string, to: string): Promise<JournalDaySummary[]> {
     const start = new Date(from);
     const end = new Date(to);
@@ -54,7 +65,7 @@ export class JournalService {
 
     const entries = await this.prisma.journalEntry.findMany({
       where: { date: { gte: start, lte: end } },
-      select: { date: true, kind: true, emotion: true },
+      select: { date: true, kind: true, emotion: true, intensity: true },
       orderBy: [{ date: "asc" }, { time: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }],
     });
 
@@ -63,14 +74,17 @@ export class JournalService {
       const date = entry.date.toISOString().slice(0, 10);
       let day = byDate.get(date);
       if (!day) {
-        day = { date, actionCount: 0, feelingCount: 0, eventCount: 0, emotions: [] };
+        day = { date, actionCount: 0, feelingCount: 0, eventCount: 0, emotions: [], feelings: [] };
         byDate.set(date, day);
       }
       if (entry.kind === "ACTION") day.actionCount++;
       if (entry.kind === "EVENT") day.eventCount++;
       if (entry.kind === "FEELING") {
         day.feelingCount++;
-        if (entry.emotion) day.emotions.push(entry.emotion);
+        if (entry.emotion) {
+          day.emotions.push(entry.emotion);
+          day.feelings.push({ emotion: entry.emotion, intensity: entry.intensity });
+        }
       }
     }
     return [...byDate.values()];

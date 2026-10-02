@@ -11,8 +11,16 @@ export const startTimeSchema = z
   .string()
   .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "startTime must be HH:mm (24h)");
 
+/** Lowercased and de-duplicated, so "Health" and "health" are one tag. */
+export const habitTagsSchema = z
+  .array(z.string().trim().toLowerCase().min(1).max(50))
+  .max(20)
+  .transform((tags) => [...new Set(tags)]);
+
 export const createHabitSchema = z.object({
   name: z.string().min(1).max(100),
+  description: z.string().trim().max(500).optional(),
+  tags: habitTagsSchema.optional(),
   icon: z.string().max(50).optional(),
   color: z.string().max(20).optional(),
   unit: z.string().max(50).optional(),
