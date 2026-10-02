@@ -1,6 +1,9 @@
 type Habit {
   id: ID!
   name: String!
+  description: String
+  """Lowercased labels for grouping and filtering habits."""
+  tags: [String!]!
   icon: String
   color: String
   unit: String
@@ -39,6 +42,8 @@ type HeatmapDay {
 
 input CreateHabitInput {
   name: String!
+  description: String
+  tags: [String!]
   icon: String
   color: String
   unit: String
@@ -50,6 +55,8 @@ input CreateHabitInput {
 
 input UpdateHabitInput {
   name: String
+  description: String
+  tags: [String!]
   icon: String
   color: String
   unit: String

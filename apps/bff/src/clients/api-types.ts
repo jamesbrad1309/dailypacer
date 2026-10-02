@@ -8,6 +8,8 @@
 export interface ApiHabit {
   id: string;
   name: string;
+  description: string | null;
+  tags: string[];
   icon: string | null;
   color: string | null;
   unit: string | null;
@@ -81,6 +83,7 @@ export interface ApiJournalDaySummary {
   feelingCount: number;
   eventCount: number;
   emotions: string[];
+  feelings: { emotion: string; intensity: number | null }[];
 }
 
 export type ApiAccountType =

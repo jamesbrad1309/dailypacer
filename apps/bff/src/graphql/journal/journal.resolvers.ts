@@ -11,6 +11,8 @@ export default {
       ctx.api.get<ApiJournalDaySummary[]>(
         `/journal-entries/days?from=${encodeURIComponent(args.from)}&to=${encodeURIComponent(args.to)}`,
       ),
+    journalFirstDate: async (_: unknown, __: unknown, ctx: GraphQLContext) =>
+      (await ctx.api.get<{ date: string | null }>("/journal-entries/first-date")).date,
   },
   Mutation: {
     createJournalEntry: (_: unknown, args: { input: unknown }, ctx: GraphQLContext) =>

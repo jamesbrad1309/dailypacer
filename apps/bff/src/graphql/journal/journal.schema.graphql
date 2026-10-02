@@ -52,6 +52,14 @@ type JournalDay {
   eventCount: Int!
   """Emotions logged that day, in time order."""
   emotions: [String!]!
+  """The same feelings with their intensity, for the day's mood score."""
+  feelings: [JournalDayFeeling!]!
+}
+
+type JournalDayFeeling {
+  emotion: String!
+  """1 (faint) to 5 (overwhelming), or null if not given."""
+  intensity: Int
 }
 
 """
@@ -92,6 +100,8 @@ extend type Query {
   journalEntries(date: String!): [JournalEntry!]!
   """At most 62 days per call."""
   journalDays(from: String!, to: String!): [JournalDay!]!
+  """YYYY-MM-DD of the earliest journal entry; null before anything is written."""
+  journalFirstDate: String
 }
 
 extend type Mutation {
