@@ -13,6 +13,10 @@ export default defineConfig({
     tailwindcss(),
   ],
   server: {
+    // IPv4 loopback: the default ("localhost") binds only [::1] on recent
+    // Node, so http://127.0.0.1:5173 was refused. Browsers still reach
+    // http://localhost:5173 (they fall back to IPv4), and it stays off the LAN.
+    host: "127.0.0.1",
     port: 5173,
     strictPort: true,
     proxy: {

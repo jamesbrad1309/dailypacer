@@ -36,8 +36,20 @@ When it's running:
 | REST API      | http://localhost:3000 (internal; the BFF calls it) |
 | Postgres      | `localhost:5433` (lifeos/lifeos) |
 
-In development, Vite proxies `/graphql` to the BFF. To run the dev server
-against the Docker stack instead: `BFF_URL=http://localhost:8080 pnpm dev:web`.
+In development, Vite proxies `/graphql` to the BFF.
+
+### Backend in Docker, frontend with Vite
+
+```bash
+./start.sh        # Ctrl+C stops the frontend; the backend keeps running
+./start.sh stop   # stop the backend containers
+```
+
+Builds and starts Postgres, the API and the BFF in Docker (the API applies
+migrations on start), waits until they're healthy, then runs the Vite dev
+server at http://localhost:5173 with live reload. The BFF container is
+published on `127.0.0.1:4000` for Vite's proxy, so don't run `pnpm dev:bff`
+at the same time.
 
 ### Run everything in Docker
 

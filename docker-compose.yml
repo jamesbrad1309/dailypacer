@@ -1,9 +1,11 @@
 # Request path:  browser → gateway → bff → api → postgres
-#                                  ↘ web (static SPA)
+#                                  ↘ frontend (static SPA)
 #
 # Only `gateway` (and postgres, for local tooling like Prisma Studio) is
-# published to the host. `api` and `bff` are reachable only on the internal
-# Compose network, so the browser can't bypass the BFF.
+# published to the host for browsers. `api` is reachable only on the internal
+# Compose network. `bff` is also published on 127.0.0.1:4000 (loopback only)
+# so `./start.sh` can run the backend here and Vite's dev server (:5173) on
+# the host, whose proxy sends /graphql to localhost:4000.
 
 services:
   postgres:
@@ -49,6 +51,8 @@ services:
       API_URL: http://api:3000
       NODE_ENV: production
     expose: ["4000"]
+    # Loopback only: for Vite's dev proxy (./start.sh), not for other machines.
+    ports: ["127.0.0.1:4000:4000"]
     depends_on:
       api:
         condition: service_healthy
@@ -58,7 +62,7 @@ services:
       timeout: 5s
       retries: 20
 
-  web:
+  frontend:
     build:
       context: .
       dockerfile: docker/web.Dockerfile
@@ -72,7 +76,7 @@ services:
     depends_on:
       bff:
         condition: service_healthy
-      web:
+      frontend:
         condition: service_started
 
 volumes:
