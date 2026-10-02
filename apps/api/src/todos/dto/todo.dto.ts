@@ -50,3 +50,15 @@ export const listTasksQuerySchema = z.object({
   /** Done tasks shown on a board: the most recently completed ones. */
   doneLimit: z.coerce.number().int().min(0).max(200).default(50),
 });
+
+/** `GET /tasks/search?q=paint&limit=10&exclude=<task id>` */
+export const searchTasksQuerySchema = z.object({
+  q: z.string().max(100).default(""),
+  limit: z.coerce.number().int().min(1).max(25).default(10),
+  exclude: z.string().uuid().optional(),
+});
+export type SearchTasksQuery = z.infer<typeof searchTasksQuerySchema>;
+
+/** Body of `POST /tasks/:id/dependencies`: the task it should wait for. */
+export const addDependencySchema = z.object({ dependsOnId: z.string().uuid() });
+export type AddDependencyInput = z.infer<typeof addDependencySchema>;

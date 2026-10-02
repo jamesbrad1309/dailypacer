@@ -518,8 +518,27 @@ model Task {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
+  /// Tasks this one waits for (it's blocked until they're all done).
+  blockedBy TaskDependency[] @relation("blockedBy")
+  /// Tasks waiting for this one.
+  blocks    TaskDependency[] @relation("blocks")
+
   @@unique([listId, number])
   @@index([plannedFor])
   @@index([listId, status, position])
   @@map("tasks")
+}
+
+/// "task waits for dependsOn". Either side can be in any list; no cycles
+/// (checked by TodosService). Deleting either task removes the link.
+model TaskDependency {
+  taskId      String
+  task        Task     @relation("blockedBy", fields: [taskId], references: [id], onDelete: Cascade)
+  dependsOnId String
+  dependsOn   Task     @relation("blocks", fields: [dependsOnId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@id([taskId, dependsOnId])
+  @@index([dependsOnId])
+  @@map("task_dependencies")
 }

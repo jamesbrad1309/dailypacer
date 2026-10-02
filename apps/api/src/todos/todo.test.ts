@@ -5,6 +5,7 @@ import {
   parseKey,
   positionBetween,
   suggestPrefix,
+  wouldCreateCycle,
 } from "#todos/todo.util";
 
 describe("suggestPrefix", () => {
@@ -42,5 +43,27 @@ describe("positionBetween", () => {
     expect(positionBetween(1, 2)).toBe(1.5);
     expect(positionBetween(null, 3)).toBe(2);
     expect(positionBetween(3, null)).toBe(4);
+  });
+});
+
+describe("wouldCreateCycle", () => {
+  // a waits for b, b waits for c.
+  const edges = new Map([
+    ["a", ["b"]],
+    ["b", ["c"]],
+  ]);
+
+  it("refuses a task waiting for itself", () => {
+    expect(wouldCreateCycle("a", "a", edges)).toBe(true);
+  });
+
+  it("refuses closing a loop, directly or through others", () => {
+    expect(wouldCreateCycle("b", "a", edges)).toBe(true); // b → a → b
+    expect(wouldCreateCycle("c", "a", edges)).toBe(true); // c → a → b → c
+  });
+
+  it("allows chains and shared dependencies", () => {
+    expect(wouldCreateCycle("a", "c", edges)).toBe(false);
+    expect(wouldCreateCycle("d", "a", edges)).toBe(false);
   });
 });

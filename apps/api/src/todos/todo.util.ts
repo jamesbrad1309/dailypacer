@@ -52,3 +52,28 @@ export function positionBetween(before: number | null, after: number | null): nu
   if (after === null) return before + 1;
   return (before + after) / 2;
 }
+
+/** At most this many tasks one task can wait for. */
+export const MAX_DEPENDENCIES = 20;
+
+/**
+ * Whether "task waits for dependsOn" would close a loop: true if `dependsOn`
+ * is the task itself, or already waits (directly or through others) for
+ * `task`. `edges` maps each task to the tasks it waits for.
+ */
+export function wouldCreateCycle(
+  task: string,
+  dependsOn: string,
+  edges: ReadonlyMap<string, readonly string[]>,
+): boolean {
+  const seen = new Set<string>();
+  const queue = [dependsOn];
+  while (queue.length > 0) {
+    const current = queue.shift() as string;
+    if (current === task) return true;
+    if (seen.has(current)) continue;
+    seen.add(current);
+    queue.push(...(edges.get(current) ?? []));
+  }
+  return false;
+}

@@ -1,13 +1,17 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
 import { ZodValidationPipe } from "#common/http/zod-validation.pipe";
 import {
+  type AddDependencyInput,
   type CreateListInput,
   type CreateTaskInput,
+  type SearchTasksQuery,
   type UpdateListInput,
   type UpdateTaskInput,
+  addDependencySchema,
   createListSchema,
   createTaskSchema,
   listTasksQuerySchema,
+  searchTasksQuerySchema,
   todayQuerySchema,
   updateListSchema,
   updateTaskSchema,
@@ -67,6 +71,12 @@ export class TodosController {
     return this.todos.today(query.today);
   }
 
+  /** Find tasks by title or key across every list; see TodosService.searchTasks. */
+  @Get("tasks/search")
+  searchTasks(@Query(new ZodValidationPipe(searchTasksQuerySchema)) query: SearchTasksQuery) {
+    return this.todos.searchTasks(query.q, query.limit, query.exclude);
+  }
+
   /** `GET /tasks/by-key/GRO-12` */
   @Get("tasks/by-key/:key")
   taskByKey(@Param("key") key: string) {
@@ -84,6 +94,25 @@ export class TodosController {
     @Body(new ZodValidationPipe(updateTaskSchema)) input: UpdateTaskInput,
   ) {
     return this.todos.updateTask(id, input);
+  }
+
+  @Get("tasks/:id")
+  task(@Param("id") id: string) {
+    return this.todos.task(id);
+  }
+
+  /** Make the task wait for another one (same or another list). */
+  @Post("tasks/:id/dependencies")
+  addDependency(
+    @Param("id") id: string,
+    @Body(new ZodValidationPipe(addDependencySchema)) input: AddDependencyInput,
+  ) {
+    return this.todos.addDependency(id, input.dependsOnId);
+  }
+
+  @Delete("tasks/:id/dependencies/:dependsOnId")
+  removeDependency(@Param("id") id: string, @Param("dependsOnId") dependsOnId: string) {
+    return this.todos.removeDependency(id, dependsOnId);
   }
 
   @Delete("tasks/:id")
