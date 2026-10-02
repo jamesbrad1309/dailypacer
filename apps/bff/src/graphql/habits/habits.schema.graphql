@@ -65,11 +65,107 @@ input UpdateHabitInput {
   schedule: JSON
 }
 
+enum HabitRecordStatus {
+  DONE
+  """A value was logged but the check-in wasn't completed."""
+  PARTIAL
+  NOT_DONE
+  """A past due day with no entry."""
+  MISSED
+  """A finished week under target, for "times a week" habits."""
+  MISSED_WEEK
+}
+
+enum HabitRecordFilter {
+  ALL
+  DONE
+  """Entries that weren't completed (partial or not done)."""
+  NOT_DONE
+  MISSED
+}
+
+type HabitRecordWeek {
+  start: String!
+  end: String!
+  done: Int!
+  target: Int!
+}
+
+"""One row of a habit's records: a stored entry, a missed day, or a missed week."""
+type HabitRecord {
+  """YYYY-MM-DD; a missed week's last day."""
+  date: String!
+  status: HabitRecordStatus!
+  entry: HabitEntry
+  week: HabitRecordWeek
+}
+
+type HabitRecordCounts {
+  all: Int!
+  done: Int!
+  notDone: Int!
+  missed: Int!
+}
+
+type HabitRecordsPage {
+  items: [HabitRecord!]!
+  """Rows matching the filter, across all pages."""
+  total: Int!
+  page: Int!
+  pageSize: Int!
+  counts: HabitRecordCounts!
+  """The first tracked day: creation, or an earlier backdated entry."""
+  trackedSince: String!
+  """True when misses are whole weeks ("times a week" habits)."""
+  missesByWeek: Boolean!
+}
+
+type WeekdayStat {
+  """0 = Monday … 6 = Sunday."""
+  weekday: Int!
+  due: Int!
+  done: Int!
+  """done / due (0–1); null when the weekday was never due."""
+  rate: Float
+}
+
+type CompletionPeriod {
+  from: String!
+  to: String!
+  due: Int!
+  done: Int!
+  rate: Float
+}
+
+"""When a habit gets done or skipped, and whether this month beats last month."""
+type HabitInsights {
+  """Last twelve weeks, Monday first."""
+  weekdays: [WeekdayStat!]!
+  """Weekday indexes; null when the pattern is too thin or flat to call."""
+  best: Int
+  worst: Int
+  thisMonth: CompletionPeriod!
+  lastMonth: CompletionPeriod!
+}
+
 extend type Query {
   habits: [Habit!]!
   archivedHabits: [Habit!]!
   todayHabits: [Habit!]!
   habit(id: ID!): Habit!
+  """
+  A page of a habit's check-ins and misses, newest first, paged on the server.
+  `today` is the user's local day: today and this week are never missed.
+  """
+  habitRecords(
+    habitId: ID!
+    today: String!
+    filter: HabitRecordFilter = ALL
+    page: Int = 1
+    pageSize: Int = 25
+  ): HabitRecordsPage!
+  """`today` is the user's local day."""
+  habitInsights(habitId: ID!, today: String!): HabitInsights!
 }
 
 extend type Mutation {
@@ -77,6 +173,8 @@ extend type Mutation {
   updateHabit(id: ID!, input: UpdateHabitInput!): Habit!
   archiveHabit(id: ID!): Habit!
   unarchiveHabit(id: ID!): Habit!
-  pauseHabit(id: ID!): Habit!
-  resumeHabit(id: ID!): Habit!
+  """`date`: the user's local day (YYYY-MM-DD) the pause starts; the server's day if omitted."""
+  pauseHabit(id: ID!, date: String): Habit!
+  """`date`: the user's local day the habit is due again from."""
+  resumeHabit(id: ID!, date: String): Habit!
 }

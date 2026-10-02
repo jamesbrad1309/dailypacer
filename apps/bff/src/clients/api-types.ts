@@ -23,6 +23,22 @@ export interface ApiHabit {
   updatedAt: string;
 }
 
+/** `GET /habits/:id/records`: a page of check-ins and misses. */
+export interface ApiHabitRecordsPage {
+  items: {
+    date: string;
+    status: "DONE" | "PARTIAL" | "NOT_DONE" | "MISSED" | "MISSED_WEEK";
+    entry: ApiHabitEntry | null;
+    week: { start: string; end: string; done: number; target: number } | null;
+  }[];
+  total: number;
+  page: number;
+  pageSize: number;
+  counts: { all: number; done: number; notDone: number; missed: number };
+  trackedSince: string;
+  missesByWeek: boolean;
+}
+
 export interface ApiHabitEntry {
   id: string;
   habitId: string;

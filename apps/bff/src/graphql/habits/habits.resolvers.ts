@@ -1,4 +1,4 @@
-import type { ApiHabit } from "#clients/api-types";
+import type { ApiHabit, ApiHabitRecordsPage } from "#clients/api-types";
 import type { GraphQLContext } from "#graphql/context";
 
 const habitPath = (id: string) => `/habits/${encodeURIComponent(id)}`;
@@ -17,6 +17,23 @@ export default {
       ctx.api.get<ApiHabit[]>("/habits/today"),
     habit: (_: unknown, args: { id: string }, ctx: GraphQLContext) =>
       ctx.api.get<ApiHabit>(habitPath(args.id)),
+    habitRecords: (
+      _: unknown,
+      args: { habitId: string; today: string; filter: string; page: number; pageSize: number },
+      ctx: GraphQLContext,
+    ) => {
+      const query = new URLSearchParams({
+        today: args.today,
+        filter: args.filter,
+        page: String(args.page),
+        pageSize: String(args.pageSize),
+      });
+      return ctx.api.get<ApiHabitRecordsPage>(`${habitPath(args.habitId)}/records?${query}`);
+    },
+    habitInsights: (_: unknown, args: { habitId: string; today: string }, ctx: GraphQLContext) =>
+      ctx.api.get<unknown>(
+        `${habitPath(args.habitId)}/insights?today=${encodeURIComponent(args.today)}`,
+      ),
   },
   Mutation: {
     createHabit: (_: unknown, args: { input: unknown }, ctx: GraphQLContext) =>
@@ -27,10 +44,10 @@ export default {
       ctx.api.post<ApiHabit>(`${habitPath(args.id)}/archive`),
     unarchiveHabit: (_: unknown, args: { id: string }, ctx: GraphQLContext) =>
       ctx.api.post<ApiHabit>(`${habitPath(args.id)}/unarchive`),
-    pauseHabit: (_: unknown, args: { id: string }, ctx: GraphQLContext) =>
-      ctx.api.post<ApiHabit>(`${habitPath(args.id)}/pause`),
-    resumeHabit: (_: unknown, args: { id: string }, ctx: GraphQLContext) =>
-      ctx.api.post<ApiHabit>(`${habitPath(args.id)}/resume`),
+    pauseHabit: (_: unknown, args: { id: string; date?: string }, ctx: GraphQLContext) =>
+      ctx.api.post<ApiHabit>(`${habitPath(args.id)}/pause`, { date: args.date ?? undefined }),
+    resumeHabit: (_: unknown, args: { id: string; date?: string }, ctx: GraphQLContext) =>
+      ctx.api.post<ApiHabit>(`${habitPath(args.id)}/resume`, { date: args.date ?? undefined }),
   },
   Habit: {
     todayEntry: (habit: ApiHabit, _: unknown, ctx: GraphQLContext) =>
