@@ -24,6 +24,9 @@ import { Route as HabitsHistoryRouteImport } from './routes/habits/history'
 import { Route as HabitsTodayRouteImport } from './routes/habits/today'
 import { Route as JournalIndexRouteImport } from './routes/journal/index'
 import { Route as JournalCalendarRouteImport } from './routes/journal/calendar'
+import { Route as TasksIndexRouteImport } from './routes/tasks/index'
+import { Route as TasksListsIndexRouteImport } from './routes/tasks/lists/index'
+import { Route as TasksListsListIdRouteImport } from './routes/tasks/lists/$listId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -100,6 +103,21 @@ const JournalCalendarRoute = JournalCalendarRouteImport.update({
   path: '/journal/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TasksIndexRoute = TasksIndexRouteImport.update({
+  id: '/tasks/',
+  path: '/tasks/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TasksListsIndexRoute = TasksListsIndexRouteImport.update({
+  id: '/tasks/lists/',
+  path: '/tasks/lists/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TasksListsListIdRoute = TasksListsListIdRouteImport.update({
+  id: '/tasks/lists/$listId',
+  path: '/tasks/lists/$listId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -117,6 +135,9 @@ export interface FileRoutesByFullPath {
   '/finance/': typeof FinanceIndexRoute
   '/habits/': typeof HabitsIndexRoute
   '/journal/': typeof JournalIndexRoute
+  '/tasks/': typeof TasksIndexRoute
+  '/tasks/lists/$listId': typeof TasksListsListIdRoute
+  '/tasks/lists/': typeof TasksListsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -134,6 +155,9 @@ export interface FileRoutesByTo {
   '/finance': typeof FinanceIndexRoute
   '/habits': typeof HabitsIndexRoute
   '/journal': typeof JournalIndexRoute
+  '/tasks': typeof TasksIndexRoute
+  '/tasks/lists/$listId': typeof TasksListsListIdRoute
+  '/tasks/lists': typeof TasksListsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -152,6 +176,9 @@ export interface FileRoutesById {
   '/finance/': typeof FinanceIndexRoute
   '/habits/': typeof HabitsIndexRoute
   '/journal/': typeof JournalIndexRoute
+  '/tasks/': typeof TasksIndexRoute
+  '/tasks/lists/$listId': typeof TasksListsListIdRoute
+  '/tasks/lists/': typeof TasksListsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -171,6 +198,9 @@ export interface FileRouteTypes {
     | '/finance/'
     | '/habits/'
     | '/journal/'
+    | '/tasks/'
+    | '/tasks/lists/$listId'
+    | '/tasks/lists/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -188,6 +218,9 @@ export interface FileRouteTypes {
     | '/finance'
     | '/habits'
     | '/journal'
+    | '/tasks'
+    | '/tasks/lists/$listId'
+    | '/tasks/lists'
   id:
     | '__root__'
     | '/'
@@ -205,6 +238,9 @@ export interface FileRouteTypes {
     | '/finance/'
     | '/habits/'
     | '/journal/'
+    | '/tasks/'
+    | '/tasks/lists/$listId'
+    | '/tasks/lists/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -223,6 +259,9 @@ export interface RootRouteChildren {
   FinanceIndexRoute: typeof FinanceIndexRoute
   HabitsIndexRoute: typeof HabitsIndexRoute
   JournalIndexRoute: typeof JournalIndexRoute
+  TasksIndexRoute: typeof TasksIndexRoute
+  TasksListsListIdRoute: typeof TasksListsListIdRoute
+  TasksListsIndexRoute: typeof TasksListsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -332,6 +371,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JournalCalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tasks/': {
+      id: '/tasks/'
+      path: '/tasks'
+      fullPath: '/tasks/'
+      preLoaderRoute: typeof TasksIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tasks/lists/': {
+      id: '/tasks/lists/'
+      path: '/tasks/lists'
+      fullPath: '/tasks/lists/'
+      preLoaderRoute: typeof TasksListsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tasks/lists/$listId': {
+      id: '/tasks/lists/$listId'
+      path: '/tasks/lists/$listId'
+      fullPath: '/tasks/lists/$listId'
+      preLoaderRoute: typeof TasksListsListIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -351,6 +411,9 @@ const rootRouteChildren: RootRouteChildren = {
   FinanceIndexRoute: FinanceIndexRoute,
   HabitsIndexRoute: HabitsIndexRoute,
   JournalIndexRoute: JournalIndexRoute,
+  TasksIndexRoute: TasksIndexRoute,
+  TasksListsListIdRoute: TasksListsListIdRoute,
+  TasksListsIndexRoute: TasksListsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

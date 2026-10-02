@@ -2,7 +2,15 @@
 export const shell = {
   appName: "LifeOS",
   nav: {
-    groups: { habits: "Habits", mind: "Mind", money: "Money", comingSoon: "Coming soon" },
+    groups: {
+      habits: "Habits",
+      todos: "To-do",
+      mind: "Mind",
+      money: "Money",
+      comingSoon: "Coming soon",
+    },
+    tasksToday: "Today",
+    tasksLists: "Lists",
     dashboard: "Dashboard",
     today: "Today",
     history: "History",
@@ -19,6 +27,9 @@ export const shell = {
     mainLabel: "Main",
   },
   pages: {
+    tasksToday: { title: "Today's tasks", subtitle: "What you plan to get done today." },
+    tasksLists: { title: "Lists", subtitle: "Your to-do lists, each with its own key prefix." },
+    taskBoard: { title: "Board", subtitle: "Drag tasks between To do, In progress and Done." },
     habitDetail: { title: "Habit", subtitle: "Every check-in, day by day." },
     dashboard: { title: "Dashboard", subtitle: "Keep your streaks alive." },
     today: { title: "Today", subtitle: "What's due, hour by hour." },

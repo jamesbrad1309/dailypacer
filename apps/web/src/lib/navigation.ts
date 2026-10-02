@@ -4,8 +4,10 @@ import {
   ChartBar,
   Coins,
   Grid3x3,
+  KanbanSquare,
   Landmark,
   LayoutDashboard,
+  ListTodo,
   type LucideIcon,
   NotebookPen,
   PiggyBank,
@@ -50,6 +52,13 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "dashboard", icon: LayoutDashboard, to: "/habits", exact: true },
       { label: "today", icon: CalendarClock, to: "/habits/today" },
       { label: "history", icon: Grid3x3, to: "/habits/history" },
+    ],
+  },
+  {
+    label: "todos",
+    items: [
+      { label: "tasksToday", icon: ListTodo, to: "/tasks", exact: true },
+      { label: "tasksLists", icon: KanbanSquare, to: "/tasks/lists" },
     ],
   },
   {

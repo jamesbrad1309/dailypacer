@@ -539,3 +539,48 @@ export interface SubscriptionSummary {
   next30DaysMinor: number;
   pendingCount: number;
 }
+
+// ─── To-do lists ─────────────────────────────────────────────────────────────
+
+export type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
+
+export interface TodoList {
+  id: string;
+  name: string;
+  /** Uppercase, 2–6 characters; the key prefix of every task in the list. */
+  prefix: string;
+  nextNumber: number;
+  isInbox: boolean;
+  position: number;
+  openCount: number;
+  doneCount: number;
+}
+
+export interface Task {
+  id: string;
+  /** "<list prefix>-<number>", e.g. GRO-12. */
+  key: string;
+  number: number;
+  listId: string;
+  list: Pick<TodoList, "id" | "name" | "prefix" | "isInbox">;
+  title: string;
+  notes: string | null;
+  status: TaskStatus;
+  position: number;
+  /** "YYYY-MM-DD", or null when not planned. */
+  plannedFor: string | null;
+  completedAt: string | null;
+  createdAt: string;
+}
+
+export interface TodoListsData {
+  todoLists: TodoList[];
+}
+
+export interface TodayTasksData {
+  todayTasks: { today: Task[]; earlier: Task[] };
+}
+
+export interface ListBoardData {
+  listBoard: { list: TodoList; tasks: Task[]; doneTotal: number };
+}

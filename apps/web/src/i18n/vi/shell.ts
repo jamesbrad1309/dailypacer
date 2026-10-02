@@ -3,7 +3,15 @@ import type { shell as en } from "#i18n/en/shell";
 export const shell: typeof en = {
   appName: "LifeOS",
   nav: {
-    groups: { habits: "Thói quen", mind: "Tâm trí", money: "Tài chính", comingSoon: "Sắp ra mắt" },
+    groups: {
+      habits: "Thói quen",
+      todos: "Việc cần làm",
+      mind: "Tâm trí",
+      money: "Tài chính",
+      comingSoon: "Sắp ra mắt",
+    },
+    tasksToday: "Hôm nay",
+    tasksLists: "Danh sách",
     dashboard: "Tổng quan",
     today: "Hôm nay",
     history: "Lịch sử",
@@ -20,6 +28,12 @@ export const shell: typeof en = {
     mainLabel: "Chính",
   },
   pages: {
+    tasksToday: { title: "Việc hôm nay", subtitle: "Những việc bạn định làm hôm nay." },
+    tasksLists: {
+      title: "Danh sách",
+      subtitle: "Các danh sách việc, mỗi danh sách có tiền tố mã riêng.",
+    },
+    taskBoard: { title: "Bảng", subtitle: "Kéo việc giữa Cần làm, Đang làm và Xong." },
     habitDetail: { title: "Thói quen", subtitle: "Mọi lần đánh dấu, theo từng ngày." },
     dashboard: { title: "Tổng quan", subtitle: "Giữ vững chuỗi ngày của bạn." },
     today: { title: "Hôm nay", subtitle: "Việc cần làm, theo từng giờ." },
