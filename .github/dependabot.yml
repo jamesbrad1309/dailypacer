@@ -1,0 +1,66 @@
+version: 2
+
+updates:
+  # One pnpm workspace: the root lockfile covers apps/api, apps/bff and apps/web.
+  - package-ecosystem: npm
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    versioning-strategy: increase
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      prisma:
+        patterns: ["prisma", "@prisma/*"]
+      nestjs:
+        patterns: ["@nestjs/*"]
+      tanstack:
+        patterns: ["@tanstack/*"]
+      # Everything else: patch/minor bumps land as one PR; majors get a PR each.
+      # (Listed last — a dependency joins the first group it matches.)
+      minor-and-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "chore(ci)"
+    groups:
+      actions:
+        patterns: ["*"]
+
+  # Base images in docker/*.Dockerfile and docker-compose.yml.
+  - package-ecosystem: docker
+    directories: ["/docker"]
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "chore(docker)"
+    ignore:
+      # Stay on the Node major in package.json "engines" / Dockerfiles until bumped deliberately.
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]
+      - dependency-name: postgres
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: docker-compose
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "chore(docker)"
+    ignore:
+      - dependency-name: postgres
+        update-types: ["version-update:semver-major"]
