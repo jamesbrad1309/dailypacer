@@ -24,10 +24,11 @@ improves UX · `2` edge case / power-user · `1` speculative.
 | Calendar | 2 | 1 | Week or month calendar view (2) |
 | History & review | 3 | 0 | — |
 | Motivation & rewards | 0 | 5 | Streak freeze (3) |
-| Routines & structure | 0 | 4 | Habit stacking / routines (3) |
-| Insights | 0 | 4 | Best / worst weekday per habit (3) |
+| Routines & structure | 1 | 3 | Habit stacking / routines (3) |
+| Insights | 2 | 2 | Weekly review screen (3) |
 | Journaling & mood | 9 | 4 | Which events drive which feelings (3) |
 | Cross-module (habits × finance) | 0 | 5 | "No-spend day" habit auto-checked from transactions (3) |
+| **To-do lists** (planned module) | 0 | 7 | Today's to-do list (5) |
 | **Finance** (separate doc) | 50 | 10 | Savings goals, custom categories, payee rules (1 partly built), see [finance/use-cases.md](../finance/use-cases.md) |
 
 ## Use cases
@@ -39,7 +40,7 @@ improves UX · `2` edge case / power-user · `1` speculative.
 |  | ✅ | **Configure a schedule preset** (daily / weekdays / weekends / custom days / N×week / every N days) | 4 | `ScheduleEditor`; presets are just `weekly` with specific `daysOfWeek`, no extra schema |
 |  | ✅ | **Set a start time** for the day-calendar view | 3 | `Habit.startTime` ("HH:mm") |
 |  | ✅ | **Archive a habit** (soft-delete, keeps history) | 3 | `Mutation.archiveHabit` |
-|  | ✅ | **Pause a habit** (skip it without archiving) | 3 | `Mutation.pauseHabit`/`resumeHabit`; excluded from `todayHabits` and the day view while paused |
+|  | ✅ | **Pause a habit** (skip it without archiving) | 3 | `Mutation.pauseHabit`/`resumeHabit(id, date)`; excluded from `todayHabits` and the day view while paused. Each pause is kept in `habit_pauses` (local start day, resume day), and paused days count as not due: they neither break a streak nor show as missed |
 |  | ✅ | **Unarchive / view archived habits** | 2 | Collapsible "Archived habits" list under the dashboard (`archivedHabits`, fetched only when opened), Restore calls `unarchiveHabit` |
 |  | ✅ | **Describe a habit**: a short "why / how" shown under its name | 3 | `Habit.description` (≤500 chars), set in the create/edit dialogs, 2 lines on the card |
 |  | ✅ | **Tag habits and filter the dashboard by tag** ("health", "morning") | 3 | `Habit.tags` (lowercased, de-duplicated, ≤20); chips above the habit list, and a card's `#tag` filters to it. Filter is not kept in the URL |
@@ -57,7 +58,7 @@ improves UX · `2` edge case / power-user · `1` speculative.
 |  | ✅ | **Check a habit off directly from the day view** | 4 | Same `upsertHabitEntry` mutation as the dashboard card |
 |  | ⬜ | **Week or month calendar view** | 2 | Only a single day view exists so far |
 | **History & review** | ✅ | **Compare all habits over the last 30 days**: one row per habit, a green box per day done, plus a done/30 count | 3 | `/habits/history` (`HabitHistory`); reads the last 30 days of each habit's `Habit.heatmap`, no query of its own. The percentage counts all 30 days, not only scheduled ones |
-|  | ✅ | **View a single habit's full entry history** (list, not just heatmap) | 2 | Records table on the habit detail page: date, status (done / partly done / not done), value against target, note; filter All / Done / Not done / **Missed (n)**, 25 rows a page, newest first. Misses are due days with no completed check-in, or for "times a week" habits each finished week under its target (`lib/habit-records.ts`); today and this week aren't counted until they're over, and days paused still count, since pauses aren't recorded. Beside the 120-day heatmap, a **this week vs last week** line chart of running check-in counts (`lib/week-comparison.ts`) |
+|  | ✅ | **View a single habit's full entry history** (list, not just heatmap) | 2 | Records table on the habit detail page: date, status (done / partly done / not done), value against target, note; filter All / Done / Not done / **Missed (n)**, 25 rows a page, newest first, **paged on the server** (`Query.habitRecords`, `GET /habits/:id/records`): the browser holds one page. Misses are due days with no entry, or for "times a week" habits each finished week under its target, at most a year back, skipping paused days and weeks (`habit-records.util.ts`); today and this week aren't counted until they're over. Beside the 120-day heatmap, a **this week vs last week** line chart of running check-in counts (`lib/week-comparison.ts`) |
 |  | ✅ | **Habit detail page** | 1 | `/habits/$habitId` (`HabitDetail`), opened from a card's name or a History row: description, schedule, tags, streak stats, heatmap, and the records table. One `HabitDetail` query (`habit` + `habitEntries`) |
 | **Motivation & rewards** | ⬜ | **Streak freeze**: spend earned points to protect a streak on a missed day | 3 | A `StreakFreeze(habitId, date)` row; `streak.util.ts` treats a frozen day as "not due", like a paused habit |
 |  | ⬜ | **Achievements / badges** ("First 7-day streak", "100 check-ins", "Perfect week") | 3 | Derived from entries at query time, the same way points are; no stored "unlocked" flag is needed until unlocks need a timestamp |
@@ -66,10 +67,10 @@ improves UX · `2` edge case / power-user · `1` speculative.
 |  | ⬜ | **Reward shop**: trade points for self-defined rewards ("takeaway night = 500 pts") | 2 | Needs a spent-points ledger, because points are currently derived and can't be decreased |
 | **Routines & structure** | ⬜ | **Habit stacking / routines**: group habits into an ordered "Morning routine" and check them off in sequence | 3 | `Routine` plus an ordered join table; the day view renders a routine as one block at its first habit's `startTime` |
 |  | ⬜ | **Negative habits** ("no sugar", "no doomscrolling"): success is the *absence* of an event | 3 | A `polarity: "avoid"` flag; a due day counts as successful unless an entry marks a slip |
-|  | ⬜ | **Habit templates**: start from a preset such as "Drink 2L water" or "Read 20 pages" | 2 | A static list on the frontend that pre-fills `CreateHabitDialog`; no backend change |
+|  | ✅ | **Habit templates**: start from a preset such as "Drink water" or "Read" | 2 | Eight presets at the top of the Add habit modal (`lib/habit-templates.ts`), filling name, description, tags, unit, target, start time and schedule in the UI language; nothing about a template is stored |
 |  | ⬜ | **Time-boxed habits / programs**: "30-day push-up challenge" that ends on its own | 2 | Optional `endDate` on `Habit`; auto-archive after it passes |
-| **Insights** | ⬜ | **Best / worst weekday per habit** ("you skip gym on Fridays") | 3 | Group entries by `date.getDay()` over the stats window |
-|  | ⬜ | **Completion-rate trend** (this month vs last month) | 3 | Two windowed `computeTotalCompletions` calls divided by due-day counts |
+| **Insights** | ✅ | **Best / worst weekday per habit** ("you skip gym on Fridays") | 3 | Habit detail page, "By weekday": completion rate per weekday over the last 12 weeks (`Query.habitInsights`, `habit-insights.util.ts`), counting due, unpaused days since tracking began; best and worst are named only once each weekday has 3+ due days and they differ. "Times a week" habits compare where check-ins fall |
+|  | ✅ | **Completion-rate trend** (this month vs last month) | 3 | Same query: this month so far vs the whole of last month, as done / due days (today counts only once done); "times a week" habits measure against the weekly target. The difference in points shows once this month has 5+ counted days |
 |  | ⬜ | **Weekly review screen**: a summary each Sunday with wins, misses, and streaks at risk | 3 | A `weeklyReview(weekStart)` query that aggregates existing stats |
 |  | ⬜ | **Habit correlations** ("on days you exercise you sleep 40 min more") | 2 | Pairwise comparison of entry values across habits on the same dates; needs enough history to mean anything |
 | **Journaling & mood** | ✅ | **Log what you did** (an ACTION, with optional duration) | 4 | One textarea: bulleted `/action` lines, parsed by `apps/web/src/lib/journal-syntax.ts`; saved atomically by `Mutation.createJournalEntries` |
@@ -90,6 +91,30 @@ improves UX · `2` edge case / power-user · `1` speculative.
 |  | ⬜ | **"Log today's spending" habit**: an evening habit that opens quick log and counts as done once anything is logged that day | 3 | Auto-checked like no-spend days; see [habits-integration.md §5](../finance/habits-integration.md#5-log-todays-spending-habit) |
 |  | ⬜ | **Cost of a habit**: link a habit to a spending category ("coffee", "gym") and show spend next to the streak | 2 | `Habit.linkedSpendMinor(month)`, see [habits-integration.md §3](../finance/habits-integration.md#3-cost-of-a-habit) |
 |  | ⬜ | **Unified "LifeOS level"**: XP from both habits and financial discipline (staying under budget) | 2 | Finance XP added in `gamification.util.ts`, see [habits-integration.md §4](../finance/habits-integration.md#4-unified-lifeos-xp) |
+
+## To-do lists (planned)
+
+A to-do module next to habits: one-off tasks rather than repeating ones.
+Nothing here is built yet.
+
+| Status | Use case | Impact | Notes |
+| :----: | -------- | :----: | ----- |
+| ⬜ | **Today's to-do list**: add tasks for today, tick them off, reorder them | 5 | "Today" is a view (tasks planned for today, from any list), not a list of its own |
+| ⬜ | **Undone tasks from previous days**: anything planned for an earlier day and not done shows in an "Earlier, not done" group, with one action to move it to today or drop it | 4 | Nothing moves on its own; the user decides. Shows how many days a task has been carried over |
+| ⬜ | **Custom lists with a key prefix**: e.g. "Grocery list" with prefix `GRO`, so its tasks read `GRO-1`, `GRO-2`… | 4 | `TodoList(name, prefix, nextNumber)`; prefix 2–6 letters, unique across lists, suggested from the name |
+| ⬜ | **Rename a list's prefix** without touching task numbers: `GRO-12` becomes `FOOD-12` | 3 | The key is shown as `<current prefix>-<number>`, never stored, so a rename is one update. `Task.number` is assigned once from the list's counter (`@@unique([listId, number])`) and never changes or gets reused, even after a delete |
+| ⬜ | **Kanban board** for a list: To do / In progress / Done columns, drag tasks between and within columns | 4 | `Task.status` + `Task.position` (fractional index, so a drag is one row update); keyboard moves as well as drag |
+| ⬜ | **Find a task by its key**: typing `GRO-12` jumps to it | 2 | Look up by the list's current prefix + number |
+| ⬜ | **Custom kanban columns** per list (e.g. "Waiting on someone") | 2 | `TodoColumn(listId, name, position)` replacing the fixed status enum |
+
+Open questions before building:
+
+- **Moving a task to another list**: keep its number (`GRO-12` → `HOME-12`
+  could clash) or take the next number in the new list, as Jira does? The
+  latter keeps "the number never changes" true within a list.
+- **Today across lists**: can a task from "Grocery list" also sit in today's
+  plan (a planned date on the task), or does Today only hold tasks with no
+  list?
 
 ## Explicitly out of scope for v1
 

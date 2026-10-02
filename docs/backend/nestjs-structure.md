@@ -57,7 +57,10 @@ job.
 | `GET /habits/:id` | `Habit` | 404 if missing |
 | `POST /habits` | `Habit` | Body validated by `createHabitSchema` |
 | `PATCH /habits/:id` | `Habit` | `updateHabitSchema` |
-| `POST /habits/:id/archive` · `/unarchive` · `/pause` · `/resume` | `Habit` | |
+| `POST /habits/:id/archive` · `/unarchive` | `Habit` | |
+| `POST /habits/:id/pause` · `/resume` | `Habit` | Optional body `{ date }` (user's local day); records the stretch in `habit_pauses` |
+| `GET /habits/:id/records?filter=&page=&pageSize=&today=` | `HabitRecordsPage` | Entries plus misses, paged on the server; `filter` ALL / DONE / NOT_DONE / MISSED; `pageSize` ≤ 100 |
+| `GET /habits/:id/insights?today=` | `HabitInsights` | Completion by weekday (12 weeks) and this month vs last |
 | `GET /habits/:id/entries` | `HabitEntry[]` | Newest first |
 | `GET /habit-entries/by-date/:date?habitIds=a,b` | `HabitEntry[]` | **Batch** endpoint for the `todayEntry` DataLoader |
 | `PUT /habit-entries` | `HabitEntry` | Upsert on `(habitId, date)` |
