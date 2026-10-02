@@ -40,19 +40,51 @@ export interface Habit {
   heatmap: HeatmapDay[];
 }
 
-/** A stored check-in, as listed on a habit's detail page. */
-export interface HabitEntryRecord {
-  id: string;
-  /** "YYYY-MM-DD" */
-  date: string;
-  value: number | null;
-  completed: boolean;
-  note: string | null;
+export interface CompletionPeriod {
+  from: string;
+  to: string;
+  due: number;
+  done: number;
+  rate: number | null;
+}
+
+export interface HabitInsightsData {
+  habitInsights: {
+    /** 0 = Monday … 6 = Sunday; null when too thin or flat to call. */
+    best: number | null;
+    worst: number | null;
+    weekdays: { weekday: number; due: number; done: number; rate: number | null }[];
+    thisMonth: CompletionPeriod;
+    lastMonth: CompletionPeriod;
+  };
 }
 
 export interface HabitDetailData {
   habit: Habit & { createdAt: string };
-  habitEntries: HabitEntryRecord[];
+}
+
+export type HabitRecordStatus = "DONE" | "PARTIAL" | "NOT_DONE" | "MISSED" | "MISSED_WEEK";
+export type HabitRecordFilter = "ALL" | "DONE" | "NOT_DONE" | "MISSED";
+
+/** One row of a habit's records: a stored entry, a missed day, or a missed week. */
+export interface HabitRecord {
+  /** "YYYY-MM-DD"; a missed week's last day. */
+  date: string;
+  status: HabitRecordStatus;
+  entry: { id: string; value: number | null; note: string | null } | null;
+  week: { start: string; end: string; done: number; target: number } | null;
+}
+
+export interface HabitRecordsData {
+  habitRecords: {
+    items: HabitRecord[];
+    total: number;
+    page: number;
+    pageSize: number;
+    counts: { all: number; done: number; notDone: number; missed: number };
+    trackedSince: string;
+    missesByWeek: boolean;
+  };
 }
 
 export interface HabitsData {

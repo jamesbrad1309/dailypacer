@@ -31,7 +31,8 @@ export function EditHabitDialog({ habit }: { habit: Habit }) {
   const [schedule, setSchedule] = useState<HabitSchedule>(habit.schedule);
 
   const [updateHabit, { loading }] = useMutation(UPDATE_HABIT_MUTATION, {
-    refetchQueries: [{ query: HABITS_QUERY }, { query: DASHBOARD_STATS_QUERY }],
+    // A schedule change moves which days count as missed (HabitRecords).
+    refetchQueries: [{ query: HABITS_QUERY }, { query: DASHBOARD_STATS_QUERY }, "HabitRecords"],
   });
 
   function handleOpenChange(next: boolean) {

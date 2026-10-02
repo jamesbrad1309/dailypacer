@@ -20,11 +20,8 @@ import {
   UPSERT_HABIT_ENTRY_MUTATION,
 } from "#graphql/habits";
 import type { Habit } from "#graphql/types";
+import { todayIsoDate } from "#lib/dates";
 import { cn } from "#lib/utils";
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
 
 interface Props {
   habit: Habit;
@@ -39,7 +36,9 @@ export function HabitCard({ habit, onTagClick }: Props) {
   // Any of these can change dashboardStats (points/streaks aggregate across
   // all habits), which Apollo's cache normalization can't infer on its own
   // since DashboardStats isn't keyed by habit id — refetch it explicitly.
-  const refetchQueries = [{ query: DASHBOARD_STATS_QUERY }];
+  // "HabitRecords" by name: a habit's detail page (if it's been opened) shows
+  // its check-ins and misses, which all of these change.
+  const refetchQueries = [{ query: DASHBOARD_STATS_QUERY }, "HabitRecords"];
   // Archiving removes a row from the `habits` list query's array, which
   // normalization also can't do on its own (it only updates existing
   // entities, never a list's membership) — refetch both lists it moves between.
@@ -130,7 +129,7 @@ export function HabitCard({ habit, onTagClick }: Props) {
                 variables: {
                   input: {
                     habitId: habit.id,
-                    date: todayIso(),
+                    date: todayIsoDate(),
                     completed: checked === true,
                     value: entry?.value ?? undefined,
                   },
@@ -156,7 +155,7 @@ export function HabitCard({ habit, onTagClick }: Props) {
                   variables: {
                     input: {
                       habitId: habit.id,
-                      date: todayIso(),
+                      date: todayIsoDate(),
                       value,
                       completed: entry?.completed ?? false,
                     },
@@ -183,7 +182,9 @@ export function HabitCard({ habit, onTagClick }: Props) {
             if (note === (entry?.note ?? "")) return;
             // Upsert keeps the entry's value and completion when they're
             // left out, and "" clears the note (null would mean "unchanged").
-            upsertEntry({ variables: { input: { habitId: habit.id, date: todayIso(), note } } });
+            upsertEntry({
+              variables: { input: { habitId: habit.id, date: todayIsoDate(), note } },
+            });
           }}
         />
 
@@ -200,7 +201,7 @@ export function HabitCard({ habit, onTagClick }: Props) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => resumeHabit({ variables: { id: habit.id } })}
+              onClick={() => resumeHabit({ variables: { id: habit.id, date: todayIsoDate() } })}
             >
               <Play className="size-3.5" /> {t("habits.card.resume")}
             </Button>
@@ -208,7 +209,7 @@ export function HabitCard({ habit, onTagClick }: Props) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => pauseHabit({ variables: { id: habit.id } })}
+              onClick={() => pauseHabit({ variables: { id: habit.id, date: todayIsoDate() } })}
             >
               <Pause className="size-3.5" /> {t("habits.card.pause")}
             </Button>

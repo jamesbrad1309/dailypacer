@@ -118,8 +118,8 @@ export const UNARCHIVE_HABIT_MUTATION = gql`
 
 export const PAUSE_HABIT_MUTATION = gql`
   ${HABIT_FIELDS}
-  mutation PauseHabit($id: ID!) {
-    pauseHabit(id: $id) {
+  mutation PauseHabit($id: ID!, $date: String) {
+    pauseHabit(id: $id, date: $date) {
       ...HabitFields
     }
   }
@@ -127,14 +127,14 @@ export const PAUSE_HABIT_MUTATION = gql`
 
 export const RESUME_HABIT_MUTATION = gql`
   ${HABIT_FIELDS}
-  mutation ResumeHabit($id: ID!) {
-    resumeHabit(id: $id) {
+  mutation ResumeHabit($id: ID!, $date: String) {
+    resumeHabit(id: $id, date: $date) {
       ...HabitFields
     }
   }
 `;
 
-/** One habit and every entry it has, newest first, for its detail page. */
+/** One habit, for its detail page; its records come a page at a time (HABIT_RECORDS_QUERY). */
 export const HABIT_DETAIL_QUERY = gql`
   ${HABIT_FIELDS}
   query HabitDetail($id: ID!) {
@@ -142,12 +142,81 @@ export const HABIT_DETAIL_QUERY = gql`
       ...HabitFields
       createdAt
     }
-    habitEntries(habitId: $id) {
-      id
-      date
-      value
-      completed
-      note
+  }
+`;
+
+/** A page of a habit's check-ins and misses, paged and worked out on the server. */
+export const HABIT_RECORDS_QUERY = gql`
+  query HabitRecords(
+    $habitId: ID!
+    $today: String!
+    $filter: HabitRecordFilter
+    $page: Int
+    $pageSize: Int
+  ) {
+    habitRecords(
+      habitId: $habitId
+      today: $today
+      filter: $filter
+      page: $page
+      pageSize: $pageSize
+    ) {
+      total
+      page
+      pageSize
+      trackedSince
+      missesByWeek
+      counts {
+        all
+        done
+        notDone
+        missed
+      }
+      items {
+        date
+        status
+        entry {
+          id
+          value
+          note
+        }
+        week {
+          start
+          end
+          done
+          target
+        }
+      }
+    }
+  }
+`;
+
+/** Completion by weekday and this month vs last, worked out on the server. */
+export const HABIT_INSIGHTS_QUERY = gql`
+  query HabitInsights($habitId: ID!, $today: String!) {
+    habitInsights(habitId: $habitId, today: $today) {
+      best
+      worst
+      weekdays {
+        weekday
+        due
+        done
+        rate
+      }
+      thisMonth {
+        from
+        to
+        due
+        done
+        rate
+      }
+      lastMonth {
+        from
+        to
+        due
+        done
+        rate
+      }
     }
   }
 `;

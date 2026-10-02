@@ -6,16 +6,13 @@ import { Checkbox } from "#components/ui/checkbox";
 import { Progress } from "#components/ui/progress";
 import { DASHBOARD_STATS_QUERY, HABITS_QUERY, UPSERT_HABIT_ENTRY_MUTATION } from "#graphql/habits";
 import type { Habit, HabitsData } from "#graphql/types";
+import { todayIsoDate } from "#lib/dates";
 import { isDueOn, timeToMinutes } from "#lib/schedule";
 import { cn } from "#lib/utils";
 
 const START_HOUR = 5;
 const END_HOUR = 23;
 const HOUR_HEIGHT = 56;
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
 
 function HabitBlock({ habit, top }: { habit: Habit; top: number }) {
   const [upsertEntry] = useMutation(UPSERT_HABIT_ENTRY_MUTATION, {
@@ -42,7 +39,7 @@ function HabitBlock({ habit, top }: { habit: Habit; top: number }) {
             variables: {
               input: {
                 habitId: habit.id,
-                date: todayIso(),
+                date: todayIsoDate(),
                 completed: checked === true,
                 value: habit.todayEntry?.value ?? undefined,
               },
@@ -72,7 +69,7 @@ function AnytimeRow({ habit }: { habit: Habit }) {
             variables: {
               input: {
                 habitId: habit.id,
-                date: todayIso(),
+                date: todayIsoDate(),
                 completed: checked === true,
                 value: habit.todayEntry?.value ?? undefined,
               },
