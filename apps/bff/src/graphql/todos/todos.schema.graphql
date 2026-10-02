@@ -28,6 +28,14 @@ type TaskList {
   isInbox: Boolean!
 }
 
+"""A linked task: just enough to show and open it."""
+type TaskRef {
+  id: ID!
+  key: String!
+  title: String!
+  status: TaskStatus!
+}
+
 type Task {
   id: ID!
   """"<list prefix>-<number>", e.g. GRO-12."""
@@ -43,6 +51,12 @@ type Task {
   plannedFor: String
   completedAt: String
   createdAt: String!
+  """Tasks this one waits for, in any list."""
+  blockedBy: [TaskRef!]!
+  """Tasks waiting for this one."""
+  blocks: [TaskRef!]!
+  """True while anything it waits for isn't done."""
+  blocked: Boolean!
 }
 
 type TodayTasks {
@@ -99,6 +113,12 @@ extend type Query {
   """`today` is the user's local day."""
   todayTasks(today: String!): TodayTasks!
   taskByKey(key: String!): Task!
+  """
+  Tasks across every list matching a title, a key (HOME-2) or a number (2):
+  open first, then most recently updated. `excludeDependenciesOf` leaves out
+  that task and the tasks it already waits for (for picking a dependency).
+  """
+  searchTasks(query: String!, excludeDependenciesOf: ID, limit: Int = 10): [Task!]!
 }
 
 extend type Mutation {
@@ -110,4 +130,10 @@ extend type Mutation {
   updateTask(id: ID!, input: UpdateTaskInput!): Task!
   """Returns the deleted task's id."""
   deleteTask(id: ID!): ID!
+  """
+  Make `taskId` wait for another task, given by id or by key (GRO-12). Refused
+  for the task itself, a loop at any depth, or more than 20.
+  """
+  addTaskDependency(taskId: ID!, dependsOnId: ID, dependsOnKey: String): Task!
+  removeTaskDependency(taskId: ID!, dependsOnId: ID!): Task!
 }

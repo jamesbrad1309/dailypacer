@@ -1,3 +1,4 @@
+import { GraphQLError } from "graphql";
 import type { GraphQLContext } from "#graphql/context";
 
 const enc = encodeURIComponent;
@@ -17,6 +18,15 @@ export default {
       ctx.api.get(`/todo-lists/${enc(args.listId)}/tasks?doneLimit=${args.doneLimit}`),
     todayTasks: (_: unknown, args: { today: string }, ctx: GraphQLContext) =>
       ctx.api.get(`/tasks/today?today=${enc(args.today)}`),
+    searchTasks: (
+      _: unknown,
+      args: { query: string; excludeDependenciesOf?: string; limit: number },
+      ctx: GraphQLContext,
+    ) => {
+      const params = new URLSearchParams({ q: args.query, limit: String(args.limit) });
+      if (args.excludeDependenciesOf) params.set("exclude", args.excludeDependenciesOf);
+      return ctx.api.get(`/tasks/search?${params}`);
+    },
     taskByKey: (_: unknown, args: { key: string }, ctx: GraphQLContext) =>
       ctx.api.get(`/tasks/by-key/${enc(args.key)}`),
   },
@@ -37,5 +47,27 @@ export default {
       await ctx.api.delete(`/tasks/${enc(args.id)}`);
       return args.id;
     },
+    addTaskDependency: async (
+      _: unknown,
+      args: { taskId: string; dependsOnId?: string; dependsOnKey?: string },
+      ctx: GraphQLContext,
+    ) => {
+      const dependsOnId =
+        args.dependsOnId ??
+        (args.dependsOnKey
+          ? (await ctx.api.get<{ id: string }>(`/tasks/by-key/${enc(args.dependsOnKey)}`)).id
+          : undefined);
+      if (!dependsOnId) {
+        throw new GraphQLError("Give dependsOnId or dependsOnKey", {
+          extensions: { code: "BAD_USER_INPUT" },
+        });
+      }
+      return ctx.api.post(`/tasks/${enc(args.taskId)}/dependencies`, { dependsOnId });
+    },
+    removeTaskDependency: (
+      _: unknown,
+      args: { taskId: string; dependsOnId: string },
+      ctx: GraphQLContext,
+    ) => ctx.api.delete(`/tasks/${enc(args.taskId)}/dependencies/${enc(args.dependsOnId)}`),
   },
 };
