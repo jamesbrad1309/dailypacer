@@ -1,7 +1,9 @@
 import {
   CalendarClock,
+  CalendarDays,
   ChartBar,
   Coins,
+  Grid3x3,
   Landmark,
   LayoutDashboard,
   type LucideIcon,
@@ -47,11 +49,15 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "dashboard", icon: LayoutDashboard, to: "/habits", exact: true },
       { label: "today", icon: CalendarClock, to: "/habits/today" },
+      { label: "history", icon: Grid3x3, to: "/habits/history" },
     ],
   },
   {
     label: "mind",
-    items: [{ label: "journal", icon: NotebookPen, to: "/journal" }],
+    items: [
+      { label: "journal", icon: NotebookPen, to: "/journal", exact: true },
+      { label: "journalCalendar", icon: CalendarDays, to: "/journal/calendar" },
+    ],
   },
   {
     label: "money",

@@ -38,7 +38,17 @@ export const JOURNAL_DAYS_QUERY = gql`
       feelingCount
       eventCount
       emotions
+      feelings {
+        emotion
+        intensity
+      }
     }
+  }
+`;
+
+export const JOURNAL_FIRST_DATE_QUERY = gql`
+  query JournalFirstDate {
+    journalFirstDate
   }
 `;
 
@@ -71,4 +81,4 @@ export const DELETE_JOURNAL_ENTRY_MUTATION = gql`
  * which cache normalization can't infer — refetch both active queries by
  * operation name after any journal write.
  */
-export const JOURNAL_REFETCH = ["JournalEntries", "JournalDays"];
+export const JOURNAL_REFETCH = ["JournalEntries", "JournalDays", "JournalFirstDate"];

@@ -15,7 +15,8 @@
     "test": "pnpm --filter web --filter api test",
     "format": "biome format --write .",
     "check": "biome check --write .",
-    "quickstart": "bash scripts/quickstart.sh"
+    "quickstart": "bash scripts/quickstart.sh",
+    "lexicon:fetch": "node scripts/fetch-emotion-lexicon.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

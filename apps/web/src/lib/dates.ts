@@ -136,3 +136,14 @@ export function monthRange(yearMonth: string): { from: string; to: string } {
   const [y, m] = yearMonth.split("-").map(Number);
   return { from: `${yearMonth}-01`, to: toIsoDate(new Date(y, m, 0)) };
 }
+
+/**
+ * The Monday-first weeks covering `month` ("YYYY-MM"): from the Monday on or
+ * before the 1st to the Sunday on or after the last day — at most 42 days,
+ * so a month calendar fits one 62-day `journalDays` call.
+ */
+export function monthGridRange(month: string): { from: string; to: string } {
+  const { from, to } = monthRange(month);
+  const gridFrom = startOfWeek(from);
+  return { from: gridFrom, to: addDays(startOfWeek(to), 6) };
+}

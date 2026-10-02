@@ -1,13 +1,2 @@
-node_modules/
-dist/
-build/
-.env
-*.local
-pnpm-lock.yaml.bak
-.turbo/
-.DS_Store
-coverage/
-*.tsbuildinfo
-
 # Third-party data that must not be redistributed (scripts/fetch-emotion-lexicon.mjs)
 apps/web/lexicon/

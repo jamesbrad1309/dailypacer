@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { JournalView } from "#components/journal/JournalView";
+import { JournalSkeleton } from "#components/layout/Skeletons";
 import { JOURNAL_DAYS_QUERY, JOURNAL_ENTRIES_QUERY } from "#graphql/journal";
 import { addDays, fromIsoDate, startOfWeek, toIsoDate, todayIsoDate } from "#lib/dates";
 
@@ -21,7 +22,7 @@ function shownDate(requested: string | undefined): string {
   return requested && requested < today ? requested : today;
 }
 
-export const Route = createFileRoute("/journal")({
+export const Route = createFileRoute("/journal/")({
   staticData: { page: "journal" },
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => ({ date: search.date }),
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/journal")({
       apolloClient.query({ query: JOURNAL_DAYS_QUERY, variables: { from, to: addDays(from, 6) } }),
     ]);
   },
+  pendingComponent: JournalSkeleton,
   component: JournalPage,
 });
 

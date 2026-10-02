@@ -1,16 +1,12 @@
 import type { JournalEntry, JournalEntryKind, JournalTone } from "#graphql/types";
 import { journal as en } from "#i18n/en/journal";
 import { journal as vi } from "#i18n/vi/journal";
-import { EMOTIONS, type Emotion, emotionFor } from "#lib/emotions";
+import { EMOTIONS, EMOTION_PHRASES, type Emotion, emotionFor } from "#lib/emotions";
+import { fold } from "#lib/fold";
 
 /** The languages the syntax is written in. Every language's words parse; this picks which to write. */
 export type SyntaxLanguage = "en" | "vi";
 const WORDS = { en, vi } as const;
-
-/** Case, accents and spacing don't matter: "/Sự-kiện", "/sukien" and "/sựkiện" are one command. */
-function fold(text: string): string {
-  return text.toLowerCase().normalize("NFKD").replace(/\p{M}/gu, "").replace(/đ/g, "d").trim();
-}
 
 /**
  * The composer's plain-text format: one entry per bulleted line, starting
@@ -53,19 +49,6 @@ const KIND_BY_WORD: Record<string, JournalEntryKind> = {
 function kindForWord(word: string): JournalEntryKind | undefined {
   return KIND_BY_WORD[fold(word).replace(/[\s-]/g, "")];
 }
-
-/**
- * Emotion phrases in every language, folded, to the key that's stored
- * ("lo âu" → "anxious"). Longest first, so "tràn đầy năng lượng" wins over
- * a shorter phrase that starts the same way.
- */
-const EMOTION_PHRASES: [string[], string][] = EMOTIONS.flatMap(({ name }) => {
-  const phrases = new Set([
-    name,
-    ...Object.values(WORDS).map((w) => w.emotions[name as keyof typeof en.emotions]),
-  ]);
-  return [...phrases].filter(Boolean).map((p): [string[], string] => [fold(p).split(/\s+/), name]);
-}).sort((a, b) => b[0].length - a[0].length);
 
 /** The emotion at the start of `text` (known phrase, else its first word) and the rest. */
 function takeEmotion(text: string): [string | null, string] {

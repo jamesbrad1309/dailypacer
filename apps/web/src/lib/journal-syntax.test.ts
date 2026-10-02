@@ -64,6 +64,21 @@ describe("parseJournalText: Vietnamese", () => {
     expect(one(source).item.kind).toBe(kind);
   });
 
+  it("stores an emotion's other words under its key, in either language", () => {
+    expect(one("/feeling exhausted after the run").item).toMatchObject({
+      emotion: "tired",
+      text: "after the run",
+    });
+    expect(one("/feeling on edge 4/5").item).toMatchObject({ emotion: "nervous", intensity: 4 });
+    expect(one("/cảm lo lắng về công việc").item).toMatchObject({
+      emotion: "worried",
+      text: "về công việc",
+    });
+    // The longer phrase wins: "chán nản" is sad, "chán" alone is bored.
+    expect(one("/cảm chán nản").item.emotion).toBe("sad");
+    expect(one("/cảm chán").item.emotion).toBe("bored");
+  });
+
   it("stores Vietnamese emotion phrases under their English key", () => {
     expect(one("/cảm lo âu 4/5 vì buổi họp").item).toMatchObject({
       emotion: "anxious",

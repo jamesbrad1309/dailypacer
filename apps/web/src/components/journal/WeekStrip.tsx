@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "#components/ui/button";
 import { JOURNAL_DAYS_QUERY } from "#graphql/journal";
-import type { JournalDay, JournalDaysData } from "#graphql/types";
+import type { JournalDaysData } from "#graphql/types";
 import {
   addDays,
   formatLongDate,
@@ -12,21 +12,8 @@ import {
   startOfWeek,
   todayIsoDate,
 } from "#lib/dates";
-import { emotionFor } from "#lib/emotions";
+import { dominantEmotion } from "#lib/emotions";
 import { cn } from "#lib/utils";
-
-/** The day's most frequent emotion (latest wins a tie), shown as its emoji. */
-function dominantEmotion(day: JournalDay | undefined): string | null {
-  if (!day || day.emotions.length === 0) return null;
-  const counts = new Map<string, number>();
-  let best = day.emotions[0];
-  for (const name of day.emotions) {
-    const count = (counts.get(name) ?? 0) + 1;
-    counts.set(name, count);
-    if (count >= (counts.get(best) ?? 0)) best = name;
-  }
-  return emotionFor(best).emoji;
-}
 
 interface Props {
   selected: string;
