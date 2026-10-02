@@ -28,7 +28,7 @@ improves UX · `2` edge case / power-user · `1` speculative.
 | Insights | 2 | 2 | Weekly review screen (3) |
 | Journaling & mood | 9 | 4 | Which events drive which feelings (3) |
 | Cross-module (habits × finance) | 0 | 5 | "No-spend day" habit auto-checked from transactions (3) |
-| **To-do lists** | 7 | 3 | Reorder tasks within Today (5) |
+| **To-do lists** | 10 | 3 | Reorder tasks within Today (5) |
 | **Finance** (separate doc) | 50 | 10 | Savings goals, custom categories, payee rules (1 partly built), see [finance/use-cases.md](../finance/use-cases.md) |
 
 ## Use cases
@@ -95,7 +95,7 @@ improves UX · `2` edge case / power-user · `1` speculative.
 ## To-do lists
 
 One-off tasks next to habits: `apps/api/src/todos/`, `apps/web/src/components/todos/`,
-pages under `/tasks`. Every task belongs to a list (the built-in **Inbox**,
+pages under `/tasks`. Design notes: [todos.md](todos.md). Every task belongs to a list (the built-in **Inbox**,
 prefix `TASK`, catches tasks added without one) and has a key
 `<list prefix>-<number>`.
 
@@ -103,11 +103,14 @@ prefix `TASK`, catches tasks added without one) and has a key
 | :----: | -------- | :----: | ----- |
 | 🟡 | **Today's to-do list**: add tasks for today, tick them off, reorder them | 5 | `/tasks`: quick add with a list picker (Inbox by default), tick off, progress bar. Today is a view of tasks planned for today from every list (`Query.todayTasks`), not a list. **Not built: reordering within Today** (order is open first, then by creation) |
 | ✅ | **Undone tasks from previous days**: shown in "Earlier, not done", with one action to move to today or unplan | 4 | Tasks planned before today and still open, with "planned N days ago"; Move to today / Unplan per task, and Move all to today. Nothing moves on its own |
-| ✅ | **Custom lists with a key prefix**: "Grocery list" / `GRO` → `GRO-1`, `GRO-2`… | 4 | `/tasks/lists`. The prefix is suggested from the name as you type (accents folded: "Đi chợ" → `DIC`, then `DIC2`… if taken) and can be overridden; 2–6 characters, a letter first, unique |
+| ✅ | **Custom lists with a key prefix**: "Grocery list" / `GRO` → `GRO-1`, `GRO-2`… | 4 | `/tasks/lists`, New list modal validated with zod (`todoListSchema`), including that the prefix isn't used by another list. The prefix is suggested from the name as you type (accents folded: "Đi chợ" → `DIC`, then `DIC2`… if taken) and can be overridden; 2–6 characters, a letter first, unique |
 | ✅ | **Rename a list's prefix** without touching task numbers: `GRO-12` becomes `FOOD-12` | 3 | The key is built from the list's current prefix when read, never stored, so a rename is one update. `TodoList.nextNumber` only goes up, so a number is never reused, even after a delete |
 | ✅ | **Move a task to another list** | 3 | Decided: it **takes the next number in the new list** (`GRO-4` → `TASK-3`), in one transaction with that list's counter. The task dialog warns before saving |
 | ✅ | **Plan a task from any list for a day** | 4 | Decided: yes. `Task.plannedFor` works for every list; Today and Earlier show tasks from all lists with their list name |
 | ✅ | **Kanban board** for a list: To do / In progress / Done, drag between and within columns | 4 | `/tasks/lists/$listId`, dnd-kit: mouse, touch, or Space + arrow keys. A drop updates only that task (status + a position between its neighbours). Done shows the 50 most recently completed plus the total, so an old list doesn't load its history |
+| ✅ | **A task can depend on other tasks**, in the same list or another | 4 | `TaskDependency`; a task is blocked (lock badge) while anything it waits for is open. Loops at any depth and self-links are refused with the reason; completing a blocked task is allowed with a warning |
+| ✅ | **Pick a dependency by searching**, not by remembering keys | 3 | Autocomplete over every list by title, key or number (`Query.searchTasks`); only valid choices are offered (not itself, not current dependencies, nothing that would close a loop) |
+| ✅ | **Confirm before deleting** a task or list | 3 | Inline prompt in the dialog naming what goes and what it affects (tasks that stop being blocked, a list's task count); focus starts on Cancel |
 | ✅ | **Find a task by its key**: typing `GRO-12` opens it | 2 | "Go to a task by key" on the Lists page (`Query.taskByKey`), using each list's current prefix |
 | ⬜ | **Custom kanban columns** per list (e.g. "Waiting on someone") | 2 | Would replace the fixed `TaskStatus` enum with `TodoColumn(listId, name, position)` |
 | ⬜ | **Due dates and reminders** separate from the planned day | 2 | `plannedFor` is "when I'll do it"; a deadline would be its own field |

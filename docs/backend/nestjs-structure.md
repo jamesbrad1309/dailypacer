@@ -66,6 +66,9 @@ job.
 | `GET /todo-lists/:id/tasks?doneLimit=50` | `{ list, tasks, doneTotal }` | A board: open tasks by position, latest `doneLimit` done |
 | `GET /tasks/today?today=` | `{ today, earlier }` | Planned today from every list; earlier days still open |
 | `GET /tasks/by-key/:key` | `Task` | `GRO-12`, by the list's current prefix |
+| `GET /tasks/search?q=&limit=&exclude=` | `Task[]` | Title, key or number across lists; with `exclude`, only valid dependencies for that task |
+| `GET /tasks/:id` | `Task` | With `blockedBy`, `blocks` and `blocked` |
+| `POST /tasks/:id/dependencies` · `DELETE /tasks/:id/dependencies/:dependsOnId` | `Task` | Body `{ dependsOnId }`; 400 for itself, a loop at any depth, or more than 20 |
 | `POST /tasks` · `PATCH /tasks/:id` · `DELETE /tasks/:id` | `Task` | `listId` on PATCH moves it (new number from that list); status change sets `completedAt` |
 | `GET /habits/:id/entries` | `HabitEntry[]` | Newest first |
 | `GET /habit-entries/by-date/:date?habitIds=a,b` | `HabitEntry[]` | **Batch** endpoint for the `todayEntry` DataLoader |

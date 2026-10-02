@@ -44,7 +44,13 @@ works on a fresh clone; never edit it by hand).
 | `/` | `routes/index.tsx` | Redirects to `/habits` |
 | `/habits` | `routes/habits/index.tsx` | Habits dashboard |
 | `/habits/today` | `routes/habits/today.tsx` | Today's schedule |
-| `/journal?date=YYYY-MM-DD` | `routes/journal.tsx` | Journal. No `date` means today |
+| `/habits/history` | `routes/habits/history.tsx` | Every habit over the last 30 days |
+| `/habits/$habitId` | `routes/habits/$habitId.tsx` | One habit: stats, heatmap, week chart, insights, records (paged on the server) |
+| `/tasks` | `routes/tasks/index.tsx` | Today's tasks from every list, and earlier ones not done ([todos.md](../domain/todos.md)) |
+| `/tasks/lists` | `routes/tasks/lists/index.tsx` | To-do lists with key prefixes; new list modal; go to a task by key |
+| `/tasks/lists/$listId` | `routes/tasks/lists/$listId.tsx` | A list's kanban board |
+| `/journal?date=YYYY-MM-DD` | `routes/journal/index.tsx` | Journal. No `date` means today |
+| `/journal/calendar?month=YYYY-MM` | `routes/journal/calendar.tsx` | A month of journal days with the mood score ([journal.md](../domain/journal.md)) |
 | `/finance` | `routes/finance/index.tsx` | Redirects to `/finance/accounts` |
 | `/finance/accounts` | `routes/finance/accounts.tsx` | Money setup ([account-setup.md](../finance/account-setup.md)) |
 | `/finance/transactions?view=review&month=&account=&category=&q=` | `routes/finance/transactions.tsx` | Transactions and the "To review" inbox. The default `view=all` is stripped from the URL |

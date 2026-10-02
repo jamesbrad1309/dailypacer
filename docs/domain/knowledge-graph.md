@@ -7,114 +7,144 @@ want to touch X, what else is involved" before diving into a specific doc.
 
 ```mermaid
 graph TD
-    subgraph Domain["Domain model — habit-data-model.md"]
-        Habit["Habit"]
+    subgraph Domain["Domain model — habit-data-model.md · journal.md · todos.md"]
+        Habit["Habit<br/>description · tags · schedule"]
         Entry["HabitEntry"]
+        Pause["HabitPause<br/>start · resume day"]
         Habit -->|has many| Entry
+        Habit -->|has many| Pause
         Journal["JournalEntry<br/>ACTION · FEELING · EVENT"]
         Journal -->|triggered by an EVENT| Journal
+        List["TodoList<br/>prefix · nextNumber"]
+        Task["Task<br/>number · status · plannedFor"]
+        Dep["TaskDependency"]
+        List -->|has many| Task
+        Task -->|waits for, any list| Dep
     end
 
     subgraph UseCases["Use-case groups — use-cases.md"]
-        Manage["Habit management<br/>create · edit · archive · pause"]
+        Manage["Habit management<br/>create · edit · tags · pause · templates"]
         Track["Daily tracking<br/>check-in · value · note"]
         Dash["Dashboard & gamification<br/>streaks · points · level · heatmap"]
         Cal["Calendar<br/>day timeline by startTime"]
-        Hist["History & review<br/>per-habit entry log"]
-        JournalUC["Journaling & mood<br/>did · felt · happened · because of"]
+        Hist["History & review<br/>30-day grid · records + misses"]
+        Insight["Insights<br/>weekday pattern · month trend · week vs week"]
+        JournalUC["Journaling & mood<br/>did · felt · happened · calendar · mood score"]
+        TodoUC["To-do lists<br/>today · earlier · keys · board · dependencies"]
     end
 
     subgraph Backend["Backend — graphql-bff.md, nestjs-structure.md, prisma-and-data-access.md"]
-        GQL["apps/bff: GraphQL resolvers + DataLoaders<br/>graphql/habits, graphql/dashboard, graphql/journal"]
-        REST["apps/api: REST controllers<br/>/habits, /habit-entries, /dashboard, /journal-entries"]
+        GQL["apps/bff: GraphQL resolvers + DataLoaders<br/>graphql/habits · dashboard · journal · todos"]
+        REST["apps/api: REST controllers<br/>/habits · /habit-entries · /dashboard · /journal-entries · /todo-lists · /tasks"]
         Services["HabitsService / HabitEntriesService / HabitStatsService"]
+        Records["HabitRecordsService<br/>records (paged) · insights"]
+        HabitUtils["streak · gamification · pause<br/>habit-records · habit-insights utils"]
         JournalSvc["JournalService"]
-        Streak["streak.util.ts"]
-        Gamif["gamification.util.ts"]
+        TodosSvc["TodosService<br/>keys · moves · cycles · search"]
         Prisma["Prisma / Postgres"]
     end
 
-    subgraph Frontend["Frontend — react-shadcn setup"]
-        Card["HabitCard"]
-        EditDlg["EditHabitDialog + ScheduleEditor"]
+    subgraph Frontend["Frontend — app-shell.md"]
+        Card["HabitCard · HabitsDashboard<br/>CreateHabitDialog · EditHabitDialog"]
         DayCal["DayCalendar"]
         Header["StatTiles + sidebar LevelCard"]
-        Heatmap["HeatmapGrid"]
-        JournalUI["JournalView<br/>JournalComposer + SlashTextarea · WeekStrip"]
+        HistoryUI["HabitHistory (30 days)"]
+        Detail["HabitDetail<br/>HabitRecordsTable · HabitInsights · WeekComparisonChart"]
+        JournalUI["JournalView · JournalCalendar · MoodChart"]
+        TodoUI["TodayView · ListsView · BoardView<br/>TaskDialog · TaskPicker · ConfirmPrompt"]
     end
 
     Manage --> Habit
+    Manage --> Pause
     Track --> Entry
     Dash --> Entry
     Cal --> Habit
     Hist --> Entry
+    Insight --> Entry
     JournalUC --> Journal
+    TodoUC --> Task
+    TodoUC --> List
+    TodoUC --> Dep
 
     Manage --> Services
     Track --> Services
     Dash --> Services
-    Dash --> Streak
-    Dash --> Gamif
     Cal --> Services
-    Hist --> Services
-
+    Hist --> Records
+    Insight --> Records
+    Services --> HabitUtils
+    Records --> HabitUtils
     JournalUC --> JournalSvc
+    TodoUC --> TodosSvc
     Services --> Prisma
+    Records --> Prisma
     JournalSvc --> Prisma
-    REST --> JournalSvc
+    TodosSvc --> Prisma
     GQL -->|HTTP| REST
     REST --> Services
+    REST --> Records
+    REST --> JournalSvc
+    REST --> TodosSvc
 
-    Manage --> EditDlg
+    Manage --> Card
     Track --> Card
     Dash --> Header
-    Dash --> Heatmap
     Cal --> DayCal
+    Hist --> HistoryUI
+    Hist --> Detail
+    Insight --> Detail
     JournalUC --> JournalUI
+    TodoUC --> TodoUI
 
-    EditDlg --> GQL
     Card --> GQL
     DayCal --> GQL
     Header --> GQL
+    HistoryUI --> GQL
+    Detail --> GQL
     JournalUI --> GQL
+    TodoUI --> GQL
 ```
 
 ## How to read it
 
-- **Domain → Use cases**: which entity a use-case group primarily reads or
-  writes. Dashboard & gamification and History & review both center on
-  `HabitEntry` because streaks, points, heatmaps, and history are all
-  *derived from* entries, never stored themselves (see "Derived data" in
-  the data model doc) — this is why `streak.util.ts`/`gamification.util.ts`
-  sit directly under Dashboard rather than under a generic "utils" bucket.
-- **Use cases → Backend**: every group ultimately funnels through the API's
-  `HabitsService`/`HabitEntriesService`/`HabitStatsService`, reached from the
-  BFF's resolvers over REST. Behaviour changes go in those services. A BFF
-  change is only needed when the GraphQL shape changes.
-- **Use cases → Frontend**: mostly 1:1 with a component, except Dashboard,
-  which spans three (`StatTiles` and the sidebar's level card for aggregate stats, `HabitCard` for
-  per-habit stats, `HeatmapGrid` for the contribution grid) — a change to
-  the points/level formula (`gamification.util.ts`) can visibly affect all
-  three at once.
-- **History & review has no frontend node** — matches its unchecked boxes in
-  [use-cases.md](use-cases.md): the backend query (`habitEntries`) exists,
-  nothing renders it yet.
-
+- **Domain → Use cases**: which entity a use-case group mainly reads or
+  writes. Dashboard, History and Insights all center on `HabitEntry`,
+  because streaks, points, heatmaps, misses and rates are *derived from*
+  entries, never stored (see "Derived data" in the data model doc).
+- **Pauses cut across habits.** `HabitPause` days count as not due, so they
+  change streaks (`streak.util.ts`), misses (`habit-records.util.ts`) and
+  rates (`habit-insights.util.ts`) at once. A change to how pauses work
+  touches all three.
+- **Use cases → Backend**: habit groups go through the API's
+  `HabitsService` / `HabitEntriesService` / `HabitStatsService`, and the
+  detail page's records and insights through `HabitRecordsService`, which
+  works out misses and rates on the server so the browser only gets one page
+  of records. The BFF reaches all of them over REST; it only changes when the
+  GraphQL shape does.
+- **Use cases → Frontend**: Dashboard spans `StatTiles`, the sidebar's level
+  card and `HabitCard`, so a change to the points/level formula
+  (`gamification.util.ts`) shows in all three. History spans the 30-day
+  grid and the habit detail page.
 - **Journaling is its own island.** `JournalEntry` has no relation to
-  `Habit` yet. Its only link is to itself (a feeling or action → the event
-  that triggered it). See [journal.md](journal.md).
+  `Habit`. Its only link is to itself (a feeling or action → the event that
+  triggered it). The mood score is computed in the browser from feelings
+  (`lib/mood.ts`), see [journal.md](journal.md).
+- **To-do lists are another island.** `TodoList` / `Task` /
+  `TaskDependency` don't touch habits or the journal. Dependencies cross
+  lists; keys are derived from the list's current prefix, so a prefix
+  rename touches one row. See [todos.md](todos.md).
 
-## Planned: finance module
+## Finance module
 
-The finance module ([finance/index.md](../finance/index.md)) is designed as a
-parallel subgraph: `Account → Transaction ← Category`, `Budget → Category`,
-served by `FinanceModule` REST controllers in `apps/api` and `graphql/finance/` in `apps/bff`. The only edges
-into the habits graph are listed in
-[finance/habits-integration.md](../finance/habits-integration.md), and they
-run one way: finance writes `HabitEntry` rows through
-`HabitEntriesService`. The habits code never imports finance. Add finance
-to the diagram once it's built.
+Finance ([finance/index.md](../finance/index.md)) is a parallel subgraph:
+`Account → Transaction ← Category`, `Budget → Category`, subscriptions and
+quick log, served by `FinanceModule` REST controllers in `apps/api` and
+`graphql/finance/` in `apps/bff`. Its planned edges into the habits graph are
+listed in [finance/habits-integration.md](../finance/habits-integration.md)
+and run one way: finance would write `HabitEntry` rows through
+`HabitEntriesService`. None of them is built yet, so it's kept out of the
+diagram above.
 
-Regenerate this diagram (by hand — it's illustrative, not derived from code)
+Regenerate this diagram (by hand: it's illustrative, not derived from code)
 whenever a use case moves to a different service/component, or a new
 use-case group is added to use-cases.md.

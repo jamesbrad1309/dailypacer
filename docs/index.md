@@ -23,7 +23,8 @@ Each file below is a short, standalone read.
 - [Use cases](domain/use-cases.md) — what the app needs to do, by lifecycle stage, with build status + impact score
 - [Knowledge graph](domain/knowledge-graph.md) — how domain entities, use cases, backend, and frontend connect
 - [Habit data model](domain/habit-data-model.md) — modeling "custom habit + arbitrary tracked info"
-- [Journal](domain/journal.md) — actions, feelings and events; the `/slash` list syntax; linking feelings to events
+- [Journal](domain/journal.md) — actions, feelings and events; the `/slash` list syntax; linking feelings to events; calendar and mood score
+- [To-do lists](domain/todos.md) — today's plan, lists with key prefixes (`GRO-12`), kanban boards, dependencies across lists
 
 **Finance** (planned module, not built yet)
 - [Finance module overview](finance/index.md) — scope, build order, reading order
