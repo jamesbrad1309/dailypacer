@@ -2,8 +2,10 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import type { Habit, Prisma } from "@prisma/client";
 import { PrismaService } from "#common/database/prisma.service";
 import { scopedLogger } from "#common/logger/logger";
+import { type Day, toDay } from "#habits/day.util";
 import type { CreateHabitInput } from "#habits/dto/create-habit.dto";
 import type { UpdateHabitInput } from "#habits/dto/update-habit.dto";
+import type { PauseRange } from "#habits/pause.util";
 import { type HabitSchedule, isDueOn } from "#habits/schedule.util";
 
 const log = scopedLogger("HabitsService");
@@ -91,21 +93,47 @@ export class HabitsService {
     return habit;
   }
 
-  async pause(id: string): Promise<Habit> {
-    const habit = await this.prisma.habit.update({
-      where: { id },
-      data: { pausedAt: new Date() },
+  /**
+   * Pauses from `day` (the user's local today; the server's UTC day if not
+   * sent) and records it in habit_pauses, so the stretch is skipped by
+   * streaks and misses later. Pausing a paused habit changes nothing.
+   */
+  async pause(id: string, day: Day = toDay(new Date())): Promise<Habit> {
+    const current = await this.findOneOrFail(id);
+    if (current.pausedAt) return current;
+    const habit = await this.prisma.$transaction(async (tx) => {
+      await tx.habitPause.create({ data: { habitId: id, startDate: new Date(day) } });
+      return tx.habit.update({ where: { id }, data: { pausedAt: new Date() } });
     });
-    log.info({ habitId: habit.id }, "habit paused");
+    log.info({ habitId: habit.id, day }, "habit paused");
     return habit;
   }
 
-  async resume(id: string): Promise<Habit> {
-    const habit = await this.prisma.habit.update({
-      where: { id },
-      data: { pausedAt: null },
+  /** Resumes from `day`: closes the open pause, so the habit is due again from that day. */
+  async resume(id: string, day: Day = toDay(new Date())): Promise<Habit> {
+    const current = await this.findOneOrFail(id);
+    if (!current.pausedAt) return current;
+    const habit = await this.prisma.$transaction(async (tx) => {
+      await tx.habitPause.updateMany({
+        where: { habitId: id, endDate: null },
+        data: { endDate: new Date(day) },
+      });
+      return tx.habit.update({ where: { id }, data: { pausedAt: null } });
     });
-    log.info({ habitId: habit.id }, "habit resumed");
+    log.info({ habitId: habit.id, day }, "habit resumed");
     return habit;
+  }
+
+  /** Each habit's pause stretches, as days, for streaks and misses. */
+  async pausesFor(habitIds: readonly string[]): Promise<Map<string, PauseRange[]>> {
+    const rows = habitIds.length
+      ? await this.prisma.habitPause.findMany({ where: { habitId: { in: [...habitIds] } } })
+      : [];
+    const byHabit = new Map<string, PauseRange[]>();
+    for (const row of rows) {
+      const range = { start: toDay(row.startDate), end: row.endDate ? toDay(row.endDate) : null };
+      byHabit.set(row.habitId, [...(byHabit.get(row.habitId) ?? []), range]);
+    }
+    return byHabit;
   }
 }

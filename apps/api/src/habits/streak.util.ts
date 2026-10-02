@@ -1,4 +1,5 @@
 import type { HabitEntry } from "@prisma/client";
+import { type PauseRange, isPausedOn } from "#habits/pause.util";
 import type { HabitSchedule } from "#habits/schedule.util";
 import { isDueOn } from "#habits/schedule.util";
 
@@ -15,7 +16,7 @@ function dateKey(date: Date): string {
 /**
  * Walks backward day-by-day from `today`, only counting days the schedule
  * actually considers "due" (a weekly Mon/Wed/Fri habit isn't broken by a
- * Tuesday with no entry). Stops at the first due day that wasn't logged
+ * Tuesday with no entry, and a paused day isn't due either). Stops at the first due day that wasn't logged
  * successfully — that's the current streak. `entries` only needs to cover
  * the window being asked about (see graphql/context.ts's entriesSinceLoader).
  */
@@ -25,6 +26,8 @@ export function computeCurrentStreak(
   targetValue: number | null,
   today: Date,
   windowDays: number,
+  /** Paused days are skipped like days the schedule doesn't make due. */
+  pauses: readonly PauseRange[] = [],
 ): number {
   const byDate = new Map(entries.map((e) => [dateKey(e.date), e]));
   let streak = 0;
@@ -32,7 +35,7 @@ export function computeCurrentStreak(
   for (let offset = 0; offset < windowDays; offset++) {
     const date = new Date(today);
     date.setDate(date.getDate() - offset);
-    if (!isDueOn(schedule, date)) continue;
+    if (!isDueOn(schedule, date) || isPausedOn(pauses, dateKey(date))) continue;
 
     if (isSuccess(byDate.get(dateKey(date)), targetValue)) {
       streak++;
@@ -51,6 +54,8 @@ export function computeLongestStreak(
   targetValue: number | null,
   today: Date,
   windowDays: number,
+  /** Paused days are skipped like days the schedule doesn't make due. */
+  pauses: readonly PauseRange[] = [],
 ): number {
   const byDate = new Map(entries.map((e) => [dateKey(e.date), e]));
   let longest = 0;
@@ -59,7 +64,7 @@ export function computeLongestStreak(
   for (let offset = windowDays - 1; offset >= 0; offset--) {
     const date = new Date(today);
     date.setDate(date.getDate() - offset);
-    if (!isDueOn(schedule, date)) continue;
+    if (!isDueOn(schedule, date) || isPausedOn(pauses, dateKey(date))) continue;
 
     if (isSuccess(byDate.get(dateKey(date)), targetValue)) {
       running++;

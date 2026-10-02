@@ -8,6 +8,7 @@ import {
   pointsRequiredForLevel,
 } from "#habits/gamification.util";
 import { HabitsService } from "#habits/habits.service";
+import type { PauseRange } from "#habits/pause.util";
 import type { HabitSchedule } from "#habits/schedule.util";
 import {
   computeCurrentStreak,
@@ -72,9 +73,15 @@ export class HabitStatsService {
       else entriesByHabit.set(entry.habitId, [entry]);
     }
 
+    const pauses = await this.habitsService.pausesFor(habitIds);
     const today = new Date();
     return habits.map((habit) =>
-      this.computeStats(habit, entriesByHabit.get(habit.id) ?? [], today),
+      this.computeStats(
+        habit,
+        entriesByHabit.get(habit.id) ?? [],
+        pauses.get(habit.id) ?? [],
+        today,
+      ),
     );
   }
 
@@ -98,7 +105,12 @@ export class HabitStatsService {
     };
   }
 
-  private computeStats(habit: Habit, entries: HabitEntry[], today: Date): HabitStats {
+  private computeStats(
+    habit: Habit,
+    entries: HabitEntry[],
+    pauses: PauseRange[],
+    today: Date,
+  ): HabitStats {
     const schedule = habit.schedule as HabitSchedule;
     const currentStreak = computeCurrentStreak(
       schedule,
@@ -106,6 +118,7 @@ export class HabitStatsService {
       habit.targetValue,
       today,
       STATS_WINDOW_DAYS,
+      pauses,
     );
     const longestStreak = computeLongestStreak(
       schedule,
@@ -113,6 +126,7 @@ export class HabitStatsService {
       habit.targetValue,
       today,
       STATS_WINDOW_DAYS,
+      pauses,
     );
     const totalCompletions = computeTotalCompletions(entries, habit.targetValue);
     const points = computePoints(totalCompletions, currentStreak);

@@ -2,7 +2,17 @@ import { Body, Controller, Get, Param, Patch, Post, Query } from "@nestjs/common
 import type { Habit } from "@prisma/client";
 import { ZodValidationPipe } from "#common/http/zod-validation.pipe";
 import { type CreateHabitInput, createHabitSchema } from "#habits/dto/create-habit.dto";
+import {
+  type HabitInsightsQuery,
+  type HabitRecordsQuery,
+  type PauseDayInput,
+  habitInsightsQuerySchema,
+  habitRecordsQuerySchema,
+  pauseDaySchema,
+} from "#habits/dto/habit-records.dto";
 import { type UpdateHabitInput, updateHabitSchema } from "#habits/dto/update-habit.dto";
+import type { HabitInsights } from "#habits/habit-insights.util";
+import { type HabitRecordsPage, HabitRecordsService } from "#habits/habit-records.service";
 import { type HabitStats, HabitStatsService } from "#habits/habit-stats.service";
 import { HabitsService } from "#habits/habits.service";
 
@@ -21,6 +31,7 @@ export class HabitsController {
   constructor(
     private readonly habitsService: HabitsService,
     private readonly habitStatsService: HabitStatsService,
+    private readonly habitRecordsService: HabitRecordsService,
   ) {}
 
   @Get()
@@ -67,13 +78,37 @@ export class HabitsController {
     return this.habitsService.unarchive(id);
   }
 
+  /** One page of check-ins and misses; see HabitRecordsService. */
+  @Get(":id/records")
+  records(
+    @Param("id") id: string,
+    @Query(new ZodValidationPipe(habitRecordsQuerySchema)) query: HabitRecordsQuery,
+  ): Promise<HabitRecordsPage> {
+    return this.habitRecordsService.records(id, query);
+  }
+
+  /** Best/worst weekdays and this month vs last month. */
+  @Get(":id/insights")
+  insights(
+    @Param("id") id: string,
+    @Query(new ZodValidationPipe(habitInsightsQuerySchema)) query: HabitInsightsQuery,
+  ): Promise<HabitInsights> {
+    return this.habitRecordsService.insights(id, query.today);
+  }
+
   @Post(":id/pause")
-  pause(@Param("id") id: string): Promise<Habit> {
-    return this.habitsService.pause(id);
+  pause(
+    @Param("id") id: string,
+    @Body(new ZodValidationPipe(pauseDaySchema)) body: PauseDayInput,
+  ): Promise<Habit> {
+    return this.habitsService.pause(id, body.date);
   }
 
   @Post(":id/resume")
-  resume(@Param("id") id: string): Promise<Habit> {
-    return this.habitsService.resume(id);
+  resume(
+    @Param("id") id: string,
+    @Body(new ZodValidationPipe(pauseDaySchema)) body: PauseDayInput,
+  ): Promise<Habit> {
+    return this.habitsService.resume(id, body.date);
   }
 }

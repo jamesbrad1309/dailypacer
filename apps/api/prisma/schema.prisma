@@ -29,8 +29,25 @@ model Habit {
   updatedAt   DateTime  @updatedAt
 
   entries HabitEntry[]
+  pauses  HabitPause[]
 
   @@map("habits")
+}
+
+/// A stretch a habit was paused, in the user's local days. Paused days aren't
+/// due: they neither break a streak nor count as missed.
+model HabitPause {
+  id        String    @id @default(uuid())
+  habitId   String
+  habit     Habit     @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  /// The first paused day.
+  startDate DateTime  @db.Date
+  /// The day it was resumed (active again from that day); null while still paused.
+  endDate   DateTime? @db.Date
+  createdAt DateTime  @default(now())
+
+  @@index([habitId])
+  @@map("habit_pauses")
 }
 
 model HabitEntry {
