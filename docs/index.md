@@ -53,6 +53,7 @@ Each file below is a short, standalone read.
 - [API structure](backend/nestjs-structure.md) — `apps/api`: NestJS REST endpoints, where domain logic lives
 - [Prisma & data access](backend/prisma-and-data-access.md) — schema, migrations, `PrismaService`, JSON/Date gotchas
 - [Logging](backend/logging.md) — pino (Node's zap), HTTP/GraphQL/service-level logs, the `name` field gotcha
+- [Email & notifications](backend/email-and-notifications.md) — planned: Resend + pg-boss queue, provider comparison, deliverability
 
 **Cross-cutting**
 - [TypeScript `#` import aliases](shared/typescript-import-aliases.md) — the native alias mechanism, no plugin
