@@ -556,6 +556,14 @@ export interface TodoList {
   doneCount: number;
 }
 
+/** A linked task, as shown in a dependency list. */
+export interface TaskRef {
+  id: string;
+  key: string;
+  title: string;
+  status: TaskStatus;
+}
+
 export interface Task {
   id: string;
   /** "<list prefix>-<number>", e.g. GRO-12. */
@@ -571,6 +579,12 @@ export interface Task {
   plannedFor: string | null;
   completedAt: string | null;
   createdAt: string;
+  /** Tasks this one waits for, in any list. */
+  blockedBy: TaskRef[];
+  /** Tasks waiting for this one. */
+  blocks: TaskRef[];
+  /** True while anything it waits for isn't done. */
+  blocked: boolean;
 }
 
 export interface TodoListsData {

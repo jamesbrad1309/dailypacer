@@ -1,6 +1,7 @@
 import type { todos as en } from "#i18n/en/todos";
 
 export const todos: typeof en = {
+  cannotUndo: "Không thể hoàn tác.",
   inbox: "Hộp thư",
   status: { TODO: "Cần làm", IN_PROGRESS: "Đang làm", DONE: "Xong" },
   today: {
@@ -20,6 +21,12 @@ export const todos: typeof en = {
     unplan: "Bỏ lịch",
   },
   lists: {
+    deletePrompt_zero: "Xóa “{{name}}”? Danh sách chưa có việc nào.",
+    deletePrompt_one: "Xóa “{{name}}” và {{count}} việc của nó?",
+    deletePrompt_other: "Xóa “{{name}}” và {{count}} việc của nó?",
+    nameRequired: "Hãy đặt tên cho danh sách.",
+    nameTooLong: "Tối đa 60 ký tự.",
+    prefixTaken: "{{prefix}} đang được dùng cho {{list}}.",
     title: "Danh sách của bạn",
     newList: "Danh sách mới",
     name: "Tên",
@@ -35,7 +42,6 @@ export const todos: typeof en = {
     editList: "Sửa danh sách",
     renameHint: "Đổi tiền tố sẽ đổi mã mọi việc: {{from}} thành {{to}}.",
     delete: "Xóa danh sách",
-    confirmDelete: "Xóa cả danh sách và các việc",
     inboxNoDelete: "Hộp thư chứa các việc được thêm mà không chọn danh sách, nên không thể xóa.",
     findKey: "Tìm việc theo mã",
     findPlaceholder: "GRO-12",
@@ -50,6 +56,23 @@ export const todos: typeof en = {
     back: "Tất cả danh sách",
   },
   task: {
+    deletePrompt: "Xóa {{key}} “{{title}}”?",
+    deleteUnblocks_one: "{{keys}} đang chờ việc này và sẽ không còn bị nó chặn.",
+    deleteUnblocks_other: "{{keys}} đang chờ việc này và sẽ không còn bị nó chặn.",
+    searchPlaceholder: "Tìm việc trong mọi danh sách, hoặc nhập mã",
+    searchEmpty: "Không có việc nào khớp.",
+    searching: "Đang tìm…",
+    searchResults_one: "Tìm thấy {{count}} việc",
+    searchResults_other: "Tìm thấy {{count}} việc",
+    blockedBy: "Đang chờ {{key}}",
+    blockedByMore: "Đang chờ {{key}} +{{count}}",
+    waitingFor: "Đang chờ",
+    waitingForHint:
+      "Việc này bị chặn cho đến khi các việc dưới đây xong. Chúng có thể thuộc bất kỳ danh sách nào.",
+    blocks: "Đang chặn",
+    removeDependency: "Bỏ chờ {{key}}",
+    noDependencies: "Không chờ việc nào.",
+    doneWhileBlocked: "Vẫn đang chờ {{keys}}. Bạn vẫn có thể đánh dấu xong.",
     title: "Tên việc",
     notes: "Ghi chú",
     notesPlaceholder: "Chi tiết, đường dẫn, số lượng…",
@@ -60,7 +83,6 @@ export const todos: typeof en = {
     clear: "Bỏ",
     save: "Lưu",
     delete: "Xóa việc",
-    confirmDelete: "Xác nhận xóa",
     moveWarning: "Chuyển sang {{list}} sẽ đổi số: {{from}} thành {{to}}.",
     created: "Tạo ngày {{date}}",
   },

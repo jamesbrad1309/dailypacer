@@ -19,6 +19,19 @@ const TASK_FIELDS = gql`
     plannedFor
     completedAt
     createdAt
+    blocked
+    blockedBy {
+      id
+      key
+      title
+      status
+    }
+    blocks {
+      id
+      key
+      title
+      status
+    }
   }
 `;
 
@@ -90,6 +103,16 @@ export const TASK_BY_KEY_QUERY = gql`
   }
 `;
 
+/** Tasks across every list by title, key or number; see the BFF's `searchTasks`. */
+export const SEARCH_TASKS_QUERY = gql`
+  ${TASK_FIELDS}
+  query SearchTasks($query: String!, $excludeDependenciesOf: ID) {
+    searchTasks(query: $query, excludeDependenciesOf: $excludeDependenciesOf, limit: 10) {
+      ...TaskFields
+    }
+  }
+`;
+
 export const CREATE_TODO_LIST_MUTATION = gql`
   ${LIST_FIELDS}
   mutation CreateTodoList($input: CreateTodoListInput!) {
@@ -135,6 +158,24 @@ export const UPDATE_TASK_MUTATION = gql`
 export const DELETE_TASK_MUTATION = gql`
   mutation DeleteTask($id: ID!) {
     deleteTask(id: $id)
+  }
+`;
+
+export const ADD_TASK_DEPENDENCY_MUTATION = gql`
+  ${TASK_FIELDS}
+  mutation AddTaskDependency($taskId: ID!, $dependsOnKey: String!) {
+    addTaskDependency(taskId: $taskId, dependsOnKey: $dependsOnKey) {
+      ...TaskFields
+    }
+  }
+`;
+
+export const REMOVE_TASK_DEPENDENCY_MUTATION = gql`
+  ${TASK_FIELDS}
+  mutation RemoveTaskDependency($taskId: ID!, $dependsOnId: ID!) {
+    removeTaskDependency(taskId: $taskId, dependsOnId: $dependsOnId) {
+      ...TaskFields
+    }
   }
 `;
 

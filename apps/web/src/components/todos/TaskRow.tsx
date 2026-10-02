@@ -1,3 +1,4 @@
+import { Lock } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Checkbox } from "#components/ui/checkbox";
@@ -15,6 +16,27 @@ export function TaskKey({ taskKey, className }: { taskKey: string; className?: s
       )}
     >
       {taskKey}
+    </span>
+  );
+}
+
+/**
+ * "Blocked by GRO-3" (+n more) while a task waits for unfinished ones; the
+ * lock and the words carry it, not colour alone. Nothing when it isn't blocked.
+ */
+export function BlockedBadge({ task }: { task: Pick<Task, "blocked" | "blockedBy"> }) {
+  const { t } = useTranslation();
+  if (!task.blocked) return null;
+  const open = task.blockedBy.filter((dep) => dep.status !== "DONE");
+  return (
+    <span
+      title={open.map((dep) => `${dep.key} ${dep.title}`).join("\n")}
+      className="inline-flex shrink-0 items-center gap-1 rounded bg-amber-500/15 px-1.5 text-[11px] text-amber-800 dark:text-amber-300"
+    >
+      <Lock className="size-3" />
+      {open.length > 1
+        ? t("todos.task.blockedByMore", { key: open[0].key, count: open.length - 1 })
+        : t("todos.task.blockedBy", { key: open[0].key })}
     </span>
   );
 }
@@ -54,6 +76,7 @@ export function TaskRow({ task, onToggle, onOpen, showList = true, actions, meta
         >
           <TaskKey taskKey={task.key} />
           <span className="truncate">{task.title}</span>
+          <BlockedBadge task={task} />
           {task.status === "IN_PROGRESS" && (
             <span className="shrink-0 rounded bg-sky-500/15 px-1.5 text-[11px] text-sky-700 dark:text-sky-400">
               {t("todos.status.IN_PROGRESS")}

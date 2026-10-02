@@ -26,7 +26,7 @@ import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ListSkeleton } from "#components/layout/Skeletons";
 import { TaskDialog } from "#components/todos/TaskDialog";
-import { TaskKey } from "#components/todos/TaskRow";
+import { BlockedBadge, TaskKey } from "#components/todos/TaskRow";
 import { Button } from "#components/ui/button";
 import { Input } from "#components/ui/input";
 import {
@@ -293,8 +293,9 @@ function Card({ task, onOpen, dragging }: { task: Task; onOpen?: () => void; dra
       >
         {task.title}
       </button>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <TaskKey taskKey={task.key} />
+        <BlockedBadge task={task} />
         {task.plannedFor && (
           <span
             className={cn(
