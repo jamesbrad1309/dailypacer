@@ -1,4 +1,4 @@
-/** Same limits as the API's transaction DTO. */
+/** Same limits as the API's transaction and habit DTOs. */
 const MAX_TAGS = 20;
 const MAX_TAG_LENGTH = 50;
 

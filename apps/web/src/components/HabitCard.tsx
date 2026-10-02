@@ -1,4 +1,5 @@
 import { useMutation } from "@apollo/client/react";
+import { Link } from "@tanstack/react-router";
 import { Archive, Clock, Flame, Pause, Play, Star } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -25,7 +26,13 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function HabitCard({ habit }: { habit: Habit }) {
+interface Props {
+  habit: Habit;
+  /** Called with a tag when its chip is clicked, to filter the dashboard by it. */
+  onTagClick?: (tag: string) => void;
+}
+
+export function HabitCard({ habit, onTagClick }: Props) {
   const { t } = useTranslation();
   const [confirmingArchive, setConfirmingArchive] = useState(false);
 
@@ -52,15 +59,26 @@ export function HabitCard({ habit }: { habit: Habit }) {
   return (
     <Card className={cn(habit.paused && "opacity-60")}>
       <CardHeader className="flex-row items-start justify-between space-y-0">
-        <div>
-          <CardTitle className="text-base">{habit.name}</CardTitle>
+        <div className="min-w-0">
+          <CardTitle className="text-base">
+            <Link
+              to="/habits/$habitId"
+              params={{ habitId: habit.id }}
+              title={t("habits.detail.open", { name: habit.name })}
+              className="hover:underline"
+            >
+              {habit.name}
+            </Link>
+          </CardTitle>
+          {habit.description && (
+            <p
+              className="mt-1 line-clamp-2 text-sm text-muted-foreground"
+              title={habit.description}
+            >
+              {habit.description}
+            </p>
+          )}
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-            {habit.currentStreak > 0 && (
-              <Badge variant="warning" className="gap-1">
-                <Flame className="size-3" />
-                {t("habits.card.streak", { count: habit.currentStreak })}
-              </Badge>
-            )}
             <Badge variant="secondary" className="gap-1">
               <Star className="size-3" />
               {t("habits.card.level", { level: habit.level, points: habit.points })}
@@ -72,10 +90,38 @@ export function HabitCard({ habit }: { habit: Habit }) {
                 {habit.startTime}
               </Badge>
             )}
+            {habit.tags.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => onTagClick?.(tag)}
+                title={t("habits.card.filterByTag", { tag })}
+                className="rounded-md text-xs text-sky-600 hover:underline dark:text-sky-400"
+              >
+                #{tag}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex shrink-0 items-center gap-3">
+          <div
+            className="flex flex-col items-center leading-none"
+            title={t("habits.card.best", { count: habit.longestStreak })}
+          >
+            <span
+              className={cn(
+                "flex items-center gap-0.5 text-xl font-semibold tabular-nums",
+                habit.currentStreak > 0 ? "text-amber-500" : "text-muted-foreground",
+              )}
+            >
+              <Flame className="size-4" />
+              {habit.currentStreak}
+            </span>
+            <span className="mt-1 text-[10px] text-muted-foreground">
+              {t("habits.card.streakLabel")}
+            </span>
+          </div>
           <Checkbox
             checked={entry?.completed ?? false}
             disabled={habit.paused}

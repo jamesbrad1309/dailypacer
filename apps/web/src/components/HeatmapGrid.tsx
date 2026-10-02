@@ -15,7 +15,18 @@ function cellClass(day: HeatmapDay | undefined): string {
  * one entry per day — see graphql/habits/habits.resolvers.ts's `heatmap`
  * field), reshaped here into Sunday-aligned week columns of 7 day-rows.
  */
-export function HeatmapGrid({ days }: { days: HeatmapDay[] }) {
+const SIZES = {
+  /** The dashboard card's compact grid. */
+  sm: { gap: "gap-[3px]", cell: "size-[10px] rounded-[2px]" },
+  /** The habit detail page, where it has room to be read. */
+  lg: { gap: "gap-1", cell: "size-5 rounded-[4px]" },
+};
+
+export function HeatmapGrid({
+  days,
+  size = "sm",
+}: { days: HeatmapDay[]; size?: keyof typeof SIZES }) {
+  const { gap, cell } = SIZES[size];
   const { t } = useTranslation();
   if (days.length === 0) return null;
 
@@ -27,11 +38,11 @@ export function HeatmapGrid({ days }: { days: HeatmapDay[] }) {
   }
 
   return (
-    <div className="flex gap-[3px] overflow-x-auto py-1">
+    <div className={cn("flex overflow-x-auto py-1", gap)}>
       {weeks.map((week, weekIdx) => (
         <div
           key={week.find((d) => d)?.date ?? `week-${weekIdx}`}
-          className="flex flex-col gap-[3px]"
+          className={cn("flex flex-col", gap)}
         >
           {week.map((day, dayIdx) => (
             <div
@@ -43,7 +54,7 @@ export function HeatmapGrid({ days }: { days: HeatmapDay[] }) {
                     : formatShortDate(day.date)
                   : undefined
               }
-              className={cn("size-[10px] rounded-[2px]", cellClass(day))}
+              className={cn(cell, cellClass(day))}
             />
           ))}
         </div>

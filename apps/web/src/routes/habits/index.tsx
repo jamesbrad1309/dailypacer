@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { HabitsDashboard } from "#components/HabitsDashboard";
+import { DashboardSkeleton } from "#components/layout/Skeletons";
 import { DASHBOARD_STATS_QUERY, HABITS_QUERY } from "#graphql/habits";
 
 export const Route = createFileRoute("/habits/")({
@@ -11,5 +12,6 @@ export const Route = createFileRoute("/habits/")({
       apolloClient.query({ query: DASHBOARD_STATS_QUERY }),
     ]);
   },
+  pendingComponent: DashboardSkeleton,
   component: HabitsDashboard,
 });

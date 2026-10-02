@@ -20,6 +20,9 @@ export interface HeatmapDay {
 export interface Habit {
   id: string;
   name: string;
+  description: string | null;
+  /** Lowercased labels, see lib/tags.ts. */
+  tags: string[];
   icon: string | null;
   unit: string | null;
   targetValue: number | null;
@@ -35,6 +38,21 @@ export interface Habit {
   levelTitle: string;
   todayEntry: HabitEntry | null;
   heatmap: HeatmapDay[];
+}
+
+/** A stored check-in, as listed on a habit's detail page. */
+export interface HabitEntryRecord {
+  id: string;
+  /** "YYYY-MM-DD" */
+  date: string;
+  value: number | null;
+  completed: boolean;
+  note: string | null;
+}
+
+export interface HabitDetailData {
+  habit: Habit & { createdAt: string };
+  habitEntries: HabitEntryRecord[];
 }
 
 export interface HabitsData {
@@ -113,12 +131,19 @@ export interface JournalEntriesData {
   journalEntries: JournalEntry[];
 }
 
+export interface JournalDayFeeling {
+  emotion: string;
+  /** 1–5, or null when not given. */
+  intensity: number | null;
+}
+
 export interface JournalDay {
   date: string;
   actionCount: number;
   feelingCount: number;
   eventCount: number;
   emotions: string[];
+  feelings: JournalDayFeeling[];
 }
 
 export interface JournalDaysData {

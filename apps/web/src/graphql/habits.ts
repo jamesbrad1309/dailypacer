@@ -4,6 +4,8 @@ const HABIT_FIELDS = gql`
   fragment HabitFields on Habit {
     id
     name
+    description
+    tags
     icon
     unit
     targetValue
@@ -128,6 +130,24 @@ export const RESUME_HABIT_MUTATION = gql`
   mutation ResumeHabit($id: ID!) {
     resumeHabit(id: $id) {
       ...HabitFields
+    }
+  }
+`;
+
+/** One habit and every entry it has, newest first, for its detail page. */
+export const HABIT_DETAIL_QUERY = gql`
+  ${HABIT_FIELDS}
+  query HabitDetail($id: ID!) {
+    habit(id: $id) {
+      ...HabitFields
+      createdAt
+    }
+    habitEntries(habitId: $id) {
+      id
+      date
+      value
+      completed
+      note
     }
   }
 `;

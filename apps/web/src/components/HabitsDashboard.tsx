@@ -1,16 +1,22 @@
 import { useQuery } from "@apollo/client/react";
+import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ArchivedHabits } from "#components/ArchivedHabits";
-import { CreateHabitForm } from "#components/CreateHabitForm";
+import { CreateHabitDialog } from "#components/CreateHabitDialog";
 import { HabitList } from "#components/HabitList";
 import { StatTiles } from "#components/StatTiles";
 import { HABITS_QUERY } from "#graphql/habits";
 import type { HabitsData } from "#graphql/types";
+import { cn } from "#lib/utils";
 
 export function HabitsDashboard() {
   const { t } = useTranslation();
   const { data } = useQuery<HabitsData>(HABITS_QUERY);
   const count = data?.habits.length;
+  const allTags = [...new Set(data?.habits.flatMap((habit) => habit.tags) ?? [])].sort();
+  const [tag, setTag] = useState<string | null>(null);
+  // A tag can disappear (its last habit edited or archived); fall back to all.
+  const activeTag = tag && allTags.includes(tag) ? tag : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -24,11 +30,54 @@ export function HabitsDashboard() {
               <span className="ml-2 text-sm font-normal text-muted-foreground">{count}</span>
             )}
           </h2>
-          <CreateHabitForm className="w-full sm:w-auto sm:min-w-[28rem]" />
+          <CreateHabitDialog />
         </div>
-        <HabitList />
+        {allTags.length > 0 && (
+          <fieldset className="flex flex-wrap items-center gap-1.5">
+            <legend className="sr-only">{t("habits.filter.label")}</legend>
+            <TagChip active={activeTag === null} onClick={() => setTag(null)}>
+              {t("habits.filter.all")}
+            </TagChip>
+            {allTags.map((name) => (
+              <TagChip
+                key={name}
+                active={activeTag === name}
+                onClick={() => setTag(activeTag === name ? null : name)}
+              >
+                #{name}
+              </TagChip>
+            ))}
+          </fieldset>
+        )}
+        <HabitList tag={activeTag} onTagClick={setTag} />
         <ArchivedHabits />
       </section>
     </div>
+  );
+}
+
+function TagChip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={cn(
+        "rounded-full border px-3 py-1 text-xs transition-colors",
+        active
+          ? "border-primary bg-primary text-primary-foreground"
+          : "text-muted-foreground hover:bg-accent hover:text-foreground",
+      )}
+    >
+      {children}
+    </button>
   );
 }
