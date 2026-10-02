@@ -28,7 +28,7 @@ improves UX · `2` edge case / power-user · `1` speculative.
 | Insights | 2 | 2 | Weekly review screen (3) |
 | Journaling & mood | 9 | 4 | Which events drive which feelings (3) |
 | Cross-module (habits × finance) | 0 | 5 | "No-spend day" habit auto-checked from transactions (3) |
-| **To-do lists** (planned module) | 0 | 7 | Today's to-do list (5) |
+| **To-do lists** | 7 | 3 | Reorder tasks within Today (5) |
 | **Finance** (separate doc) | 50 | 10 | Savings goals, custom categories, payee rules (1 partly built), see [finance/use-cases.md](../finance/use-cases.md) |
 
 ## Use cases
@@ -92,29 +92,25 @@ improves UX · `2` edge case / power-user · `1` speculative.
 |  | ⬜ | **Cost of a habit**: link a habit to a spending category ("coffee", "gym") and show spend next to the streak | 2 | `Habit.linkedSpendMinor(month)`, see [habits-integration.md §3](../finance/habits-integration.md#3-cost-of-a-habit) |
 |  | ⬜ | **Unified "LifeOS level"**: XP from both habits and financial discipline (staying under budget) | 2 | Finance XP added in `gamification.util.ts`, see [habits-integration.md §4](../finance/habits-integration.md#4-unified-lifeos-xp) |
 
-## To-do lists (planned)
+## To-do lists
 
-A to-do module next to habits: one-off tasks rather than repeating ones.
-Nothing here is built yet.
+One-off tasks next to habits: `apps/api/src/todos/`, `apps/web/src/components/todos/`,
+pages under `/tasks`. Every task belongs to a list (the built-in **Inbox**,
+prefix `TASK`, catches tasks added without one) and has a key
+`<list prefix>-<number>`.
 
 | Status | Use case | Impact | Notes |
 | :----: | -------- | :----: | ----- |
-| ⬜ | **Today's to-do list**: add tasks for today, tick them off, reorder them | 5 | "Today" is a view (tasks planned for today, from any list), not a list of its own |
-| ⬜ | **Undone tasks from previous days**: anything planned for an earlier day and not done shows in an "Earlier, not done" group, with one action to move it to today or drop it | 4 | Nothing moves on its own; the user decides. Shows how many days a task has been carried over |
-| ⬜ | **Custom lists with a key prefix**: e.g. "Grocery list" with prefix `GRO`, so its tasks read `GRO-1`, `GRO-2`… | 4 | `TodoList(name, prefix, nextNumber)`; prefix 2–6 letters, unique across lists, suggested from the name |
-| ⬜ | **Rename a list's prefix** without touching task numbers: `GRO-12` becomes `FOOD-12` | 3 | The key is shown as `<current prefix>-<number>`, never stored, so a rename is one update. `Task.number` is assigned once from the list's counter (`@@unique([listId, number])`) and never changes or gets reused, even after a delete |
-| ⬜ | **Kanban board** for a list: To do / In progress / Done columns, drag tasks between and within columns | 4 | `Task.status` + `Task.position` (fractional index, so a drag is one row update); keyboard moves as well as drag |
-| ⬜ | **Find a task by its key**: typing `GRO-12` jumps to it | 2 | Look up by the list's current prefix + number |
-| ⬜ | **Custom kanban columns** per list (e.g. "Waiting on someone") | 2 | `TodoColumn(listId, name, position)` replacing the fixed status enum |
-
-Open questions before building:
-
-- **Moving a task to another list**: keep its number (`GRO-12` → `HOME-12`
-  could clash) or take the next number in the new list, as Jira does? The
-  latter keeps "the number never changes" true within a list.
-- **Today across lists**: can a task from "Grocery list" also sit in today's
-  plan (a planned date on the task), or does Today only hold tasks with no
-  list?
+| 🟡 | **Today's to-do list**: add tasks for today, tick them off, reorder them | 5 | `/tasks`: quick add with a list picker (Inbox by default), tick off, progress bar. Today is a view of tasks planned for today from every list (`Query.todayTasks`), not a list. **Not built: reordering within Today** (order is open first, then by creation) |
+| ✅ | **Undone tasks from previous days**: shown in "Earlier, not done", with one action to move to today or unplan | 4 | Tasks planned before today and still open, with "planned N days ago"; Move to today / Unplan per task, and Move all to today. Nothing moves on its own |
+| ✅ | **Custom lists with a key prefix**: "Grocery list" / `GRO` → `GRO-1`, `GRO-2`… | 4 | `/tasks/lists`. The prefix is suggested from the name as you type (accents folded: "Đi chợ" → `DIC`, then `DIC2`… if taken) and can be overridden; 2–6 characters, a letter first, unique |
+| ✅ | **Rename a list's prefix** without touching task numbers: `GRO-12` becomes `FOOD-12` | 3 | The key is built from the list's current prefix when read, never stored, so a rename is one update. `TodoList.nextNumber` only goes up, so a number is never reused, even after a delete |
+| ✅ | **Move a task to another list** | 3 | Decided: it **takes the next number in the new list** (`GRO-4` → `TASK-3`), in one transaction with that list's counter. The task dialog warns before saving |
+| ✅ | **Plan a task from any list for a day** | 4 | Decided: yes. `Task.plannedFor` works for every list; Today and Earlier show tasks from all lists with their list name |
+| ✅ | **Kanban board** for a list: To do / In progress / Done, drag between and within columns | 4 | `/tasks/lists/$listId`, dnd-kit: mouse, touch, or Space + arrow keys. A drop updates only that task (status + a position between its neighbours). Done shows the 50 most recently completed plus the total, so an old list doesn't load its history |
+| ✅ | **Find a task by its key**: typing `GRO-12` opens it | 2 | "Go to a task by key" on the Lists page (`Query.taskByKey`), using each list's current prefix |
+| ⬜ | **Custom kanban columns** per list (e.g. "Waiting on someone") | 2 | Would replace the fixed `TaskStatus` enum with `TodoColumn(listId, name, position)` |
+| ⬜ | **Due dates and reminders** separate from the planned day | 2 | `plannedFor` is "when I'll do it"; a deadline would be its own field |
 
 ## Explicitly out of scope for v1
 

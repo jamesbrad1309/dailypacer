@@ -61,6 +61,12 @@ job.
 | `POST /habits/:id/pause` · `/resume` | `Habit` | Optional body `{ date }` (user's local day); records the stretch in `habit_pauses` |
 | `GET /habits/:id/records?filter=&page=&pageSize=&today=` | `HabitRecordsPage` | Entries plus misses, paged on the server; `filter` ALL / DONE / NOT_DONE / MISSED; `pageSize` ≤ 100 |
 | `GET /habits/:id/insights?today=` | `HabitInsights` | Completion by weekday (12 weeks) and this month vs last |
+| `GET /todo-lists` · `POST` · `PATCH /:id` · `DELETE /:id` | `TodoList` | Lists with open/done counts; prefix unique (409 if taken); the Inbox can't be deleted |
+| `GET /todo-lists/suggest-prefix?name=` | `{ prefix }` | A free prefix from the name |
+| `GET /todo-lists/:id/tasks?doneLimit=50` | `{ list, tasks, doneTotal }` | A board: open tasks by position, latest `doneLimit` done |
+| `GET /tasks/today?today=` | `{ today, earlier }` | Planned today from every list; earlier days still open |
+| `GET /tasks/by-key/:key` | `Task` | `GRO-12`, by the list's current prefix |
+| `POST /tasks` · `PATCH /tasks/:id` · `DELETE /tasks/:id` | `Task` | `listId` on PATCH moves it (new number from that list); status change sets `completedAt` |
 | `GET /habits/:id/entries` | `HabitEntry[]` | Newest first |
 | `GET /habit-entries/by-date/:date?habitIds=a,b` | `HabitEntry[]` | **Batch** endpoint for the `todayEntry` DataLoader |
 | `PUT /habit-entries` | `HabitEntry` | Upsert on `(habitId, date)` |
