@@ -19,6 +19,10 @@
       "types": "./src/finance/*.ts",
       "default": "./dist/finance/*.js"
     },
+    "#todos/*": {
+      "types": "./src/todos/*.ts",
+      "default": "./dist/todos/*.js"
+    },
     "#common/*": {
       "types": "./src/common/*.ts",
       "default": "./dist/common/*.js"

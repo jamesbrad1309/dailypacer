@@ -471,3 +471,55 @@ model ServiceLogo {
 
   @@map("service_logos")
 }
+
+// ─── To-do lists ─────────────────────────────────────────────────────────────
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+/// A list of tasks with a short key prefix: "Grocery list" / GRO → GRO-1, GRO-2…
+model TodoList {
+  id         String    @id @default(uuid())
+  name       String
+  /// 2–6 uppercase letters/digits, unique. Renaming it re-keys every task at
+  /// once: keys are shown as "<prefix>-<number>", never stored.
+  prefix     String    @unique
+  /// The number the next task added to (or moved into) this list gets. Only
+  /// ever goes up, so a number is never reused, even after a delete.
+  nextNumber Int       @default(1)
+  /// The Inbox can't be deleted: tasks added without a list go there.
+  isInbox    Boolean   @default(false)
+  position   Float     @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  tasks Task[]
+
+  @@map("todo_lists")
+}
+
+model Task {
+  id          String     @id @default(uuid())
+  listId      String
+  list        TodoList   @relation(fields: [listId], references: [id], onDelete: Cascade)
+  /// Fixed while the task stays in its list; moving it takes the new list's next number.
+  number      Int
+  title       String
+  notes       String?
+  status      TaskStatus @default(TODO)
+  /// Order within its board column (fractional, so a drag updates one row).
+  position    Float      @default(0)
+  /// The day it's planned for (user's local day), from any list; null = not planned.
+  plannedFor  DateTime?  @db.Date
+  completedAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([listId, number])
+  @@index([plannedFor])
+  @@index([listId, status, position])
+  @@map("tasks")
+}
