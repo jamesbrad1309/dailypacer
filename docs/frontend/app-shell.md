@@ -73,9 +73,22 @@ works on a fresh clone; never edit it by hand).
   Links preload on hover or focus (`defaultPreload: "intent"`). Apollo owns
   caching, so the router's own loader cache is off
   (`defaultPreloadStaleTime: 0`).
-- **Pending and error UI** come from the router defaults in
-  `components/layout/RouteStatus.tsx`: a spinner if a loader takes over
-  a second, and an error card with "Try again" inside the shell.
+- **Loading: skeletons, not spinners.** If a loader takes over a second, the
+  router shows the route's `pendingComponent`, a page-shaped placeholder from
+  `components/layout/Skeletons.tsx` (dashboard, today, history, journal,
+  journal calendar, habit detail; `PageSkeleton` is the default for the
+  rest). Components show the same skeletons while their first query loads.
+  The blocks pulse only with `motion-safe`, and each region is one `<output>`
+  that announces "Loading…" to screen readers.
+- **Errors, three layers:**
+  1. A page's loader or component throws → `RouteError`
+     (`RouteStatus.tsx`), an error card with "Try again" **inside** the shell,
+     so navigation still works.
+  2. The shell itself throws (sidebar, app bar) → the root route's
+     `errorComponent`: the full-page `AppCrash` with Try again / Reload.
+  3. Anything outside the router (Apollo, the router itself) →
+     `AppErrorBoundary` around everything in `main.tsx`, the same `AppCrash`
+     page with Reload, and the error logged to the console.
 - **Code-splitting** is automatic (`autoCodeSplitting`): each page's
   component ships in its own chunk. The shell is in the main bundle.
 - **Scroll**: pages scroll inside `<main id="main">`, so the router is told

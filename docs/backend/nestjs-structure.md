@@ -63,7 +63,8 @@ job.
 | `PUT /habit-entries` | `HabitEntry` | Upsert on `(habitId, date)` |
 | `GET /dashboard/stats` | Dashboard totals | |
 | `GET /journal-entries?date=YYYY-MM-DD` | `JournalEntry[]` | One day, in time order, each with a trimmed `trigger` |
-| `GET /journal-entries/days?from=&to=` | Per-day summaries | Counts per kind + emotions; at most 62 days |
+| `GET /journal-entries/days?from=&to=` | Per-day summaries | Counts per kind + emotions (with intensity); at most 62 days |
+| `GET /journal-entries/first-date` | Earliest entry's date | `{ date }`, null when empty; the calendar's "missed" cut-off |
 | `POST /journal-entries` · `POST /journal-entries/batch` | `JournalEntry` · `JournalEntry[]` | Batch is one transaction; `triggerIndex` links to an earlier EVENT in the list |
 | `PUT /journal-entries/:id` · `DELETE /journal-entries/:id` | `JournalEntry` · `{ id }` | PUT replaces the whole entry |
 | `GET /health` | `{ status: "ok" }` | Runs `SELECT 1`; used by the Compose healthcheck |

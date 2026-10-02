@@ -37,12 +37,31 @@ The emotion vocabulary (word, emoji, pleasant/neutral/unpleasant) lives
 only in the frontend (`apps/web/src/lib/emotions.ts`). The API stores any
 word up to 40 characters, so the list can grow without a migration.
 
+- **57 emotions**, each named in English and Vietnamese
+  (`journal.emotions` in `apps/web/src/i18n/*/journal.ts`).
+- **Aliases** (`journal.emotionAliases`): other words for an emotion in
+  either language, such as "worried", "exhausted" → tired, "lo lắng", "kiệt sức".
+  A new entry is stored under the emotion's key, and an entry saved before an
+  alias existed resolves when it's read (`resolveEmotion`). A test fails if
+  one phrase, accents folded, ever belongs to two emotions.
+- **Mood score** (`apps/web/src/lib/mood.ts`): −1 to +1 per day from the
+  feelings, weighted by intensity. A word outside the vocabulary is left out,
+  not counted as neutral.
+- **Optional NRC lexicon**: `pnpm lexicon:fetch --accept-terms` downloads
+  the NRC Emotion Lexicon's positive/negative words (English and Vietnamese,
+  about 9,400) to `apps/web/lexicon/`, and the mood score uses it for words
+  outside the vocabulary. It's free only for non-commercial use and **must
+  not be redistributed**, so that folder is git- and docker-ignored, loaded
+  lazily through an `import.meta.glob` that matches nothing when it's absent
+  (`apps/web/src/lib/lexicon.ts`), and never in the repo or the Docker image.
+
 ## API (`apps/api/src/journal/`)
 
 | Method & path | Notes |
 | ------------- | ----- |
 | `GET /journal-entries?date=YYYY-MM-DD` | One day, ordered by `time` (nulls last), then `createdAt`. Each entry includes a trimmed `trigger` |
-| `GET /journal-entries/days?from=…&to=…` | Per-day counts plus the day's emotions, for the week strip. At most 62 days |
+| `GET /journal-entries/days?from=…&to=…` | Per-day counts plus the day's emotions (and each feeling's intensity, for the mood score), for the week strip and the month calendar. At most 62 days |
+| `GET /journal-entries/first-date` | `{ date }` of the earliest entry (null when there are none), so the calendar never calls days before it "missed" |
 | `POST /journal-entries` | One entry |
 | `POST /journal-entries/batch` | A list from the composer, saved **in one transaction**. `triggerIndex` links an item to an EVENT earlier in the same list, since that event has no id yet |
 | `PUT /journal-entries/:id` | Full replacement, validated by the same per-kind zod schema as create |
@@ -53,7 +72,7 @@ saved, so retrying a failed save can't create duplicates of the lines that
 did succeed.
 
 GraphQL (`apps/bff/src/graphql/journal/`) passes these through one to one:
-`journalEntries(date)`, `journalDays(from, to)`, `createJournalEntry`,
+`journalEntries(date)`, `journalDays(from, to)`, `journalFirstDate`, `createJournalEntry`,
 `createJournalEntries(entries)`, `updateJournalEntry`, `deleteJournalEntry`.
 
 ## The composer: one textarea, slash commands
@@ -70,7 +89,9 @@ parsed by pure functions in `apps/web/src/lib/journal-syntax.ts`:
 
 - Every item starts with `/action`, `/feeling` or `/event`. `/did`, `/felt`,
   `/happened` and `/a`, `/f`, `/e` also work.
-- A `/feeling`'s first word is the emotion.
+- A `/feeling` starts with its emotion: a known name or alias in either
+  language (longest phrase first, so "tràn đầy năng lượng" or "on edge"), else
+  its first word as typed.
 - **Nesting an item under an `/event` links it to that event** (sent as
   `triggerIndex`).
 - A line with no bullet or command continues the previous item's text
