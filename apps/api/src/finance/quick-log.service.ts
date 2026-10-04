@@ -2,6 +2,8 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import { type Category, Prisma, type QuickPreset, type Transaction } from "@prisma/client";
 import { PrismaService } from "#common/database/prisma.service";
 import { scopedLogger } from "#common/logger/logger";
+import type { BudgetAlert } from "#finance/budget-math.util";
+import { BudgetsService } from "#finance/budgets.service";
 import { fromIsoDate, toIsoDate } from "#finance/calendar.util";
 import {
   CategoriesService,
@@ -13,6 +15,7 @@ import type {
   QuickLogContextInput,
   QuickLogInput,
 } from "#finance/dto/quick-log.dto";
+import { PayeeRulesService } from "#finance/payee-rules.service";
 import { TransactionsService } from "#finance/transactions.service";
 
 const log = scopedLogger("QuickLogService");
@@ -35,6 +38,14 @@ export interface QuickLogContext {
 
 export interface QuickLogResult {
   transaction: Transaction;
+  /** The category's budget just passed 80% or 100% this month (in-app alert). */
+  budgetAlert: {
+    categoryId: string;
+    level: BudgetAlert;
+    spentMinor: number;
+    availableMinor: number;
+    currency: string;
+  } | null;
   /** This has been logged often enough to offer "Save as preset?". */
   suggestPreset: boolean;
   /** Identifies the combination, to dismiss the suggestion for good. */
@@ -92,6 +103,8 @@ export class QuickLogService {
     private readonly prisma: PrismaService,
     private readonly categories: CategoriesService,
     private readonly transactions: TransactionsService,
+    private readonly payeeRules: PayeeRulesService,
+    private readonly budgets: BudgetsService,
   ) {}
 
   /** Everything the log sheet needs to open instantly, in one call. */
@@ -161,18 +174,22 @@ export class QuickLogService {
     const existing = await this.prisma.transaction.findUnique({
       where: { clientId: input.clientId },
     });
-    if (existing) return { transaction: existing, suggestPreset: false, presetKey: null };
+    if (existing) {
+      return { transaction: existing, suggestPreset: false, presetKey: null, budgetAlert: null };
+    }
 
     const accountId = input.accountId ?? (await this.defaultAccountId());
     const date = input.date ?? toIsoDate(new Date());
     const amountMinor = input.isIncome ? input.amountMinor : -input.amountMinor;
+    // Left for "To review": a payee rule the user wrote may know where it goes.
+    const categoryId = input.categoryId ?? (await this.payeeRules.categoryFor(input.payee));
 
     let transaction: Transaction;
     try {
       transaction = await this.transactions.create(
         {
           accountId,
-          categoryId: input.categoryId ?? null,
+          categoryId,
           date,
           amountMinor,
           payee: input.payee ?? null,
@@ -188,7 +205,7 @@ export class QuickLogService {
         const winner = await this.prisma.transaction.findUniqueOrThrow({
           where: { clientId: input.clientId },
         });
-        return { transaction: winner, suggestPreset: false, presetKey: null };
+        return { transaction: winner, suggestPreset: false, presetKey: null, budgetAlert: null };
       }
       throw err;
     }
@@ -202,7 +219,45 @@ export class QuickLogService {
       !input.presetId &&
       presetKey !== null &&
       (await this.shouldSuggestPreset(transaction, presetKey));
-    return { transaction, suggestPreset, presetKey: suggestPreset ? presetKey : null };
+    return {
+      transaction,
+      suggestPreset,
+      presetKey: suggestPreset ? presetKey : null,
+      budgetAlert: await this.budgetAlert(transaction, date),
+    };
+  }
+
+  /** An expense that took its category's budget past 80% or 100%; never fails the log. */
+  private async budgetAlert(
+    transaction: Transaction,
+    today: string,
+  ): Promise<QuickLogResult["budgetAlert"]> {
+    if (!transaction.categoryId || transaction.amountMinor >= 0) return null;
+    try {
+      const account = await this.prisma.account.findUniqueOrThrow({
+        where: { id: transaction.accountId },
+        select: { currency: true },
+      });
+      const crossed = await this.budgets.crossedBy(
+        transaction.categoryId,
+        toIsoDate(transaction.date),
+        today,
+        -transaction.amountMinor,
+        account.currency,
+      );
+      return crossed
+        ? {
+            categoryId: transaction.categoryId,
+            level: crossed.level,
+            spentMinor: crossed.line.spentMinor,
+            availableMinor: crossed.line.availableMinor,
+            currency: crossed.currency,
+          }
+        : null;
+    } catch (err) {
+      log.warn({ err, transactionId: transaction.id }, "budget alert check failed");
+      return null;
+    }
   }
 
   listPresets(): Promise<QuickPreset[]> {

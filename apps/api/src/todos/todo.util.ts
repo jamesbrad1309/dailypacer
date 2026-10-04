@@ -77,3 +77,37 @@ export function wouldCreateCycle(
   }
   return false;
 }
+
+/** At most this many columns on one list's board. */
+export const MAX_COLUMNS = 10;
+
+/** Today shows open tasks due within this many days (or overdue) that aren't planned for today. */
+export const DUE_SOON_DAYS = 3;
+
+/** The columns a new list starts with: one per status, unnamed so they show in the UI language. */
+export const DEFAULT_COLUMNS = [
+  { status: "TODO", position: 1 },
+  { status: "IN_PROGRESS", position: 2 },
+  { status: "DONE", position: 3 },
+] as const;
+
+/** "YYYY-MM-DD" plus `days`, as a UTC date (the database's `@db.Date`). */
+export function addDays(day: string, days: number): Date {
+  const date = new Date(day);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date;
+}
+
+/**
+ * `completedAt` after a status change: set when a task becomes done, cleared
+ * when it stops being done, kept otherwise (e.g. between two Done columns).
+ */
+export function completedAtFor(
+  from: string,
+  to: string,
+  current: Date | null,
+  now = new Date(),
+): Date | null {
+  if (to !== "DONE") return null;
+  return from === "DONE" ? current : now;
+}

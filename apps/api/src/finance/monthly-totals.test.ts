@@ -81,3 +81,41 @@ describe("collectDeltas", () => {
     });
   });
 });
+
+describe("collectDeltas with splits", () => {
+  it("counts each part of a split in its own category", () => {
+    const split = row({
+      categoryId: null,
+      amountMinor: -5200,
+      splits: [
+        { categoryId: "groceries", amountMinor: -4000 },
+        { categoryId: "home", amountMinor: -1200 },
+      ],
+    });
+    expect(collectDeltas([{ row: split, sign: 1 }])).toEqual([
+      expect.objectContaining({ categoryId: "groceries", outflowMinor: 4000, count: 1 }),
+      expect.objectContaining({ categoryId: "home", outflowMinor: 1200, count: 1 }),
+    ]);
+  });
+
+  it("splitting a transaction moves its money out of the old category", () => {
+    const before = row({ categoryId: "groceries", amountMinor: -5200 });
+    const after = row({
+      categoryId: null,
+      amountMinor: -5200,
+      splits: [
+        { categoryId: "groceries", amountMinor: -4000 },
+        { categoryId: "home", amountMinor: -1200 },
+      ],
+    });
+    expect(
+      collectDeltas([
+        { row: before, sign: -1 },
+        { row: after, sign: 1 },
+      ]),
+    ).toEqual([
+      expect.objectContaining({ categoryId: "groceries", outflowMinor: -1200, count: 0 }),
+      expect.objectContaining({ categoryId: "home", outflowMinor: 1200, count: 1 }),
+    ]);
+  });
+});

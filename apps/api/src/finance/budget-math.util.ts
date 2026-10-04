@@ -115,3 +115,31 @@ export function pace(spentMinor: number, availableMinor: number, progress: numbe
   if (used <= progress) return "on-track";
   return used <= progress + 0.15 ? "close" : "over";
 }
+
+/** "near": 80% or more of the budget spent; "reached": all of it or more. */
+export type BudgetAlert = "near" | "reached";
+
+/** Shares of the budget that raise an alert. */
+export const ALERT_NEAR = 0.8;
+export const ALERT_REACHED = 1;
+
+export function alertLevel(spentMinor: number, availableMinor: number): BudgetAlert | null {
+  if (availableMinor <= 0) return spentMinor > 0 ? "reached" : null;
+  const used = spentMinor / availableMinor;
+  if (used >= ALERT_REACHED) return "reached";
+  return used >= ALERT_NEAR ? "near" : null;
+}
+
+/**
+ * The alert a new expense set off: the level it reached that the spending
+ * before it hadn't. Null when it stayed at the same level (so a third
+ * coffee after passing 80% doesn't warn again).
+ */
+export function crossedAlert(
+  beforeMinor: number,
+  afterMinor: number,
+  availableMinor: number,
+): BudgetAlert | null {
+  const after = alertLevel(afterMinor, availableMinor);
+  return after !== null && after !== alertLevel(beforeMinor, availableMinor) ? after : null;
+}

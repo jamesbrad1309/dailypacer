@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   type BudgetRule,
+  alertLevel,
   budgetMonth,
+  crossedAlert,
   monthProgress,
   pace,
   ruleFor,
@@ -120,5 +122,22 @@ describe("shiftMonth", () => {
     expect(shiftMonth("2026-01", -1)).toBe("2025-12");
     expect(shiftMonth("2026-12", 1)).toBe("2027-01");
     expect(shiftMonth("2026-09", -11)).toBe("2025-10");
+  });
+});
+
+describe("budget alerts", () => {
+  it("warns at 80% and again at 100%", () => {
+    expect(alertLevel(7900, 10000)).toBeNull();
+    expect(alertLevel(8000, 10000)).toBe("near");
+    expect(alertLevel(10000, 10000)).toBe("reached");
+    expect(alertLevel(100, 0)).toBe("reached");
+  });
+
+  it("only reports a level a new expense crossed", () => {
+    expect(crossedAlert(7500, 8200, 10000)).toBe("near");
+    expect(crossedAlert(8200, 8600, 10000)).toBeNull();
+    expect(crossedAlert(8600, 10400, 10000)).toBe("reached");
+    expect(crossedAlert(7000, 10400, 10000)).toBe("reached");
+    expect(crossedAlert(10400, 11000, 10000)).toBeNull();
   });
 });

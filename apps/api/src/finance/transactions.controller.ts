@@ -6,10 +6,11 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
   UseInterceptors,
 } from "@nestjs/common";
-import type { Transaction } from "@prisma/client";
+import type { Transaction, TransactionSplit } from "@prisma/client";
 import { ZodValidationPipe } from "#common/http/zod-validation.pipe";
 import { toIsoDate } from "#finance/calendar.util";
 import { CatchUpInterceptor } from "#finance/catch-up.interceptor";
@@ -18,18 +19,32 @@ import {
   type CreateTransactionInput,
   type CreateTransferInput,
   type ListTransactionsInput,
+  type SetSplitsInput,
   type UpdateTransactionInput,
   createTransactionSchema,
   createTransferSchema,
   listTransactionsSchema,
+  setSplitsSchema,
   updateTransactionSchema,
 } from "#finance/dto/transaction.dto";
 import { SubscriptionsService } from "#finance/subscriptions.service";
 import { TransactionsService } from "#finance/transactions.service";
 
-/** `date` is a `@db.Date` column: "YYYY-MM-DD" on the wire, like habit entries. */
-export function toTransactionDto(t: Transaction) {
-  return { ...t, date: toIsoDate(t.date) };
+/**
+ * `date` is a `@db.Date` column: "YYYY-MM-DD" on the wire, like habit
+ * entries. `splits` is empty unless the transaction is split.
+ */
+export function toTransactionDto(t: Transaction & { splits?: TransactionSplit[] }) {
+  return {
+    ...t,
+    date: toIsoDate(t.date),
+    splits: (t.splits ?? []).map(({ id, categoryId, amountMinor, note }) => ({
+      id,
+      categoryId,
+      amountMinor,
+      note,
+    })),
+  };
 }
 
 // Auto-logged charges are brought up to date before every request here.
@@ -92,6 +107,15 @@ export class TransactionsController {
     @Body(new ZodValidationPipe(updateTransactionSchema)) input: UpdateTransactionInput,
   ) {
     return toTransactionDto(await this.transactions.update(id, input));
+  }
+
+  /** Splits it across categories (the parts add up to its amount); `splits: []` undoes it. */
+  @Put(":id/splits")
+  async setSplits(
+    @Param("id") id: string,
+    @Body(new ZodValidationPipe(setSplitsSchema)) input: SetSplitsInput,
+  ) {
+    return toTransactionDto(await this.transactions.setSplits(id, input));
   }
 
   /** Returns every id deleted: both legs, for a transfer. */

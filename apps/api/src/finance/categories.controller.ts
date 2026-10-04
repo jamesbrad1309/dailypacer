@@ -1,11 +1,13 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Query } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, Param, Patch, Post, Query } from "@nestjs/common";
 import { ZodValidationPipe } from "#common/http/zod-validation.pipe";
 import { CategoriesService } from "#finance/categories.service";
 import {
   type CreateCategoryInput,
   type DismissPresetSuggestionInput,
+  type UpdateCategoryInput,
   createCategorySchema,
   dismissPresetSuggestionSchema,
+  updateCategorySchema,
 } from "#finance/dto/category.dto";
 
 @Controller("categories")
@@ -16,16 +18,26 @@ export class CategoriesController {
    * `GET /categories`: the active ones users pick from.
    * `GET /categories?ids=a,b`: batch lookup by id for the BFF's DataLoader,
    * archived and system ones included.
+   * `GET /categories?includeArchived=true`: for managing them, archived too.
    */
   @Get()
-  list(@Query("ids") ids?: string) {
+  list(@Query("ids") ids?: string, @Query("includeArchived") includeArchived?: string) {
     if (ids !== undefined) return this.categories.findByIds(ids.split(",").filter(Boolean));
-    return this.categories.list();
+    return this.categories.list(includeArchived === "true");
   }
 
   @Post()
   create(@Body(new ZodValidationPipe(createCategorySchema)) input: CreateCategoryInput) {
     return this.categories.create(input);
+  }
+
+  /** Rename, re-icon, move under a parent, edit aliases, archive or unarchive. */
+  @Patch(":id")
+  update(
+    @Param("id") id: string,
+    @Body(new ZodValidationPipe(updateCategorySchema)) input: UpdateCategoryInput,
+  ) {
+    return this.categories.update(id, input);
   }
 
   @Post(":id/dismiss-preset-suggestion")

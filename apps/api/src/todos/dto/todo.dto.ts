@@ -28,7 +28,10 @@ export const createTaskSchema = z.object({
   /** The Inbox when left out. */
   listId: z.string().uuid().optional(),
   plannedFor: day.nullable().optional(),
+  dueOn: day.nullable().optional(),
   status: status.optional(),
+  /** A column of the list (its status follows); the first column of `status` when left out. */
+  columnId: z.string().uuid().optional(),
 });
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 
@@ -37,13 +40,39 @@ export const updateTaskSchema = z.object({
   title: z.string().trim().min(1).max(300).optional(),
   notes: z.string().trim().max(5000).nullable().optional(),
   plannedFor: day.nullable().optional(),
+  dueOn: day.nullable().optional(),
+  /** Moves it to the first column of that status in its list. */
   status: status.optional(),
+  /** A column of its (new) list; the status becomes the column's. */
+  columnId: z.string().uuid().optional(),
   /** Board order within its column; sent by a drag. */
   position: z.number().finite().optional(),
+  /** Order within its planned day, for Today; sent by a drag there. */
+  dayPosition: z.number().finite().optional(),
   /** Moving lists gives the task the new list's next number. */
   listId: z.string().uuid().optional(),
 });
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
+
+const columnName = z.string().trim().min(1).max(30);
+
+export const createColumnSchema = z.object({
+  name: columnName,
+  /** The status its tasks have: what "done" means for it. */
+  status,
+});
+export type CreateColumnInput = z.infer<typeof createColumnSchema>;
+
+/** `name: null` goes back to the status's own name. */
+export const updateColumnSchema = z.object({
+  name: columnName.nullable().optional(),
+  status: status.optional(),
+  position: z.number().finite().optional(),
+});
+export type UpdateColumnInput = z.infer<typeof updateColumnSchema>;
+
+/** `DELETE /todo-columns/:id?moveTo=<column id>`: where its tasks go; needed when it has any. */
+export const deleteColumnQuerySchema = z.object({ moveTo: z.string().uuid().optional() });
 
 export const todayQuerySchema = z.object({ today: day });
 export const listTasksQuerySchema = z.object({

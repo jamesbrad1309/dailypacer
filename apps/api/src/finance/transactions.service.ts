@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { type Account, Prisma, type Transaction } from "@prisma/client";
+import { type Account, Prisma, type Transaction, type TransactionSplit } from "@prisma/client";
 import { PrismaService } from "#common/database/prisma.service";
 import { scopedLogger } from "#common/logger/logger";
 import { fromIsoDate, toIsoDate } from "#finance/calendar.util";
@@ -8,19 +8,32 @@ import type {
   CreateTransactionInput,
   CreateTransferInput,
   ListTransactionsInput,
+  SetSplitsInput,
   UpdateTransactionInput,
 } from "#finance/dto/transaction.dto";
 import { MonthlyTotalsService } from "#finance/monthly-totals.service";
+import { splitProblem } from "#finance/split.util";
 
 const log = scopedLogger("TransactionsService");
 
-/** The "To review" inbox: uncategorised money (not transfers), or anything still pending. */
-const TO_REVIEW: Prisma.TransactionWhereInput = {
-  OR: [{ categoryId: null, transferId: null }, { status: "PENDING" }],
+/** No category and not split: what "To review" and "uncategorised" mean. */
+const UNCATEGORISED: Prisma.TransactionWhereInput = {
+  categoryId: null,
+  transferId: null,
+  splits: { none: {} },
 };
 
+/** The "To review" inbox: uncategorised money (not transfers), or anything still pending. */
+const TO_REVIEW: Prisma.TransactionWhereInput = {
+  OR: [UNCATEGORISED, { status: "PENDING" }],
+};
+
+/** Every read sends a transaction's split parts with it, in their order. */
+const WITH_SPLITS = { splits: { orderBy: { position: "asc" } } } as const;
+export type TransactionWithSplits = Transaction & { splits: TransactionSplit[] };
+
 export interface TransactionPage {
-  items: Transaction[];
+  items: TransactionWithSplits[];
   /** Opaque; pass back as `after`. Null when there are no more rows. */
   nextCursor: string | null;
 }
@@ -87,10 +100,18 @@ export class TransactionsService {
   async list(input: ListTransactionsInput): Promise<TransactionPage> {
     const where: Prisma.TransactionWhereInput[] = [];
     if (input.accountId) where.push({ accountId: input.accountId });
-    if (input.categoryId) where.push({ categoryId: input.categoryId });
+    if (input.categoryId) {
+      // A split transaction shows under each category it has a part in.
+      where.push({
+        OR: [
+          { categoryId: input.categoryId },
+          { splits: { some: { categoryId: input.categoryId } } },
+        ],
+      });
+    }
     if (input.from) where.push({ date: { gte: fromIsoDate(input.from) } });
     if (input.to) where.push({ date: { lte: fromIsoDate(input.to) } });
-    if (input.uncategorised) where.push({ categoryId: null, transferId: null });
+    if (input.uncategorised) where.push(UNCATEGORISED);
     if (input.toReview) where.push(TO_REVIEW);
     if (!input.includeTransfers) where.push({ transferId: null });
     if (input.search) {
@@ -108,14 +129,18 @@ export class TransactionsService {
       where: { AND: where },
       orderBy: ORDER,
       take: input.first + 1,
+      include: WITH_SPLITS,
     });
     const items = rows.slice(0, input.first);
     const hasMore = rows.length > input.first;
     return { items, nextCursor: hasMore ? encodeCursor(items[items.length - 1]) : null };
   }
 
-  async findOne(id: string): Promise<Transaction> {
-    const transaction = await this.prisma.transaction.findUnique({ where: { id } });
+  async findOne(id: string): Promise<TransactionWithSplits> {
+    const transaction = await this.prisma.transaction.findUnique({
+      where: { id },
+      include: WITH_SPLITS,
+    });
     if (!transaction) throw new NotFoundException(`Transaction ${id} not found`);
     return transaction;
   }
@@ -143,8 +168,19 @@ export class TransactionsService {
     return transaction;
   }
 
-  async update(id: string, input: UpdateTransactionInput): Promise<Transaction> {
+  /**
+   * Partial update. Giving a split transaction a category (or `null`, back
+   * to "To review") undoes the split; its amount can't change while split,
+   * since the parts would no longer add up.
+   */
+  async update(id: string, input: UpdateTransactionInput): Promise<TransactionWithSplits> {
     const existing = await this.findOne(id);
+    const split = existing.splits.length > 0;
+    if (split && input.amountMinor !== undefined && input.amountMinor !== existing.amountMinor) {
+      throw new BadRequestException(
+        "This transaction is split: change the parts, or undo the split, to change its amount",
+      );
+    }
     const moves = input.accountId !== undefined || input.date !== undefined;
     if (existing.transferId && (moves || input.amountMinor !== undefined)) {
       throw new BadRequestException(
@@ -165,8 +201,11 @@ export class TransactionsService {
     const transaction = await this.prisma.$transaction(async (tx) => {
       // Re-read under a row lock: a concurrent edit of the same transaction
       // waits here, so "before" is never subtracted from the totals twice.
-      const [before] = await lockTransactions(tx, Prisma.sql`"id" = ${id}`);
-      if (!before) throw new NotFoundException(`Transaction ${id} not found`);
+      const [locked] = await lockTransactions(tx, Prisma.sql`"id" = ${id}`);
+      if (!locked) throw new NotFoundException(`Transaction ${id} not found`);
+      const before = { ...locked, splits: await this.splitsOf(tx, id) };
+      const unsplit = before.splits.length > 0 && input.categoryId !== undefined;
+      if (unsplit) await tx.transactionSplit.deleteMany({ where: { transactionId: id } });
       const after = await tx.transaction.update({
         where: { id },
         data: {
@@ -179,6 +218,7 @@ export class TransactionsService {
           tags: input.tags,
           status: input.status,
         },
+        include: WITH_SPLITS,
       });
       await this.totals.apply(tx, [
         { row: before, sign: -1 },
@@ -187,6 +227,58 @@ export class TransactionsService {
       return after;
     });
     log.info({ transactionId: id, fields: Object.keys(input) }, "transaction updated");
+    return transaction;
+  }
+
+  /**
+   * Splits a transaction across categories: the parts replace its category
+   * and must add up to its amount (splitProblem). `[]` undoes a split,
+   * leaving it uncategorised ("To review"). Transfers and balance
+   * adjustments aren't spending, so they can't be split.
+   */
+  async setSplits(id: string, input: SetSplitsInput): Promise<TransactionWithSplits> {
+    const existing = await this.findOne(id);
+    if (existing.transferId || existing.source === "adjustment") {
+      throw new BadRequestException("Transfers and balance adjustments can't be split");
+    }
+    const parts = input.splits;
+    if (parts.length > 0) {
+      const problem = splitProblem(existing.amountMinor, parts);
+      if (problem) throw new BadRequestException(problem);
+      for (const categoryId of new Set(parts.map((p) => p.categoryId))) {
+        await this.assertCategory(categoryId);
+      }
+    }
+
+    const transaction = await this.prisma.$transaction(async (tx) => {
+      const [locked] = await lockTransactions(tx, Prisma.sql`"id" = ${id}`);
+      if (!locked) throw new NotFoundException(`Transaction ${id} not found`);
+      const before = { ...locked, splits: await this.splitsOf(tx, id) };
+      await tx.transactionSplit.deleteMany({ where: { transactionId: id } });
+      if (parts.length > 0) {
+        await tx.transactionSplit.createMany({
+          data: parts.map((p, position) => ({
+            transactionId: id,
+            categoryId: p.categoryId,
+            amountMinor: p.amountMinor,
+            note: p.note ?? null,
+            position,
+          })),
+        });
+      }
+      const after = await tx.transaction.update({
+        where: { id },
+        // A split has no category of its own; undoing one leaves it to review.
+        data: { categoryId: null },
+        include: WITH_SPLITS,
+      });
+      await this.totals.apply(tx, [
+        { row: before, sign: -1 },
+        { row: after, sign: 1 },
+      ]);
+      return after;
+    });
+    log.info({ transactionId: id, parts: parts.length }, "transaction split set");
     return transaction;
   }
 
@@ -282,10 +374,16 @@ export class TransactionsService {
       // Locked, then deleted: a second delete of the same row waits, then
       // finds nothing, so it's only taken out of the totals once.
       const rows = await lockTransactions(tx, where);
+      const splits = await tx.transactionSplit.findMany({
+        where: { transactionId: { in: rows.map((r) => r.id) } },
+      });
       await tx.transaction.deleteMany({ where: { id: { in: rows.map((r) => r.id) } } });
       await this.totals.apply(
         tx,
-        rows.map((row) => ({ row, sign: -1 as const })),
+        rows.map((row) => ({
+          row: { ...row, splits: splits.filter((s) => s.transactionId === row.id) },
+          sign: -1 as const,
+        })),
       );
       return rows;
     });
@@ -337,6 +435,10 @@ export class TransactionsService {
       );
     }
     return account;
+  }
+
+  private splitsOf(tx: Prisma.TransactionClient, transactionId: string) {
+    return tx.transactionSplit.findMany({ where: { transactionId }, orderBy: { position: "asc" } });
   }
 
   private async assertCategory(categoryId: string | null | undefined): Promise<void> {

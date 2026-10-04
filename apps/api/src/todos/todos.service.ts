@@ -4,17 +4,24 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import type { Prisma, Task, TaskStatus, TodoList } from "@prisma/client";
+import type { Prisma, Task, TaskStatus, TodoColumn, TodoList } from "@prisma/client";
 import { PrismaService } from "#common/database/prisma.service";
 import { scopedLogger } from "#common/logger/logger";
 import type {
+  CreateColumnInput,
   CreateListInput,
   CreateTaskInput,
+  UpdateColumnInput,
   UpdateListInput,
   UpdateTaskInput,
 } from "#todos/dto/todo.dto";
 import {
+  DEFAULT_COLUMNS,
+  DUE_SOON_DAYS,
+  MAX_COLUMNS,
   MAX_DEPENDENCIES,
+  addDays,
+  completedAtFor,
   formatKey,
   parseKey,
   suggestPrefix,
@@ -62,6 +69,7 @@ export function toTaskDto({ blockedBy, blocks, ...task }: TaskRow) {
     ...task,
     key: formatKey(task.list.prefix, task.number),
     plannedFor: task.plannedFor ? task.plannedFor.toISOString().slice(0, 10) : null,
+    dueOn: task.dueOn ? task.dueOn.toISOString().slice(0, 10) : null,
     blockedBy: waitingFor,
     blocks: blocks.map((link) => toRef(link.task)),
     blocked: waitingFor.some((dep) => dep.status !== "DONE"),
@@ -75,18 +83,30 @@ export class TodosService {
 
   // ─── Lists ──────────────────────────────────────────────────────────────
 
-  /** All lists, Inbox first, with open / done counts. */
+  /** All lists, Inbox first, with open / done counts and their columns (for the task dialog). */
   async lists() {
-    const [lists, counts] = await Promise.all([
+    const [lists, counts, columns, columnCounts] = await Promise.all([
       this.prisma.todoList.findMany({
         orderBy: [{ isInbox: "desc" }, { position: "asc" }, { createdAt: "asc" }],
       }),
       this.prisma.task.groupBy({ by: ["listId", "status"], _count: { _all: true } }),
+      this.prisma.todoColumn.findMany({ orderBy: [{ position: "asc" }, { createdAt: "asc" }] }),
+      this.prisma.task.groupBy({ by: ["columnId"], _count: { _all: true } }),
     ]);
     return lists.map((list) => {
       const of = (status: TaskStatus) =>
         counts.find((c) => c.listId === list.id && c.status === status)?._count._all ?? 0;
-      return { ...list, openCount: of("TODO") + of("IN_PROGRESS"), doneCount: of("DONE") };
+      return {
+        ...list,
+        openCount: of("TODO") + of("IN_PROGRESS"),
+        doneCount: of("DONE"),
+        columns: columns
+          .filter((column) => column.listId === list.id)
+          .map((column) => ({
+            ...column,
+            taskCount: columnCounts.find((c) => c.columnId === column.id)?._count._all ?? 0,
+          })),
+      };
     });
   }
 
@@ -102,10 +122,15 @@ export class TodosService {
     if (taken.has(chosen)) throw new ConflictException(`Prefix ${chosen} is already used`);
     const last = await this.prisma.todoList.aggregate({ _max: { position: true } });
     const list = await this.prisma.todoList.create({
-      data: { name, prefix: chosen, position: (last._max.position ?? 0) + 1 },
+      data: {
+        name,
+        prefix: chosen,
+        position: (last._max.position ?? 0) + 1,
+        columns: { create: [...DEFAULT_COLUMNS] },
+      },
     });
     log.info({ listId: list.id, prefix: list.prefix }, "todo list created");
-    return { ...list, openCount: 0, doneCount: 0 };
+    return { ...list, openCount: 0, doneCount: 0, columns: await this.columnsOf(list.id) };
   }
 
   /** A prefix change re-keys every task in the list at once; their numbers stay. */
@@ -118,7 +143,7 @@ export class TodosService {
       }
     }
     const updated = await this.prisma.todoList.update({ where: { id }, data: input });
-    return { ...updated, ...(await this.countsFor(id)) };
+    return { ...updated, ...(await this.countsFor(id)), columns: await this.columnsOf(id) };
   }
 
   /** Deletes a list and its tasks. The Inbox stays. */
@@ -144,7 +169,8 @@ export class TodosService {
    */
   async listTasks(listId: string, doneLimit: number) {
     const list = await this.list(listId);
-    const [open, done, doneTotal] = await Promise.all([
+    const [columns, open, done, doneTotal] = await Promise.all([
+      this.columnsOf(listId),
       this.prisma.task.findMany({
         where: { listId, status: { not: "DONE" } },
         orderBy: [{ position: "asc" }, { createdAt: "asc" }],
@@ -159,22 +185,25 @@ export class TodosService {
       this.prisma.task.count({ where: { listId, status: "DONE" } }),
     ]);
     return {
-      list: { ...list, openCount: open.length, doneCount: doneTotal },
+      list: { ...list, openCount: open.length, doneCount: doneTotal, columns },
       tasks: [...open, ...done].map(toTaskDto),
       doneTotal,
     };
   }
 
   /**
-   * Today's plan from every list, plus anything planned for an earlier day
-   * and still not done ("Earlier, not done"): nothing moves on its own.
+   * Today's plan from every list in the user's order (open first, then
+   * done), anything planned for an earlier day and still not done
+   * ("Earlier, not done": nothing moves on its own), and open tasks due
+   * within DUE_SOON_DAYS or overdue that aren't planned for today or
+   * earlier, so a deadline isn't missed just because it wasn't planned.
    */
   async today(today: string) {
     const day = new Date(today);
-    const [planned, earlier] = await Promise.all([
+    const [planned, earlier, dueSoon] = await Promise.all([
       this.prisma.task.findMany({
         where: { plannedFor: day },
-        orderBy: [{ completedAt: { sort: "asc", nulls: "first" } }, { createdAt: "asc" }],
+        orderBy: [{ dayPosition: "asc" }, { createdAt: "asc" }],
         include: TASK_INCLUDE,
       }),
       this.prisma.task.findMany({
@@ -182,8 +211,22 @@ export class TodosService {
         orderBy: [{ plannedFor: "asc" }, { createdAt: "asc" }],
         include: TASK_INCLUDE,
       }),
+      this.prisma.task.findMany({
+        where: {
+          status: { not: "DONE" },
+          dueOn: { lte: addDays(today, DUE_SOON_DAYS) },
+          OR: [{ plannedFor: null }, { plannedFor: { gt: day } }],
+        },
+        orderBy: [{ dueOn: "asc" }, { createdAt: "asc" }],
+        include: TASK_INCLUDE,
+      }),
     ]);
-    return { today: planned.map(toTaskDto), earlier: earlier.map(toTaskDto) };
+    const isDone = (task: Task) => task.status === "DONE";
+    return {
+      today: [...planned.filter((t) => !isDone(t)), ...planned.filter(isDone)].map(toTaskDto),
+      earlier: earlier.map(toTaskDto),
+      dueSoon: dueSoon.map(toTaskDto),
+    };
   }
 
   /**
@@ -232,21 +275,33 @@ export class TodosService {
     return toTaskDto(task);
   }
 
+  /** In `columnId` when given (its list), else the first column of `status` (To do) in the list (Inbox). */
   async createTask(input: CreateTaskInput) {
-    const listId = input.listId ? (await this.list(input.listId)).id : (await this.inbox()).id;
-    const status = input.status ?? "TODO";
+    const column = input.columnId
+      ? await this.column(input.columnId)
+      : await this.firstColumn(
+          input.listId ? (await this.list(input.listId)).id : (await this.inbox()).id,
+          input.status ?? "TODO",
+        );
+    if (input.listId && column.listId !== input.listId) {
+      throw new BadRequestException("That column belongs to another list");
+    }
+    const plannedFor = input.plannedFor ? new Date(input.plannedFor) : null;
     const task = await this.prisma.$transaction(async (tx) => {
-      const number = await this.takeNumber(tx, listId);
+      const number = await this.takeNumber(tx, column.listId);
       return tx.task.create({
         data: {
-          listId,
+          listId: column.listId,
           number,
           title: input.title,
           notes: input.notes ?? null,
-          status,
-          position: await this.endOfColumn(tx, listId, status),
-          plannedFor: input.plannedFor ? new Date(input.plannedFor) : null,
-          completedAt: status === "DONE" ? new Date() : null,
+          status: column.status,
+          columnId: column.id,
+          position: await this.endOfColumn(tx, column.id),
+          plannedFor,
+          dayPosition: plannedFor ? await this.endOfDay(tx, plannedFor) : 0,
+          dueOn: input.dueOn ? new Date(input.dueOn) : null,
+          completedAt: column.status === "DONE" ? new Date() : null,
         },
         include: TASK_INCLUDE,
       });
@@ -257,35 +312,54 @@ export class TodosService {
 
   /**
    * Partial update. Moving to another list takes that list's next number
-   * (the old number isn't carried over or reused). A status change without
-   * a position puts the task at the end of its new column.
+   * (the old number isn't carried over or reused) and the first column there
+   * with the same status. A column sets the status; a status alone picks
+   * that status's first column. Changing column without a position puts the
+   * task at its end; planning it for another day without a `dayPosition`
+   * puts it last that day.
    */
   async updateTask(id: string, input: UpdateTaskInput) {
     const current = await this.prisma.task.findUnique({ where: { id } });
     if (!current) throw new NotFoundException(`Task ${id} not found`);
+    const listId = input.listId ?? current.listId;
+    const movingList = listId !== current.listId;
+    if (movingList) await this.list(listId);
+
+    let column: Pick<TodoColumn, "id" | "listId" | "status"> | null = null;
+    if (input.columnId) {
+      column = await this.column(input.columnId);
+      if (column.listId !== listId) {
+        throw new BadRequestException("That column belongs to another list");
+      }
+    } else if (movingList || (input.status && input.status !== current.status)) {
+      column = await this.firstColumn(listId, input.status ?? current.status);
+    }
 
     const task = await this.prisma.$transaction(async (tx) => {
       const data: Prisma.TaskUncheckedUpdateInput = {
         title: input.title,
         notes: input.notes,
         position: input.position,
+        dayPosition: input.dayPosition,
       };
       if (input.plannedFor !== undefined) {
-        data.plannedFor = input.plannedFor ? new Date(input.plannedFor) : null;
+        const plannedFor = input.plannedFor ? new Date(input.plannedFor) : null;
+        data.plannedFor = plannedFor;
+        const sameDay = plannedFor?.getTime() === current.plannedFor?.getTime();
+        if (plannedFor && !sameDay && input.dayPosition === undefined) {
+          data.dayPosition = await this.endOfDay(tx, plannedFor);
+        }
       }
-      const listId = input.listId ?? current.listId;
-      if (input.listId && input.listId !== current.listId) {
-        await this.list(input.listId);
-        data.listId = input.listId;
-        data.number = await this.takeNumber(tx, input.listId);
+      if (input.dueOn !== undefined) data.dueOn = input.dueOn ? new Date(input.dueOn) : null;
+      if (movingList) {
+        data.listId = listId;
+        data.number = await this.takeNumber(tx, listId);
       }
-      const status = input.status ?? current.status;
-      if (input.status && input.status !== current.status) {
-        data.status = input.status;
-        data.completedAt = input.status === "DONE" ? new Date() : null;
-      }
-      if (input.position === undefined && (data.status || data.listId)) {
-        data.position = await this.endOfColumn(tx, listId, status);
+      if (column && column.id !== current.columnId) {
+        data.columnId = column.id;
+        data.status = column.status;
+        data.completedAt = completedAtFor(current.status, column.status, current.completedAt);
+        if (input.position === undefined) data.position = await this.endOfColumn(tx, column.id);
       }
       return tx.task.update({ where: { id }, data, include: TASK_INCLUDE });
     });
@@ -296,6 +370,94 @@ export class TodosService {
     const task = await this.prisma.task.delete({ where: { id }, include: TASK_INCLUDE });
     log.info({ taskId: id }, "task deleted");
     return toTaskDto(task);
+  }
+
+  // ─── Columns ────────────────────────────────────────────────────────────
+
+  /** Adds a column at the right end of the board. At most MAX_COLUMNS per list. */
+  async createColumn(listId: string, input: CreateColumnInput) {
+    await this.list(listId);
+    const columns = await this.columnsOf(listId);
+    if (columns.length >= MAX_COLUMNS) {
+      throw new BadRequestException(`A list can have at most ${MAX_COLUMNS} columns`);
+    }
+    const column = await this.prisma.todoColumn.create({
+      data: {
+        listId,
+        name: input.name,
+        status: input.status,
+        position: (columns.at(-1)?.position ?? 0) + 1,
+      },
+    });
+    log.info({ listId, columnId: column.id }, "todo column created");
+    return { ...column, taskCount: 0 };
+  }
+
+  /**
+   * Rename (null = the status's own name), move (`position`) or change what
+   * a column means. A new status applies to every task in it at once; it's
+   * refused if it would leave the list without a column for the old status.
+   */
+  async updateColumn(id: string, input: UpdateColumnInput) {
+    const column = await this.column(id);
+    const statusChange = input.status && input.status !== column.status ? input.status : null;
+    if (statusChange) await this.assertNotLastOfStatus(column);
+    await this.prisma.$transaction(async (tx) => {
+      if (statusChange) {
+        await this.retagTasks(tx, column.id, column.status, statusChange);
+      }
+      await tx.todoColumn.update({
+        where: { id },
+        data: { name: input.name, status: input.status, position: input.position },
+      });
+    });
+    return (await this.columnsOf(column.listId)).find((c) => c.id === id);
+  }
+
+  /**
+   * Deletes a column. Its tasks go to the end of `moveTo` (another column
+   * of the same list, taking its status), which is required if there are
+   * any. The last column of a status can't go: new tasks start in To do,
+   * and ticking a task off needs a Done.
+   */
+  async deleteColumn(id: string, moveTo?: string) {
+    const column = await this.column(id);
+    await this.assertNotLastOfStatus(column);
+    const taskCount = await this.prisma.task.count({ where: { columnId: id } });
+    let target: TodoColumn | null = null;
+    if (taskCount > 0) {
+      if (!moveTo) {
+        throw new BadRequestException("Choose a column to move this column's tasks to");
+      }
+      target = await this.column(moveTo);
+      if (target.listId !== column.listId || target.id === column.id) {
+        throw new BadRequestException("Move the tasks to another column of the same list");
+      }
+    }
+    await this.prisma.$transaction(async (tx) => {
+      if (target) {
+        if (target.status !== column.status) {
+          await this.retagTasks(tx, column.id, column.status, target.status);
+        }
+        // Keep their order, after the target's own tasks: one shift for all.
+        const [first, last] = await Promise.all([
+          tx.task.aggregate({ where: { columnId: id }, _min: { position: true } }),
+          tx.task.aggregate({ where: { columnId: target.id }, _max: { position: true } }),
+        ]);
+        await tx.task.updateMany({
+          where: { columnId: id },
+          data: {
+            columnId: target.id,
+            position: {
+              increment: (last._max.position ?? 0) + 1 - (first._min.position ?? 0),
+            },
+          },
+        });
+      }
+      await tx.todoColumn.delete({ where: { id } });
+    });
+    log.info({ columnId: id, moveTo: target?.id, taskCount }, "todo column deleted");
+    return column;
   }
 
   // ─── Dependencies ───────────────────────────────────────────────────────
@@ -405,8 +567,73 @@ export class TodosService {
     return list.nextNumber - 1;
   }
 
-  private async endOfColumn(tx: Prisma.TransactionClient, listId: string, status: TaskStatus) {
-    const last = await tx.task.aggregate({ where: { listId, status }, _max: { position: true } });
+  private async endOfColumn(tx: Prisma.TransactionClient, columnId: string) {
+    const last = await tx.task.aggregate({ where: { columnId }, _max: { position: true } });
     return (last._max.position ?? 0) + 1;
+  }
+
+  /** After the last task planned for that day, from any list. */
+  private async endOfDay(tx: Prisma.TransactionClient, day: Date) {
+    const last = await tx.task.aggregate({
+      where: { plannedFor: day },
+      _max: { dayPosition: true },
+    });
+    return (last._max.dayPosition ?? 0) + 1;
+  }
+
+  /** A list's columns, left to right, with how many tasks each holds. */
+  private async columnsOf(listId: string) {
+    const [columns, counts] = await Promise.all([
+      this.prisma.todoColumn.findMany({
+        where: { listId },
+        orderBy: [{ position: "asc" }, { createdAt: "asc" }],
+      }),
+      this.prisma.task.groupBy({ by: ["columnId"], where: { listId }, _count: { _all: true } }),
+    ]);
+    return columns.map((column) => ({
+      ...column,
+      taskCount: counts.find((c) => c.columnId === column.id)?._count._all ?? 0,
+    }));
+  }
+
+  private async column(id: string) {
+    const column = await this.prisma.todoColumn.findUnique({ where: { id } });
+    if (!column) throw new NotFoundException(`Column ${id} not found`);
+    return column;
+  }
+
+  /** The leftmost column of a status: where a task goes when only its status is known. */
+  private async firstColumn(listId: string, status: TaskStatus) {
+    const column = await this.prisma.todoColumn.findFirst({
+      where: { listId, status },
+      orderBy: [{ position: "asc" }, { createdAt: "asc" }],
+    });
+    if (!column) throw new NotFoundException(`List ${listId} has no ${status} column`);
+    return column;
+  }
+
+  private async assertNotLastOfStatus(column: TodoColumn) {
+    const same = await this.prisma.todoColumn.count({
+      where: { listId: column.listId, status: column.status },
+    });
+    if (same <= 1) {
+      throw new BadRequestException(
+        `This is the list's only ${column.status} column; every list keeps one per status`,
+      );
+    }
+  }
+
+  /** Every task in a column takes a new status, with completedAt set or cleared to match. */
+  private async retagTasks(
+    tx: Prisma.TransactionClient,
+    columnId: string,
+    from: TaskStatus,
+    to: TaskStatus,
+  ) {
+    if (from === to) return;
+    await tx.task.updateMany({
+      where: { columnId },
+      data: { status: to, completedAt: to === "DONE" ? new Date() : null },
+    });
   }
 }

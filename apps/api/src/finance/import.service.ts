@@ -6,6 +6,7 @@ import { fromIsoDate, toIsoDate } from "#finance/calendar.util";
 import { categoryMetadata } from "#finance/categories.service";
 import type { ImportTransactionsInput } from "#finance/dto/import.dto";
 import { MonthlyTotalsService } from "#finance/monthly-totals.service";
+import { foldPayee, matchRule } from "#finance/payee-rule.util";
 
 const log = scopedLogger("ImportService");
 
@@ -40,20 +41,7 @@ export interface ImportResult {
   beforeOpening: number;
 }
 
-/** Case, accents and spacing don't matter when comparing payees: "TESCO  Stores" = "tesco stores". */
-export function foldPayee(payee: string | null): string {
-  return (
-    (payee ?? "")
-      .toLowerCase()
-      .normalize("NFKD")
-      .replace(/\p{M}/gu, "")
-      .replace(/đ/g, "d")
-      // "SAINSBURY'S" and "sainsburys" are the same shop.
-      .replace(/['\u2019]/g, "")
-      .replace(/[^\p{L}\p{N}]+/gu, " ")
-      .trim()
-  );
-}
+export { foldPayee };
 
 /**
  * The dedupe key for an imported row. `occurrence` counts identical
@@ -200,15 +188,18 @@ export class ImportService {
   }
 
   /**
-   * Guesses a row's category: the category the same payee was last filed
-   * under (quick log, form or an earlier import), else a category whose name
-   * or alias appears in the payee ("TESCO STORES 3245" → Groceries). Money
-   * in only matches income categories, money out only expense ones.
+   * Guesses a row's category: the user's own payee rules first (whatever
+   * the sign: a refund from Tesco is still Groceries), then the category the
+   * same payee was last filed under (quick log, form or an earlier import),
+   * else a category whose name or alias appears in the payee ("TESCO STORES
+   * 3245" → Groceries). History and names only match a category of the
+   * row's kind: money in → income, money out → expense.
    */
   private async categoryGuesser(): Promise<
     (payee: string | null, amountMinor: number) => string | null
   > {
-    const [history, categories] = await Promise.all([
+    const [rules, history, categories] = await Promise.all([
+      this.prisma.payeeRule.findMany({ orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] }),
       this.prisma.transaction.findMany({
         where: {
           payee: { not: null },
@@ -242,6 +233,8 @@ export class ImportService {
     return (payee, amountMinor) => {
       const folded = foldPayee(payee);
       if (!folded) return null;
+      const rule = matchRule(rules, payee);
+      if (rule) return rule.categoryId;
       const kind = amountMinor < 0 ? "expense" : "income";
       const remembered = byPayee.get(folded);
       if (remembered && kindOf.get(remembered) === kind) return remembered;

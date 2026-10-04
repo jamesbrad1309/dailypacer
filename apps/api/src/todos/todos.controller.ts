@@ -2,17 +2,22 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestj
 import { ZodValidationPipe } from "#common/http/zod-validation.pipe";
 import {
   type AddDependencyInput,
+  type CreateColumnInput,
   type CreateListInput,
   type CreateTaskInput,
   type SearchTasksQuery,
+  type UpdateColumnInput,
   type UpdateListInput,
   type UpdateTaskInput,
   addDependencySchema,
+  createColumnSchema,
   createListSchema,
   createTaskSchema,
+  deleteColumnQuerySchema,
   listTasksQuerySchema,
   searchTasksQuerySchema,
   todayQuerySchema,
+  updateColumnSchema,
   updateListSchema,
   updateTaskSchema,
 } from "#todos/dto/todo.dto";
@@ -65,7 +70,33 @@ export class TodosController {
     return this.todos.deleteList(id);
   }
 
-  /** `GET /tasks/today?today=2026-10-02` → { today, earlier } */
+  /** Adds a board column at the right end. */
+  @Post("todo-lists/:id/columns")
+  createColumn(
+    @Param("id") id: string,
+    @Body(new ZodValidationPipe(createColumnSchema)) input: CreateColumnInput,
+  ) {
+    return this.todos.createColumn(id, input);
+  }
+
+  @Patch("todo-columns/:id")
+  updateColumn(
+    @Param("id") id: string,
+    @Body(new ZodValidationPipe(updateColumnSchema)) input: UpdateColumnInput,
+  ) {
+    return this.todos.updateColumn(id, input);
+  }
+
+  /** `DELETE /todo-columns/:id?moveTo=<column id>`; see TodosService.deleteColumn. */
+  @Delete("todo-columns/:id")
+  deleteColumn(
+    @Param("id") id: string,
+    @Query(new ZodValidationPipe(deleteColumnQuerySchema)) query: { moveTo?: string },
+  ) {
+    return this.todos.deleteColumn(id, query.moveTo);
+  }
+
+  /** `GET /tasks/today?today=2026-10-02` → { today, earlier, dueSoon } */
   @Get("tasks/today")
   today(@Query(new ZodValidationPipe(todayQuerySchema)) query: { today: string }) {
     return this.todos.today(query.today);

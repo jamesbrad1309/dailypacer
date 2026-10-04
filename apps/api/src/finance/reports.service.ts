@@ -47,6 +47,67 @@ export interface CashFlowReport {
   months: CashFlowMonth[];
 }
 
+export interface TopPayee {
+  /** As most often written. */
+  payee: string;
+  /** Out minus refunds over the range, in the main currency. */
+  spentMinor: number;
+  transactionCount: number;
+}
+
+export interface TopPayeesReport {
+  from: string;
+  to: string;
+  currency: string;
+  unconverted: string[];
+  /** Biggest spend first. */
+  payees: TopPayee[];
+}
+
+export interface NetWorthMonth {
+  /** "YYYY-MM": balances at the end of it (today, for the current month). */
+  month: string;
+  assetsMinor: number;
+  /** Owed, as a positive amount. */
+  liabilitiesMinor: number;
+  netWorthMinor: number;
+}
+
+export interface NetWorthReport {
+  currency: string;
+  unconverted: string[];
+  /** Oldest first. */
+  months: NetWorthMonth[];
+}
+
+/**
+ * Each account's balance at the end of every month in `months` (oldest
+ * first): its opening balance plus every transaction up to then. An account
+ * opened after a month ended has no balance that month (undefined).
+ */
+export function balancesByMonth(
+  accounts: { id: string; openingBalanceMinor: number; openingMonth: string }[],
+  sums: { accountId: string; month: string; amountMinor: number }[],
+  months: string[],
+): Map<string, (number | undefined)[]> {
+  const result = new Map<string, (number | undefined)[]>();
+  for (const account of accounts) {
+    const own = sums.filter((s) => s.accountId === account.id);
+    // Everything before the first month shown, then each month's on top.
+    let running =
+      account.openingBalanceMinor +
+      own.filter((s) => s.month < months[0]).reduce((sum, s) => sum + s.amountMinor, 0);
+    result.set(
+      account.id,
+      months.map((month) => {
+        running += own.filter((s) => s.month === month).reduce((sum, s) => sum + s.amountMinor, 0);
+        return account.openingMonth <= month ? running : undefined;
+      }),
+    );
+  }
+  return result;
+}
+
 /** The date a month's figures convert at: its last day, or today while it's still going. */
 export function rateDate(month: string): string {
   const [y, m] = month.split("-").map(Number);
@@ -187,5 +248,116 @@ export class ReportsService {
     const list = [...byMonth.values()];
     for (const m of list) m.netMinor = m.inMinor - m.outMinor;
     return { currency: ctx.main, unconverted: [...unconverted].sort(), months: list };
+  }
+
+  /**
+   * Where the money went, by payee, between two days: out minus refunds,
+   * leaving out transfers, balance adjustments and income. Payees are
+   * matched ignoring case and surrounding spaces; each month converts at
+   * its own rate, as in the other reports.
+   */
+  async topPayees(from: string, to: string, limit: number): Promise<TopPayeesReport> {
+    const rows = await this.prisma.$queryRaw<
+      { key: string; payee: string; currency: string; month: string; net: number; count: number }[]
+    >`
+      SELECT lower(trim(t."payee")) AS "key",
+             mode() WITHIN GROUP (ORDER BY trim(t."payee")) AS "payee",
+             a."currency",
+             to_char(t."date", 'YYYY-MM') AS "month",
+             (-SUM(t."amountMinor"))::int AS "net",
+             COUNT(*)::int AS "count"
+      FROM "transactions" t
+      JOIN "accounts" a ON a."id" = t."accountId"
+      LEFT JOIN "categories" c ON c."id" = t."categoryId"
+      WHERE t."date" BETWEEN ${fromIsoDate(from)} AND ${fromIsoDate(to)}
+        AND t."transferId" IS NULL AND t."source" <> 'adjustment'
+        AND t."payee" IS NOT NULL AND trim(t."payee") <> ''
+        AND (c."kind" IS NULL OR c."kind" <> 'income')
+      GROUP BY 1, 3, 4`;
+    const ctx = await this.currencies.conversionContext();
+    const unconverted = new Set<string>();
+    const byPayee = new Map<string, TopPayee & { names: Map<string, number> }>();
+    for (const row of rows) {
+      const net = toMainMinor(ctx, row.net, row.currency, rateDate(row.month));
+      if (net === null) {
+        unconverted.add(row.currency);
+        continue;
+      }
+      const entry = byPayee.get(row.key) ?? {
+        payee: row.payee,
+        spentMinor: 0,
+        transactionCount: 0,
+        names: new Map<string, number>(),
+      };
+      entry.spentMinor += net;
+      entry.transactionCount += row.count;
+      entry.names.set(row.payee, (entry.names.get(row.payee) ?? 0) + row.count);
+      byPayee.set(row.key, entry);
+    }
+    const payees = [...byPayee.values()]
+      .filter((p) => p.spentMinor > 0)
+      .sort((a, b) => b.spentMinor - a.spentMinor || b.transactionCount - a.transactionCount)
+      .slice(0, limit)
+      .map(({ names, ...p }) => ({
+        ...p,
+        payee: [...names].sort((a, b) => b[1] - a[1])[0]?.[0] ?? p.payee,
+      }));
+    return { from, to, currency: ctx.main, unconverted: [...unconverted].sort(), payees };
+  }
+
+  /**
+   * Net worth at the end of each of `months` months up to `to`: every
+   * account's balance then (opening balance plus all its transactions,
+   * transfers and adjustments included), converted at that month's rate,
+   * split into what you own and what you owe.
+   */
+  async netWorth(to: string, months: number): Promise<NetWorthReport> {
+    const monthList = Array.from({ length: months }, (_, i) => shiftMonth(to, i - (months - 1)));
+    const [y, m] = to.split("-").map(Number);
+    const lastDay = new Date(Date.UTC(y, m, 0));
+    const [accounts, sums] = await Promise.all([
+      this.prisma.account.findMany({
+        select: { id: true, currency: true, openingBalanceMinor: true, openingBalanceDate: true },
+      }),
+      this.prisma.$queryRaw<{ accountId: string; month: string; amountMinor: number }[]>`
+        SELECT "accountId", to_char("date", 'YYYY-MM') AS "month",
+               SUM("amountMinor")::int AS "amountMinor"
+        FROM "transactions"
+        WHERE "date" <= ${lastDay}
+        GROUP BY 1, 2`,
+    ]);
+    const balances = balancesByMonth(
+      accounts.map((a) => ({
+        id: a.id,
+        openingBalanceMinor: a.openingBalanceMinor,
+        openingMonth: toIsoDate(a.openingBalanceDate).slice(0, 7),
+      })),
+      sums,
+      monthList,
+    );
+    const ctx = await this.currencies.conversionContext();
+    const unconverted = new Set<string>();
+    const result = monthList.map((month, i) => {
+      let assetsMinor = 0;
+      let liabilitiesMinor = 0;
+      for (const account of accounts) {
+        const balance = balances.get(account.id)?.[i];
+        if (balance === undefined || balance === 0) continue;
+        const main = toMainMinor(ctx, balance, account.currency, rateDate(month));
+        if (main === null) {
+          unconverted.add(account.currency);
+          continue;
+        }
+        if (main >= 0) assetsMinor += main;
+        else liabilitiesMinor -= main;
+      }
+      return {
+        month,
+        assetsMinor,
+        liabilitiesMinor,
+        netWorthMinor: assetsMinor - liabilitiesMinor,
+      };
+    });
+    return { currency: ctx.main, unconverted: [...unconverted].sort(), months: result };
   }
 }

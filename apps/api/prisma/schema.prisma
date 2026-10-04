@@ -111,8 +111,7 @@ model JournalEntry {
 
 // ─── Finance ─────────────────────────────────────────────────────────────────
 // All amounts are integer minor units (pence): see docs/finance/money-handling.md.
-// Savings goals come in a later phase (docs/finance/index.md) and add their
-// own tables then. Subscriptions are at the end of this section.
+// Subscriptions, savings goals and payee rules are at the end of this section.
 
 enum AccountType {
   CURRENT
@@ -176,6 +175,7 @@ model Account {
   presets       QuickPreset[]
   monthlyTotals MonthlyTotal[]
   subscriptions Subscription[]
+  savingsGoals  SavingsGoal[]
 
   @@map("accounts")
 }
@@ -203,6 +203,8 @@ model Category {
   monthlyTotals MonthlyTotal[]
   budgets       Budget[]
   subscriptions Subscription[]
+  splits        TransactionSplit[]
+  payeeRules    PayeeRule[]
 
   @@unique([parentId, name])
   @@map("categories")
@@ -244,6 +246,9 @@ model Transaction {
 
   /// Set when this transaction is a confirmed subscription charge.
   subscriptionCharge SubscriptionCharge?
+  /// Split across categories: then `categoryId` is null and these say where
+  /// the money went; they always add up to `amountMinor`.
+  splits             TransactionSplit[]
 
   @@unique([accountId, importHash])
   @@index([accountId, date])
@@ -251,6 +256,25 @@ model Transaction {
   @@index([transferId])
   @@index([status])
   @@map("transactions")
+}
+
+/// One part of a split transaction ("£40 groceries + £12 household" on one
+/// receipt). Same sign as the transaction; monthly totals count each part
+/// in its own category (MonthlyTotalsService).
+model TransactionSplit {
+  id            String      @id @default(uuid())
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  /// Restrict, like monthly totals: categories are archived, never deleted.
+  categoryId    String
+  category      Category    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  amountMinor   Int
+  note          String?
+  position      Int         @default(0)
+
+  @@index([transactionId])
+  @@index([categoryId])
+  @@map("transaction_splits")
 }
 
 /// A one-tap quick-log button: "☕ Flat white £3.40". Without an amount it
@@ -496,9 +520,30 @@ model TodoList {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
-  tasks Task[]
+  tasks   Task[]
+  columns TodoColumn[]
 
   @@map("todo_lists")
+}
+
+/// A board column. Each maps to a status (its category): a task's status is
+/// always its column's, so "done", Today and "blocked" work whatever the
+/// columns are called. Every list keeps at least one column per status.
+model TodoColumn {
+  id        String     @id @default(uuid())
+  listId    String
+  list      TodoList   @relation(fields: [listId], references: [id], onDelete: Cascade)
+  /// Null shows the status's own (translated) name: "To do", "In progress", "Done".
+  name      String?
+  status    TaskStatus
+  /// Left-to-right order on the board.
+  position  Float      @default(0)
+  createdAt DateTime   @default(now())
+
+  tasks Task[]
+
+  @@index([listId, position])
+  @@map("todo_columns")
 }
 
 model Task {
@@ -509,11 +554,20 @@ model Task {
   number      Int
   title       String
   notes       String?
+  /// Always the column's status (TodosService keeps them in step).
   status      TaskStatus @default(TODO)
+  /// Its board column, in the same list. NoAction (checked at the end of the
+  /// statement) so deleting a list can cascade to both columns and tasks.
+  columnId    String
+  column      TodoColumn @relation(fields: [columnId], references: [id], onDelete: NoAction)
   /// Order within its board column (fractional, so a drag updates one row).
   position    Float      @default(0)
   /// The day it's planned for (user's local day), from any list; null = not planned.
   plannedFor  DateTime?  @db.Date
+  /// Order within its planned day, for Today (fractional, like `position`).
+  dayPosition Float      @default(0)
+  /// The deadline, separate from when it's planned: "due Friday, doing it Thursday".
+  dueOn       DateTime?  @db.Date
   completedAt DateTime?
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -526,6 +580,8 @@ model Task {
   @@unique([listId, number])
   @@index([plannedFor])
   @@index([listId, status, position])
+  @@index([columnId, position])
+  @@index([dueOn])
   @@map("tasks")
 }
 
@@ -541,4 +597,53 @@ model TaskDependency {
   @@id([taskId, dependsOnId])
   @@index([dependsOnId])
   @@map("task_dependencies")
+}
+
+// ─── Savings goals ───────────────────────────────────────────────────────────
+
+/// Money put aside for something. Linked to an account, that account's
+/// balance is what's saved; otherwise `savedMinor` is, added to by hand.
+/// Progress, "on track" and the monthly amount needed are derived on read
+/// (finance/savings-goal.util.ts).
+model SavingsGoal {
+  id               String    @id @default(uuid())
+  name             String
+  emoji            String?
+  /// Positive, in `currency`.
+  targetMinor      Int
+  /// ISO 4217: the linked account's currency, else the main one when created.
+  currency         String
+  deadline         DateTime? @db.Date
+  accountId        String?
+  account          Account?  @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  /// Unlinked goals only: what's been put aside so far.
+  savedMinor       Int       @default(0)
+  /// "On track" compares progress since this day with the time gone since it.
+  startDate        DateTime  @db.Date
+  /// What was saved on `startDate` (a linked account may not start at zero).
+  startSavedMinor  Int       @default(0)
+  sortOrder        Int       @default(0)
+  archivedAt       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@map("savings_goals")
+}
+
+// ─── Payee rules ─────────────────────────────────────────────────────────────
+
+/// "TESCO*" → Groceries: rules the user writes, tried before payee history
+/// and category names when quick log, CSV import or "Apply rules" files a
+/// transaction (finance/payee-rule.util.ts). Lower `sortOrder` wins.
+model PayeeRule {
+  id         String   @id @default(uuid())
+  /// `*` matches anything; without one it matches anywhere in the payee.
+  /// Case, accents and spacing don't matter.
+  pattern    String
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@map("payee_rules")
 }

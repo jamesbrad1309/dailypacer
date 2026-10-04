@@ -6,11 +6,15 @@ import { toIsoDate } from "#finance/calendar.util";
 
 const log = scopedLogger("MonthlyTotalsService");
 
-/** The fields of a transaction that decide which total it lands in and by how much. */
+/**
+ * The fields of a transaction that decide which total it lands in and by
+ * how much. A split transaction lands in each part's category instead
+ * (`splits`, which add up to `amountMinor`).
+ */
 export type TotalsRow = Pick<
   Prisma.TransactionGetPayload<object>,
   "accountId" | "categoryId" | "date" | "amountMinor" | "transferId" | "source"
->;
+> & { splits?: { categoryId: string; amountMinor: number }[] };
 
 /** +1 adds a transaction to the totals, -1 takes it back out (delete, or the old side of an edit). */
 export type TotalsChange = { row: TotalsRow; sign: 1 | -1 };
@@ -39,22 +43,28 @@ export function collectDeltas(changes: TotalsChange[]): Delta[] {
   for (const { row, sign } of changes) {
     if (!isCounted(row)) continue;
     const month = `${toIsoDate(row.date).slice(0, 7)}-01`;
-    const key = `${month}|${row.accountId}|${row.categoryId ?? ""}`;
-    let delta = byKey.get(key);
-    if (!delta) {
-      delta = {
-        month,
-        accountId: row.accountId,
-        categoryId: row.categoryId,
-        outflowMinor: 0,
-        inflowMinor: 0,
-        count: 0,
-      };
-      byKey.set(key, delta);
+    // Each part of a split counts once in its own category.
+    const parts = row.splits?.length
+      ? row.splits
+      : [{ categoryId: row.categoryId, amountMinor: row.amountMinor }];
+    for (const part of parts) {
+      const key = `${month}|${row.accountId}|${part.categoryId ?? ""}`;
+      let delta = byKey.get(key);
+      if (!delta) {
+        delta = {
+          month,
+          accountId: row.accountId,
+          categoryId: part.categoryId,
+          outflowMinor: 0,
+          inflowMinor: 0,
+          count: 0,
+        };
+        byKey.set(key, delta);
+      }
+      delta.outflowMinor += sign * Math.max(0, -part.amountMinor);
+      delta.inflowMinor += sign * Math.max(0, part.amountMinor);
+      delta.count += sign;
     }
-    delta.outflowMinor += sign * Math.max(0, -row.amountMinor);
-    delta.inflowMinor += sign * Math.max(0, row.amountMinor);
-    delta.count += sign;
   }
   // An edit that changes only the payee adds and removes the same amount.
   return [...byKey.values()].filter(
@@ -179,7 +189,11 @@ export class MonthlyTotalsService implements OnModuleInit {
   }
 }
 
-/** What the totals should be, recounted from scratch (the same rules as `isCounted`). */
+/**
+ * What the totals should be, recounted from scratch (the same rules as
+ * `isCounted` and `collectDeltas`): unsplit transactions in their own
+ * category, split ones as one entry per part.
+ */
 const FRESH_TOTALS = Prisma.sql`
   SELECT date_trunc('month', "date")::date AS "month",
          "accountId",
@@ -187,6 +201,15 @@ const FRESH_TOTALS = Prisma.sql`
          SUM(CASE WHEN "amountMinor" < 0 THEN -"amountMinor" ELSE 0 END)::int AS "outflowMinor",
          SUM(CASE WHEN "amountMinor" > 0 THEN "amountMinor" ELSE 0 END)::int AS "inflowMinor",
          COUNT(*)::int AS "transactionCount"
-  FROM "transactions"
-  WHERE "transferId" IS NULL AND "source" <> 'adjustment'
+  FROM (
+    SELECT t."date", t."accountId", t."categoryId", t."amountMinor"
+    FROM "transactions" t
+    WHERE t."transferId" IS NULL AND t."source" <> 'adjustment'
+      AND NOT EXISTS (SELECT 1 FROM "transaction_splits" s WHERE s."transactionId" = t."id")
+    UNION ALL
+    SELECT t."date", t."accountId", s."categoryId", s."amountMinor"
+    FROM "transaction_splits" s
+    JOIN "transactions" t ON t."id" = s."transactionId"
+    WHERE t."transferId" IS NULL AND t."source" <> 'adjustment'
+  ) counted
   GROUP BY 1, 2, 3`;

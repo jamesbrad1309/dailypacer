@@ -23,6 +23,20 @@ export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;
 export const updateTransactionSchema = createTransactionSchema.partial();
 export type UpdateTransactionInput = z.infer<typeof updateTransactionSchema>;
 
+/** `PUT /transactions/:id/splits`: the parts, or `[]` to undo the split (back to "To review"). */
+export const setSplitsSchema = z.object({
+  splits: z
+    .array(
+      z.object({
+        categoryId: z.string().uuid(),
+        amountMinor: nonZeroMinor,
+        note: optionalText(200),
+      }),
+    )
+    .max(20),
+});
+export type SetSplitsInput = z.infer<typeof setSplitsSchema>;
+
 const flag = z
   .enum(["true", "false"])
   .optional()

@@ -3,11 +3,14 @@ import type { Category } from "@prisma/client";
 import { PrismaService } from "#common/database/prisma.service";
 import { scopedLogger } from "#common/logger/logger";
 import {
+  type BudgetAlert,
   type BudgetMonth,
   type BudgetRule,
   type Pace,
   ROLLOVER_WINDOW_MONTHS,
+  alertLevel,
   budgetMonth,
+  crossedAlert,
   monthProgress,
   pace,
   ruleFor,
@@ -27,6 +30,8 @@ const AVERAGE_MONTHS = 3;
 export interface BudgetLine extends BudgetMonth {
   category: Category;
   pace: Pace;
+  /** 80% or 100% of the budget spent (in-app alerts); null below that. */
+  alert: BudgetAlert | null;
   /** Average monthly spend over the 3 months before, to judge the limit by. */
   averageSpentMinor: number;
 }
@@ -135,6 +140,7 @@ export class BudgetsService {
           ...b,
           category,
           pace: pace(b.spentMinor, b.availableMinor, progress),
+          alert: alertLevel(b.spentMinor, b.availableMinor),
           averageSpentMinor: average(category.id),
         });
       } else if (spentIn(category.id)(month) > 0) {
@@ -180,6 +186,30 @@ export class BudgetsService {
   }
 
   /** Sets (or changes) a category's limit from `month` on; earlier months keep theirs. */
+  /**
+   * Whether an expense just logged took its category's budget past 80% or
+   * 100% this month: the line as it is now, and the level it crossed.
+   * `amountMinor` is the expense (positive) in `currency`. Null when the
+   * category has no budget or nothing new was crossed.
+   */
+  async crossedBy(
+    categoryId: string,
+    date: string,
+    today: string,
+    amountMinor: number,
+    currency: string,
+  ): Promise<{ line: BudgetLine; level: BudgetAlert; currency: string } | null> {
+    const month = date.slice(0, 7);
+    const report = await this.report(month, today);
+    const line = report.lines.find((l) => l.category.id === categoryId);
+    if (!line) return null;
+    const ctx = await this.currencies.conversionContext();
+    const added = toMainMinor(ctx, amountMinor, currency, rateDate(month));
+    if (added === null) return null;
+    const level = crossedAlert(line.spentMinor - added, line.spentMinor, line.availableMinor);
+    return level ? { line, level, currency: report.currency } : null;
+  }
+
   async set(input: SetBudgetInput): Promise<void> {
     const category = await this.prisma.category.findUnique({ where: { id: input.categoryId } });
     if (!category || category.isSystem || category.kind !== "expense") {

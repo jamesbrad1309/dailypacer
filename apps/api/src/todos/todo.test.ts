@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   PREFIX_PATTERN,
+  addDays,
+  completedAtFor,
   formatKey,
   parseKey,
   positionBetween,
@@ -65,5 +67,25 @@ describe("wouldCreateCycle", () => {
   it("allows chains and shared dependencies", () => {
     expect(wouldCreateCycle("a", "c", edges)).toBe(false);
     expect(wouldCreateCycle("d", "a", edges)).toBe(false);
+  });
+});
+
+describe("completedAtFor", () => {
+  const now = new Date("2026-10-04T10:00:00Z");
+  const before = new Date("2026-10-01T09:00:00Z");
+
+  it("stamps a task that becomes done, and clears one that stops being done", () => {
+    expect(completedAtFor("TODO", "DONE", null, now)).toBe(now);
+    expect(completedAtFor("DONE", "IN_PROGRESS", before, now)).toBeNull();
+  });
+
+  it("keeps the time when moving between two Done columns", () => {
+    expect(completedAtFor("DONE", "DONE", before, now)).toBe(before);
+  });
+});
+
+describe("addDays", () => {
+  it("crosses month ends in UTC", () => {
+    expect(addDays("2026-10-30", 3).toISOString().slice(0, 10)).toBe("2026-11-02");
   });
 });

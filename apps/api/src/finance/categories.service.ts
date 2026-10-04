@@ -1,8 +1,14 @@
-import { Injectable, NotFoundException, type OnModuleInit } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  type OnModuleInit,
+} from "@nestjs/common";
 import { type Category, Prisma } from "@prisma/client";
 import { PrismaService } from "#common/database/prisma.service";
 import { scopedLogger } from "#common/logger/logger";
-import type { CreateCategoryInput } from "#finance/dto/category.dto";
+import type { CreateCategoryInput, UpdateCategoryInput } from "#finance/dto/category.dto";
 
 const log = scopedLogger("CategoriesService");
 
@@ -267,10 +273,13 @@ export class CategoriesService implements OnModuleInit {
     log.info({ count: DEFAULT_CATEGORIES.length }, "default categories seeded");
   }
 
-  /** Active categories users pick from; the system ones (Adjustment) are left out. */
-  list(): Promise<Category[]> {
+  /**
+   * Active categories users pick from (archived ones too when managing
+   * them); the system ones (Adjustment) are left out.
+   */
+  list(includeArchived = false): Promise<Category[]> {
     return this.prisma.category.findMany({
-      where: { archivedAt: null, isSystem: false },
+      where: { isSystem: false, ...(includeArchived ? {} : { archivedAt: null }) },
       orderBy: [{ kind: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
     });
   }
@@ -287,18 +296,86 @@ export class CategoriesService implements OnModuleInit {
   }
 
   async create(input: CreateCategoryInput): Promise<Category> {
+    if (input.parentId) await this.assertParent(input.parentId, input.kind);
     const last = await this.prisma.category.aggregate({ _max: { sortOrder: true } });
-    const category = await this.prisma.category.create({
-      data: {
-        name: input.name,
-        icon: input.icon ?? null,
-        kind: input.kind,
-        sortOrder: (last._max.sortOrder ?? -1) + 1,
-        metadata: { aliases: input.aliases ?? [] },
-      },
-    });
-    log.info({ categoryId: category.id }, "category created");
+    const category = await this.uniqueName(input.name, () =>
+      this.prisma.category.create({
+        data: {
+          name: input.name,
+          icon: input.icon ?? null,
+          color: input.color ?? null,
+          kind: input.kind,
+          parentId: input.parentId ?? null,
+          sortOrder: (last._max.sortOrder ?? -1) + 1,
+          metadata: { aliases: input.aliases ?? [] },
+        },
+      }),
+    );
+    log.info({ categoryId: category.id, parentId: category.parentId }, "category created");
     return category;
+  }
+
+  /**
+   * Edits a user's category. Categories nest one level ("Food › Eating
+   * out"): a parent is top-level and of the same kind, and a category with
+   * subcategories can't go under another. Archiving takes its
+   * subcategories with it; transactions keep it either way.
+   */
+  async update(id: string, input: UpdateCategoryInput): Promise<Category> {
+    const category = await this.findOne(id);
+    if (category.isSystem) throw new BadRequestException("Built-in categories can't be edited");
+    if (input.parentId) {
+      if (input.parentId === id)
+        throw new BadRequestException("A category can't be its own parent");
+      await this.assertParent(input.parentId, category.kind);
+      const children = await this.prisma.category.count({ where: { parentId: id } });
+      if (children > 0) {
+        throw new BadRequestException(
+          "It has subcategories of its own; categories nest one level deep",
+        );
+      }
+    }
+    if (input.archived === false && category.parentId && input.parentId === undefined) {
+      const parent = await this.findOne(category.parentId);
+      if (parent.archivedAt) {
+        throw new BadRequestException(`Unarchive ${parent.name} first, or move it out`);
+      }
+    }
+    // A seeded category is shown translated by its key; renamed, it's the user's own name.
+    const { key, ...rest } = categoryMetadata(category);
+    const renamed = input.name !== undefined && input.name !== category.name;
+    const metadata = renamed ? rest : { key, ...rest };
+    const archivedAt =
+      input.archived === undefined ? undefined : input.archived ? new Date() : null;
+    const updated = await this.uniqueName(input.name ?? category.name, () =>
+      this.prisma.$transaction(async (tx) => {
+        if (input.archived === true) {
+          await tx.category.updateMany({
+            where: { parentId: id, archivedAt: null },
+            data: { archivedAt },
+          });
+        }
+        return tx.category.update({
+          where: { id },
+          data: {
+            name: input.name,
+            icon: input.icon,
+            color: input.color,
+            parentId: input.parentId,
+            archivedAt,
+            metadata:
+              input.aliases === undefined && !renamed
+                ? undefined
+                : ({
+                    ...metadata,
+                    ...(input.aliases ? { aliases: input.aliases } : {}),
+                  } as Prisma.InputJsonObject),
+          },
+        });
+      }),
+    );
+    log.info({ categoryId: id, fields: Object.keys(input) }, "category updated");
+    return updated;
   }
 
   /** Remembers a "no thanks" to "Save as preset?" so it isn't asked again. */
@@ -316,6 +393,34 @@ export class CategoriesService implements OnModuleInit {
         } as Prisma.InputJsonObject,
       },
     });
+  }
+
+  /** A valid parent: active, a user's own, top-level, and of the same kind. */
+  private async assertParent(parentId: string, kind: string): Promise<void> {
+    const parent = await this.prisma.category.findUnique({ where: { id: parentId } });
+    if (!parent || parent.archivedAt || parent.isSystem) {
+      throw new BadRequestException("The parent must be an active category of yours");
+    }
+    if (parent.parentId) {
+      throw new BadRequestException(
+        `${parent.name} is itself a subcategory; categories nest one level deep`,
+      );
+    }
+    if (parent.kind !== kind) {
+      throw new BadRequestException("A subcategory must be the same kind (expense or income)");
+    }
+  }
+
+  /** Runs a write, turning a name clash under the same parent into a 409. */
+  private async uniqueName<T>(name: string, write: () => Promise<T>): Promise<T> {
+    try {
+      return await write();
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+        throw new ConflictException(`There's already a category called ${name} there`);
+      }
+      throw err;
+    }
   }
 
   /** The category balance adjustments are filed under; reports ignore it. */

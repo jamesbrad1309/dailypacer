@@ -14,10 +14,14 @@ import { ImportService } from "#finance/import.service";
 import { LogosController } from "#finance/logos.controller";
 import { LogosService } from "#finance/logos.service";
 import { MonthlyTotalsService } from "#finance/monthly-totals.service";
+import { PayeeRulesController } from "#finance/payee-rules.controller";
+import { PayeeRulesService } from "#finance/payee-rules.service";
 import { QuickLogController } from "#finance/quick-log.controller";
 import { QuickLogService } from "#finance/quick-log.service";
 import { ReportsController } from "#finance/reports.controller";
 import { ReportsService } from "#finance/reports.service";
+import { SavingsGoalsController } from "#finance/savings-goals.controller";
+import { SavingsGoalsService } from "#finance/savings-goals.service";
 import { SubscriptionsController } from "#finance/subscriptions.controller";
 import { SubscriptionsService } from "#finance/subscriptions.service";
 import { TransactionsController } from "#finance/transactions.controller";
@@ -42,6 +46,8 @@ import { TransactionsService } from "#finance/transactions.service";
     CsvUploadsController,
     SubscriptionsController,
     LogosController,
+    PayeeRulesController,
+    SavingsGoalsController,
   ],
   providers: [
     AccountsService,
@@ -57,6 +63,8 @@ import { TransactionsService } from "#finance/transactions.service";
     CsvUploadsService,
     SubscriptionsService,
     LogosService,
+    PayeeRulesService,
+    SavingsGoalsService,
   ],
 })
 export class FinanceModule {}
