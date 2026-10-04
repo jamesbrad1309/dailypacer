@@ -16,8 +16,11 @@ graph TD
         Journal["JournalEntry<br/>ACTION · FEELING · EVENT"]
         Journal -->|triggered by an EVENT| Journal
         List["TodoList<br/>prefix · nextNumber"]
-        Task["Task<br/>number · status · plannedFor"]
+        Task["Task<br/>number · status · plannedFor · dueOn"]
+        Column["TodoColumn<br/>name · status · position"]
         Dep["TaskDependency"]
+        List -->|has many| Column
+        Column -->|holds| Task
         List -->|has many| Task
         Task -->|waits for, any list| Dep
     end
@@ -129,16 +132,19 @@ graph TD
   `Habit`. Its only link is to itself (a feeling or action → the event that
   triggered it). The mood score is computed in the browser from feelings
   (`lib/mood.ts`), see [journal.md](journal.md).
-- **To-do lists are another island.** `TodoList` / `Task` /
-  `TaskDependency` don't touch habits or the journal. Dependencies cross
+- **To-do lists are another island.** `TodoList` / `TodoColumn` / `Task` /
+  `TaskDependency` don't touch habits or the journal. A task's status
+  always follows its column's. Dependencies cross
   lists; keys are derived from the list's current prefix, so a prefix
   rename touches one row. See [todos.md](todos.md).
 
 ## Finance module
 
 Finance ([finance/index.md](../finance/index.md)) is a parallel subgraph:
-`Account → Transaction ← Category`, `Budget → Category`, subscriptions and
-quick log, served by `FinanceModule` REST controllers in `apps/api` and
+`Account → Transaction ← Category` (a split transaction has
+`TransactionSplit` parts, each with its own category), `Category → Category`
+(one level of nesting), `Budget → Category`, `PayeeRule → Category`,
+`SavingsGoal → Account`, subscriptions and quick log, served by `FinanceModule` REST controllers in `apps/api` and
 `graphql/finance/` in `apps/bff`. Its planned edges into the habits graph are
 listed in [finance/habits-integration.md](../finance/habits-integration.md)
 and run one way: finance would write `HabitEntry` rows through

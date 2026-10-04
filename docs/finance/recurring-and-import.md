@@ -130,13 +130,17 @@ importHash = sha256(`${accountId}|${date}|${amountMinor}|${foldPayee(payee)}|${o
 
 Each row gets, in order:
 
-1. the category the same payee was last filed under (quick log, the form or
+1. the first of the user's own **payee rules** that matches ("TESCO*" →
+   Groceries, written on `/finance/categories`; see
+   [data-model.md](data-model.md#payee-rules)), whatever the amount's sign;
+2. the category the same payee was last filed under (quick log, the form or
    an earlier import);
-2. a category whose name or alias appears as whole words in the payee
+3. a category whose name or alias appears as whole words in the payee
    ("TESCO STORES 3245" → Groceries, "SAINSBURY'S" → Groceries);
-3. nothing: the row lands in "To review".
+4. nothing: the row lands in "To review".
 
-Money in only matches income categories and money out only expense ones.
-Still to do: user-written rules (`"TESCO*" → Groceries`), and offering to
-create one when an imported row is recategorised.
+Steps 2 and 3 only match a category of the row's kind: money in → income,
+money out → expense. Quick log uses the rules too, for a payee logged
+without a category. Still to do: offering to create a rule when an
+imported row is recategorised.
 

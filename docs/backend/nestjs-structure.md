@@ -63,13 +63,14 @@ job.
 | `GET /habits/:id/insights?today=` | `HabitInsights` | Completion by weekday (12 weeks) and this month vs last |
 | `GET /todo-lists` · `POST` · `PATCH /:id` · `DELETE /:id` | `TodoList` | Lists with open/done counts; prefix unique (409 if taken); the Inbox can't be deleted |
 | `GET /todo-lists/suggest-prefix?name=` | `{ prefix }` | A free prefix from the name |
-| `GET /todo-lists/:id/tasks?doneLimit=50` | `{ list, tasks, doneTotal }` | A board: open tasks by position, latest `doneLimit` done |
-| `GET /tasks/today?today=` | `{ today, earlier }` | Planned today from every list; earlier days still open |
+| `GET /todo-lists/:id/tasks?doneLimit=50` | `{ list, tasks, doneTotal }` | A board: the list with its `columns`, open tasks by position, latest `doneLimit` done |
+| `POST /todo-lists/:id/columns` · `PATCH /todo-columns/:id` · `DELETE /todo-columns/:id?moveTo=` | `TodoColumn` | Add (10 at most), rename / move / re-type, delete (its tasks go to `moveTo`); the last column of a status is refused |
+| `GET /tasks/today?today=` | `{ today, earlier, dueSoon }` | Planned today from every list (by `dayPosition`, open first); earlier days still open; due within 3 days and not planned |
 | `GET /tasks/by-key/:key` | `Task` | `GRO-12`, by the list's current prefix |
 | `GET /tasks/search?q=&limit=&exclude=` | `Task[]` | Title, key or number across lists; with `exclude`, only valid dependencies for that task |
 | `GET /tasks/:id` | `Task` | With `blockedBy`, `blocks` and `blocked` |
 | `POST /tasks/:id/dependencies` · `DELETE /tasks/:id/dependencies/:dependsOnId` | `Task` | Body `{ dependsOnId }`; 400 for itself, a loop at any depth, or more than 20 |
-| `POST /tasks` · `PATCH /tasks/:id` · `DELETE /tasks/:id` | `Task` | `listId` on PATCH moves it (new number from that list); status change sets `completedAt` |
+| `POST /tasks` · `PATCH /tasks/:id` · `DELETE /tasks/:id` | `Task` | `listId` on PATCH moves it (new number from that list); `columnId` or `status` moves it between columns and sets or clears `completedAt`; `dayPosition` orders Today; `dueOn` is the deadline |
 | `GET /habits/:id/entries` | `HabitEntry[]` | Newest first |
 | `GET /habit-entries/by-date/:date?habitIds=a,b` | `HabitEntry[]` | **Batch** endpoint for the `todayEntry` DataLoader |
 | `PUT /habit-entries` | `HabitEntry` | Upsert on `(habitId, date)` |

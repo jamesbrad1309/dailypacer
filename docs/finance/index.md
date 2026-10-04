@@ -45,7 +45,7 @@ on the existing stack without new infrastructure:
 | 2b ✅ | Spend by category this month                                 | "Where did my money go?"          |
 | 3 ✅  | `Budget` + budget-vs-actual view                             | Spending limits                   |
 | 4 ✅  | Transfers (pay off, settle up) and CSV import with dedupe    | Real bank data in minutes         |
-| 5 🟡  | Subscriptions, auto-log, pending transactions, cash flow ✅; `SavingsGoal` | Bills and goals |
+| 5 ✅  | Subscriptions, auto-log, pending transactions, cash flow, `SavingsGoal`; categories, payee rules, splits, budget alerts, top payees, net worth, CSV export | Bills, goals and the rest of v1 |
 | 6     | Habits integration                                           | Features that span both modules   |
 
 ## What's built
@@ -200,6 +200,26 @@ transactions (`Transaction.status`, migration
 cash flow on Spending (`cashFlow`, see
 [budgets-and-reports.md](budgets-and-reports.md#reports)); and an app
 manifest with a "Log an expense" shortcut, so the app can be installed.
+
+**Phase 5 (rest): Goals, categories and the remaining v1 use cases.**
+
+| Use case | Where | Notes |
+| -------- | ----- | ----- |
+| Savings goals | `/finance/goals`; `savings-goals.service.ts`, `savings-goal.util.ts` | Linked to an account (its balance is what's saved) or filled by hand. On track / behind, monthly amount needed, a pace tick. See [data-model.md](data-model.md#savings-goals) |
+| Custom categories | `/finance/categories`; `PATCH /categories/:id` | Emoji, colour, aliases, archive; nested one level ("Food › Eating out"), shown nested in every picker (`lib/categories.ts`) |
+| Payee rules | `/finance/categories`; `payee-rules.service.ts`, `payee-rule.util.ts` | "TESCO*" → Groceries, tried first by quick log and CSV import; "Apply to To review" files what's waiting. See [recurring-and-import.md](recurring-and-import.md) |
+| Split transactions | The transaction form (✂); `PUT /transactions/:id/splits` | `TransactionSplit`; monthly totals count each part in its category. See [data-model.md](data-model.md#splits) |
+| Budget alerts | Budgets page; quick log's toast | 80% ("near") and 100% ("reached"), in-app only (`alertLevel`, `crossedAlert` in `budget-math.util.ts`) |
+| Top payees, net worth over time | Spending page; `GET /reports/top-payees`, `GET /reports/net-worth` | Converted month by month, like the other reports |
+| CSV export | Transactions page; `lib/csv-export.ts` | Built in the browser from `transactions(filter)` |
+
+REST endpoints added: `PATCH /categories/:id` (and `?includeArchived=true`
+on `GET /categories`), `GET/POST /payee-rules`, `GET /payee-rules/match-count`,
+`POST /payee-rules/apply`, `PATCH/DELETE /payee-rules/:id`,
+`PUT /transactions/:id/splits`, `GET/POST /savings-goals`,
+`PATCH/DELETE /savings-goals/:id`, `POST /savings-goals/:id/contributions`,
+`GET /reports/top-payees?from&to&limit`, `GET /reports/net-worth?to&months`.
+Migration `savings_goals_payee_rules_splits`.
 
 ## Scope decisions
 

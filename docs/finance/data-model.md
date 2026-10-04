@@ -148,6 +148,7 @@ model RecurringRule {
   @@map("recurring_rules")
 }
 
+// Sketch: the built model differs. See "Savings goals" below and schema.prisma.
 model SavingsGoal {
   id          String    @id @default(uuid())
   name        String
@@ -218,14 +219,58 @@ model QuickPreset {
   money between your own accounts never shows as spending.
 - **Category `kind`** separates income categories from expense categories,
   so the UI can offer the right list based on the amount's sign.
-- **Splits** (use case, impact 2) are deferred. When they're needed, add a
-  `TransactionSplit(transactionId, categoryId, amountMinor)` table and treat
-  `Transaction.categoryId` as "use the splits".
+- **Splits** are a `TransactionSplit` table, and a split transaction's own
+  `categoryId` is null. See [Splits](#splits).
 - **`importHash` has a unique index scoped to the account**, so re-importing
   the same CSV is a no-op. See
   [recurring-and-import.md](recurring-and-import.md).
 - **`String` for `Category.kind`** instead of an enum keeps it flexible,
   like `schedule` JSON on `Habit`. Validation happens in zod DTOs.
+
+## Splits
+
+- `TransactionSplit(transactionId, categoryId, amountMinor, note, position)`.
+  The parts have the transaction's sign, none is zero, and they add up to
+  exactly its amount (`splitProblem` in `split.util.ts`). At least two.
+- `PUT /transactions/:id/splits` replaces the parts in one database
+  transaction and sets `categoryId` to null; `[]` undoes the split, leaving
+  it in "To review". Giving a split transaction a category through the
+  normal update also undoes it. Its amount can't change while split (the
+  parts would stop adding up): the web form undoes, saves, then re-splits.
+- **Monthly totals count each part in its own category**
+  (`collectDeltas`), and the recount used by `rebuild` does the same in SQL,
+  so budgets and reports need no changes. Transfers and adjustments can't
+  be split.
+- "To review" and "uncategorised" mean no category **and** no splits.
+  Filtering by a category also finds split transactions with a part in it.
+- CSV export writes one row per part.
+
+## Savings goals
+
+| Field | Notes |
+| ----- | ----- |
+| `targetMinor`, `currency` | Positive. The currency is the linked account's, else the main currency when the goal was made |
+| `deadline` | Optional. Without one there's no "on track" or monthly amount |
+| `accountId` | Linked: the account's balance (never below 0) is what's saved, so transfers in count at once. Unlinked: `savedMinor`, changed by `POST /savings-goals/:id/contributions` (never below 0) |
+| `startDate`, `startSavedMinor` | The day it was made and what was saved then: "on track" compares saving since then with the time gone |
+| `archivedAt` | Archived goals are hidden unless "Show archived" |
+
+Progress is derived on every read (`goalProgress` in `savings-goal.util.ts`):
+`requiredPerMonthMinor` is what's left over the months left (at least one,
+so the last weeks ask for the rest), `onTrack` means saved ≥ a steady pace
+from `startSavedMinor` to the target, and `overdue` is a passed deadline.
+Unlinking an account keeps its balance as the goal's own saved amount.
+The habit link (`habitId`, [habits-integration.md](habits-integration.md)) is
+phase 6 and not built.
+
+## Payee rules
+
+`PayeeRule(pattern, categoryId, sortOrder)`. Patterns and payees are folded
+the same way as import dedupe (`foldPayee`: case, accents and punctuation
+don't matter). `*` matches anything and the pattern must then match the
+whole payee ("TESCO*"); without a `*` it matches anywhere. The first rule
+by `sortOrder` wins, regardless of the amount's sign (a refund from Tesco
+is still Groceries). Deleting a category deletes its rules.
 
 ## Migration
 

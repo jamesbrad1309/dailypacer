@@ -56,7 +56,9 @@ works on a fresh clone; never edit it by hand).
 | `/finance/transactions?view=review&month=&account=&category=&q=` | `routes/finance/transactions.tsx` | Transactions and the "To review" inbox. The default `view=all` is stripped from the URL |
 | `/finance/currencies` | `routes/finance/currencies.tsx` | Currencies in use, main currency, exchange rates ([money-handling.md](../finance/money-handling.md#currencies)) |
 | `/finance/budgets?month=` | `routes/finance/budgets.tsx` | Budget vs actual with pace ([budgets-and-reports.md](../finance/budgets-and-reports.md)) |
-| `/finance/spending?month=&account=` | `routes/finance/spending.tsx` | Spend by category for a month vs the one before ([budgets-and-reports.md](../finance/budgets-and-reports.md)) |
+| `/finance/spending?month=&account=` | `routes/finance/spending.tsx` | Spend by category for a month vs the one before, top payees, cash flow and net worth over time ([budgets-and-reports.md](../finance/budgets-and-reports.md)) |
+| `/finance/goals` | `routes/finance/goals.tsx` | Savings goals: progress, on track or behind, monthly amount needed ([data-model.md](../finance/data-model.md#savings-goals)) |
+| `/finance/categories` | `routes/finance/categories.tsx` | Categories (nested, emoji, colour, archive) and payee rules ([data-model.md](../finance/data-model.md#payee-rules)) |
 | `/log?amount=3.40&category=coffee` | `routes/log.tsx` | Opens the quick-log sheet over the dashboard, filled in (a deep link for phone shortcuts) |
 | anything else | `routes/__root.tsx` | "Not found", inside the shell |
 

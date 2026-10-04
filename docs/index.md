@@ -24,9 +24,9 @@ Each file below is a short, standalone read.
 - [Knowledge graph](domain/knowledge-graph.md) — how domain entities, use cases, backend, and frontend connect
 - [Habit data model](domain/habit-data-model.md) — modeling "custom habit + arbitrary tracked info"
 - [Journal](domain/journal.md) — actions, feelings and events; the `/slash` list syntax; linking feelings to events; calendar and mood score
-- [To-do lists](domain/todos.md) — today's plan, lists with key prefixes (`GRO-12`), kanban boards, dependencies across lists
+- [To-do lists](domain/todos.md) — today's plan in your order, lists with key prefixes (`GRO-12`), boards with custom columns, due dates, dependencies across lists
 
-**Finance** (planned module, not built yet)
+**Finance** (phases 1–5 built; habits integration next)
 - [Finance module overview](finance/index.md) — scope, build order, reading order
 - [Finance use cases](finance/use-cases.md) — accounts, transactions, budgets, recurring bills, goals, reports
 - [Account setup](finance/account-setup.md) — bank accounts, credit cards and limits, loans, IOUs, reconciling

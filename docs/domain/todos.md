@@ -1,8 +1,8 @@
 # To-do Lists
 
-One-off tasks next to habits: a plan for today, lists with their own key
-prefix (`GRO-12`), a kanban board per list, and dependencies between tasks
-in any lists. Code: `apps/api/src/todos/`, `apps/bff/src/graphql/todos/`,
+One-off tasks next to habits: a plan for today in your own order, lists
+with their own key prefix (`GRO-12`), a kanban board per list with its own
+columns, due dates, and dependencies between tasks in any lists. Code: `apps/api/src/todos/`, `apps/bff/src/graphql/todos/`,
 `apps/web/src/components/todos/`, pages under `/tasks`.
 
 ## Data model (`apps/api/prisma/schema.prisma`)
@@ -10,7 +10,8 @@ in any lists. Code: `apps/api/src/todos/`, `apps/bff/src/graphql/todos/`,
 | Model | Fields | Notes |
 | ----- | ------ | ----- |
 | `TodoList` | `name`, `prefix` (unique), `nextNumber`, `isInbox`, `position` | The migration seeds an **Inbox** (prefix `TASK`) that catches tasks added without a list and can't be deleted |
-| `Task` | `listId`, `number`, `title`, `notes`, `status` (TODO / IN_PROGRESS / DONE), `position`, `plannedFor` (date), `completedAt` | `@@unique([listId, number])` |
+| `TodoColumn` | `listId`, `name` (null = the status's own name), `status`, `position` | A list's board columns; see [Columns](#columns) |
+| `Task` | `listId`, `number`, `title`, `notes`, `status` (TODO / IN_PROGRESS / DONE), `columnId`, `position`, `plannedFor` (date), `dayPosition`, `dueOn` (date), `completedAt` | `@@unique([listId, number])`; `status` is always its column's |
 | `TaskDependency` | `taskId` waits for `dependsOnId` | Composite key; both sides cascade on delete |
 
 ## Keys and prefixes
@@ -33,22 +34,61 @@ in any lists. Code: `apps/api/src/todos/`, `apps/bff/src/graphql/todos/`,
 ## Today, and earlier days
 
 - `plannedFor` is the day a task is planned for, from **any** list.
+- **Today is in your order**: drag a task's handle, or focus it and use
+  Space and the arrow keys. A drop saves only that task's `dayPosition`
+  (halfway between its neighbours, like the board). Planning a task for a
+  day puts it last that day. Done tasks sit below the open ones.
 - `/tasks` shows today's tasks from every list, then **Earlier, not done**:
   tasks planned before today that are still open, with "planned N days
   ago". Nothing moves on its own; each has Move to today / Unplan, and
   there's Move all to today.
+- Then **Due soon**: open tasks due within 3 days (`DUE_SOON_DAYS`) or
+  overdue that aren't planned for today or earlier, each with "Plan for
+  today".
 - `today` is always sent by the browser (local day), as elsewhere in the app.
+
+## Due dates
+
+- `dueOn` is the deadline; `plannedFor` is when you'll do it. Either can
+  be set without the other, from the task dialog.
+- A badge shows on every open task with one: "Overdue by 2 days" (red),
+  "Due today" (amber), "Due 9 Oct" (`dueState` in `lib/todos.ts`). The
+  flag and the words carry it, not colour alone.
+- Reminders are in-app only (the badges and Due soon). Email or push
+  would come with [email-and-notifications.md](../backend/email-and-notifications.md).
+
+## Columns
+
+- Every list has its own columns (`TodoColumn`), left to right. New lists
+  start with To do, In progress and Done, unnamed so they show in the UI
+  language; the migration gave every existing list the same three.
+- **Each column counts as a status.** A task's status is always its
+  column's, so Done, Today's tick box, "blocked" and the open/done counts
+  work whatever the columns are called. Ticking a task off in Today moves
+  it to its list's first Done column; un-ticking, to the first To do.
+- **Edit columns** on the board: add (10 at most), rename (clear the name
+  to go back to the status's own), move ← / →, change what it counts as
+  (every task in it changes status at once), delete. Changes apply at once.
+- Every list keeps at least one column per status, so new tasks and ticking
+  off always have somewhere to go: the last one of a status can't be
+  deleted or re-typed. Deleting a column with tasks asks which column they
+  go to; they keep their order, after that column's own.
+- Moving a task to another list puts it in that list's first column with
+  the same status; the task dialog offers that list's columns.
+- `Task.columnId` uses `onDelete: NoAction` (checked at the end of the
+  statement), so deleting a list can cascade to both its columns and tasks.
 
 ## Board
 
-- `/tasks/lists/$listId`: To do, In progress and Done columns, built with
-  dnd-kit. Drag with the mouse, by touch, or focus a card and use Space and
+- `/tasks/lists/$listId`: the list's columns, built with dnd-kit, side by
+  side and scrolling sideways when there are many. Drag with the mouse, by touch, or focus a card and use Space and
   the arrow keys. A short drag threshold keeps a click opening the card.
-- A drop saves only the moved task: its status and a `position` halfway
-  between its new neighbours (`positionBetween`), so nothing else is
-  rewritten. Done is ordered by `completedAt`, so a drop there only sets the
-  status.
-- Done shows the 50 most recently completed tasks plus the total
+- A drop saves only the moved task: its column (and so status) and a
+  `position` halfway between its new neighbours (`positionBetween`), so
+  nothing else is rewritten. Done columns are ordered by `completedAt`, so a
+  drop there only sets the column. Moving between two Done columns keeps
+  `completedAt`.
+- Done columns show the 50 most recently completed tasks plus the total
   (`doneLimit`), so an old list doesn't load its whole history.
 
 ## Dependencies
@@ -87,11 +127,11 @@ in any lists. Code: `apps/api/src/todos/`, `apps/bff/src/graphql/todos/`,
 ## API and GraphQL
 
 REST endpoints are listed in [nestjs-structure.md](../backend/nestjs-structure.md).
-GraphQL (`apps/bff/src/graphql/todos/`): `todoLists`, `suggestListPrefix`,
-`listBoard`, `todayTasks`, `taskByKey`, `searchTasks`; mutations
-`createTodoList`, `updateTodoList`, `deleteTodoList`, `createTask`,
-`updateTask`, `deleteTask`, `addTaskDependency` (by id or key) and
+GraphQL (`apps/bff/src/graphql/todos/`): `todoLists` (each with its
+`columns`), `suggestListPrefix`, `listBoard`, `todayTasks` (`today`,
+`earlier`, `dueSoon`), `taskByKey`, `searchTasks`; mutations
+`createTodoList`, `updateTodoList`, `deleteTodoList`, `createTodoColumn`,
+`updateTodoColumn`, `deleteTodoColumn(id, moveTo)`, `createTask`,
+`updateTask` (`columnId`, `dayPosition`, `dueOn` among its fields),
+`deleteTask`, `addTaskDependency` (by id or key) and
 `removeTaskDependency`.
-
-Not built yet (see [use-cases.md](use-cases.md#to-do-lists)): reordering
-within Today, custom board columns, due dates separate from the planned day.
