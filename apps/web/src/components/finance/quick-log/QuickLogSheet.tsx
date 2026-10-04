@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@apollo/client/react";
 import { Link } from "@tanstack/react-router";
 import { ChevronDown, ChevronUp, Sparkles, X } from "lucide-react";
-import { type FormEvent, useMemo, useRef, useState } from "react";
+import { type FormEvent, useMemo, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Amount, MONEY_IN_CLASS, MONEY_OUT_CLASS } from "#components/finance/Amount";
 import { AmountKeypad, applyKey } from "#components/finance/quick-log/AmountKeypad";
@@ -79,6 +79,80 @@ export function QuickLogSheet() {
   );
 }
 
+/** Everything the log sheet's form holds between renders. */
+interface QuickLogState {
+  /** As typed (or tapped on the keypad). */
+  amount: string;
+  /** The one-line parser's input: "coffee 3.40 @amex". */
+  text: string;
+  isIncome: boolean;
+  /** Null = automatic: the parser's @account, the category's last account, or the default. */
+  accountId: string | null;
+  date: string;
+  showAll: boolean;
+  editingPresets: boolean;
+  /** Set by an amount-less preset or a deep link: the next save uses it. */
+  chosenCategoryId: string | null;
+  error: string | null;
+  /** Fresh per entry, so a retried save logs once. */
+  clientId: string;
+  /** For the open-to-save time sent with each log. */
+  openedAt: number;
+  saving: boolean;
+  /** A deep link's category is matched once, when categories have loaded. */
+  prefillApplied: boolean;
+}
+
+type QuickLogAction =
+  | {
+      [K in keyof QuickLogState]: { type: "set"; field: K; value: QuickLogState[K] };
+    }[keyof QuickLogState]
+  /** A keypad press, applied to the amount. */
+  | { type: "key"; key: string }
+  | { type: "saving"; on: boolean }
+  /** Catch-up mode: clear the entry for the next one, with a new clientId. */
+  | { type: "next" };
+
+function quickLogReducer(state: QuickLogState, action: QuickLogAction): QuickLogState {
+  switch (action.type) {
+    case "set":
+      return { ...state, [action.field]: action.value };
+    case "key":
+      return { ...state, amount: applyKey(state.amount, action.key) };
+    case "saving":
+      return { ...state, saving: action.on, error: action.on ? null : state.error };
+    case "next":
+      return {
+        ...state,
+        amount: "",
+        text: "",
+        isIncome: false,
+        chosenCategoryId: null,
+        error: null,
+        clientId: crypto.randomUUID(),
+        openedAt: performance.now(),
+      };
+  }
+}
+
+function initialQuickLog(prefill: ReturnType<typeof useQuickLogState>["prefill"]): QuickLogState {
+  return {
+    amount: prefill?.amount ?? "",
+    text: "",
+    isIncome: false,
+    accountId: null,
+    date: todayIsoDate(),
+    showAll: false,
+    editingPresets: false,
+    chosenCategoryId: null,
+    error: null,
+    clientId: crypto.randomUUID(),
+    openedAt: performance.now(),
+    saving: false,
+    prefillApplied: !prefill?.category,
+  };
+}
+
 function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState>["prefill"] }) {
   const { t } = useTranslation();
   const categoryName = useCategoryName();
@@ -95,21 +169,25 @@ function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState
   const categories = categoriesData?.categories ?? [];
 
   const [touch] = useState(isTouch);
-  const [amount, setAmount] = useState(() => prefill?.amount ?? "");
-  const [text, setText] = useState("");
-  const [isIncome, setIsIncome] = useState(false);
-  /** Null = automatic: the parser's @account, the category's last account, or the default. */
-  const [accountId, setAccountId] = useState<string | null>(null);
-  const [date, setDate] = useState(todayIsoDate);
-  const [showAll, setShowAll] = useState(false);
-  const [editingPresets, setEditingPresets] = useState(false);
-  /** Set by an amount-less preset or a deep link: the next save uses it. */
-  const [chosenCategoryId, setChosenCategoryId] = useState<string | null>(null);
+  const [form, dispatch] = useReducer(quickLogReducer, prefill, initialQuickLog);
+  const set = <K extends keyof QuickLogState>(field: K, value: QuickLogState[K]) =>
+    dispatch({ type: "set", field, value } as QuickLogAction);
+  const {
+    amount,
+    text,
+    isIncome,
+    accountId,
+    date,
+    showAll,
+    editingPresets,
+    chosenCategoryId,
+    error,
+    clientId,
+    openedAt,
+    saving,
+    prefillApplied,
+  } = form;
   const [catchUp, setCatchUp] = useStoredState("lifeos.quickLog.catchUp", false);
-  const [error, setError] = useState<string | null>(null);
-  const [clientId, setClientId] = useState(() => crypto.randomUUID());
-  const [openedAt, setOpenedAt] = useState(() => performance.now());
-  const [saving, setSaving] = useState(false);
   const amountRef = useRef<HTMLInputElement>(null);
 
   const [quickLog] = useMutation<QuickLogData>(QUICK_LOG_MUTATION, {
@@ -127,9 +205,8 @@ function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState
   const [dismissSuggestion] = useMutation(DISMISS_PRESET_SUGGESTION_MUTATION);
 
   // A deep link names its category ("coffee"): match it once categories load.
-  const [prefillApplied, setPrefillApplied] = useState(!prefill?.category);
   if (!prefillApplied && categories.length > 0 && prefill?.category) {
-    setPrefillApplied(true);
+    set("prefillApplied", true);
     const wanted = prefill.category.toLocaleLowerCase();
     const match = categories.find(
       (c) =>
@@ -137,7 +214,7 @@ function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState
         categoryName(c).toLocaleLowerCase() === wanted ||
         c.aliases.includes(wanted),
     );
-    if (match) setChosenCategoryId(match.id);
+    if (match) set("chosenCategoryId", match.id);
   }
 
   const accounts = context?.accounts ?? [];
@@ -205,13 +282,7 @@ function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState
 
   /** Clears the form for the next entry (catch-up mode) with a fresh clientId. */
   function reset() {
-    setAmount("");
-    setText("");
-    setIsIncome(false);
-    setChosenCategoryId(null);
-    setError(null);
-    setClientId(crypto.randomUUID());
-    setOpenedAt(performance.now());
+    dispatch({ type: "next" });
     amountRef.current?.focus();
   }
 
@@ -219,14 +290,13 @@ function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState
     const minor =
       preset?.amountMinor != null && typedAmount === null ? preset.amountMinor : amountMinor;
     if (!minor) {
-      setError(t("finance.quickLog.typeAmountFirst"));
-      if (preset) setChosenCategoryId(preset.category.id);
+      set("error", t("finance.quickLog.typeAmountFirst"));
+      if (preset) set("chosenCategoryId", preset.category.id);
       amountRef.current?.focus();
       return;
     }
     const category = categoryId ? byId.get(categoryId) : undefined;
-    setSaving(true);
-    setError(null);
+    dispatch({ type: "saving", on: true });
     try {
       const { data: result } = await quickLog({
         variables: {
@@ -250,15 +320,20 @@ function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState
       else closeQuickLog();
     } catch (err) {
       // Same clientId on retry, so a save that actually went through isn't doubled.
-      setError(err instanceof Error ? err.message : t("common.couldntSave"));
+      set("error", err instanceof Error ? err.message : t("common.couldntSave"));
     } finally {
-      setSaving(false);
+      set("saving", false);
     }
   }
 
-  /** "£3.40 Coffee logged · Undo", then "Save as preset?" when it's a regular. */
-  function announce(result: QuickLogData["quickLog"], category: Category | undefined) {
+  /**
+   * "£3.40 Coffee logged · Undo"; then a warning if it took the category's
+   * budget past 80% or 100%; then "Save as preset?" when it's a regular.
+   */
+  function announce(result: QuickLogData["quickLog"], chosen: Category | undefined) {
     const tx = result.transaction;
+    // A payee rule may have filed one logged without a category.
+    const category = chosen ?? tx.category ?? undefined;
     const amount = formatMoney(Math.abs(tx.amountMinor), tx.account.currency);
     const what = category
       ? `${category.icon ?? ""} ${categoryName(category)}`.trim()
@@ -268,6 +343,18 @@ function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState
         { label: t("common.undo"), onClick: () => deleteTransaction({ variables: { id: tx.id } }) },
       ],
     });
+
+    const alert = result.budgetAlert;
+    if (alert) {
+      toast(
+        t(`finance.budgets.alert.toast.${alert.level}`, {
+          name: categoryName(alert.category),
+          spent: formatMoney(alert.spentMinor, alert.currency),
+          available: formatMoney(alert.availableMinor, alert.currency),
+        }),
+        { durationMs: 8000 },
+      );
+    }
 
     if (result.suggestPreset && category && result.presetKey) {
       const label = tx.payee ?? tx.note ?? categoryName(category);
@@ -337,7 +424,7 @@ function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState
         <select
           aria-label={t("finance.quickLog.account")}
           value={accountId ?? ""}
-          onChange={(e) => setAccountId(e.target.value || null)}
+          onChange={(e) => set("accountId", e.target.value || null)}
           className="h-8 max-w-44 truncate rounded-full border bg-background px-3 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <option value="">
@@ -366,7 +453,7 @@ function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState
               key={option.label}
               type="button"
               aria-pressed={date === option.value}
-              onClick={() => setDate(option.value)}
+              onClick={() => set("date", option.value)}
               className={cn(
                 "h-full rounded-full px-2.5",
                 date === option.value ? "bg-foreground text-background" : "text-muted-foreground",
@@ -380,7 +467,7 @@ function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState
             aria-label={t("finance.quickLog.anotherDate")}
             value={date}
             max={todayIsoDate()}
-            onChange={(e) => e.target.value && setDate(e.target.value)}
+            onChange={(e) => e.target.value && set("date", e.target.value)}
             className={cn(
               "h-full w-8 rounded-full bg-transparent px-1 text-transparent outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-calendar-picker-indicator]:m-0 [&::-webkit-calendar-picker-indicator]:opacity-60",
               date < yesterday && "w-auto text-foreground",
@@ -404,7 +491,7 @@ function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState
             aria-label={t("finance.quickLog.amount")}
             placeholder={placeholder}
             value={amount}
-            onChange={(e) => setAmount(e.target.value.replace(/[^\d.,]/g, ""))}
+            onChange={(e) => set("amount", e.target.value.replace(/[^\d.,]/g, ""))}
             // Grows with what's shown: the typed amount, or the one parsed from the text.
             size={Math.max(4, (amount || placeholder).length + 1)}
             className="w-auto min-w-0 bg-transparent text-center outline-none placeholder:text-muted-foreground/50"
@@ -412,7 +499,7 @@ function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState
         </label>
         <button
           type="button"
-          onClick={() => setIsIncome(!isIncome)}
+          onClick={() => set("isIncome", !isIncome)}
           aria-pressed={isIncome}
           className={cn(
             "rounded-full px-2.5 py-0.5 text-xs font-medium",
@@ -431,7 +518,7 @@ function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState
           placeholder={t("finance.quickLog.whatWasIt")}
           value={text}
           autoComplete="off"
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => set("text", e.target.value)}
         />
         <p className="min-h-4 px-1 text-xs text-muted-foreground" aria-live="polite">
           {hinted &&
@@ -467,7 +554,7 @@ function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState
         {!income && (
           <button
             type="button"
-            onClick={() => setShowAll(!showAll)}
+            onClick={() => set("showAll", !showAll)}
             aria-expanded={showAll}
             className="flex h-9 items-center gap-1 rounded-full px-3 text-sm text-muted-foreground hover:text-foreground"
           >
@@ -492,7 +579,7 @@ function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState
             </p>
             <button
               type="button"
-              onClick={() => setEditingPresets(!editingPresets)}
+              onClick={() => set("editingPresets", !editingPresets)}
               className="text-xs text-muted-foreground hover:text-foreground"
             >
               {editingPresets ? t("finance.quickLog.done") : t("common.edit")}
@@ -540,7 +627,7 @@ function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState
         </p>
       )}
 
-      {touch && <AmountKeypad onKey={(key) => setAmount((a) => applyKey(a, key))} />}
+      {touch && <AmountKeypad onKey={(key) => dispatch({ type: "key", key })} />}
 
       <div className="flex items-center justify-between gap-2 border-t pt-3">
         <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">

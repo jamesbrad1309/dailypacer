@@ -7,13 +7,15 @@ import {
   FileUp,
   Inbox,
   Plus,
+  Scissors,
   Search,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { Amount } from "#components/finance/Amount";
 import { PendingCharges } from "#components/finance/subscriptions/PendingCharges";
 import { CsvImportDialog } from "#components/finance/transactions/CsvImportDialog";
+import { ExportCsvButton } from "#components/finance/transactions/ExportCsvButton";
 import { PendingBadge } from "#components/finance/transactions/PendingBadge";
 import { TransactionForm } from "#components/finance/transactions/TransactionForm";
 import { TransferDialog } from "#components/finance/transactions/TransferDialog";
@@ -40,6 +42,7 @@ import type {
 import { useCategoryName } from "#hooks/useCategoryName";
 import { useCurrencies } from "#hooks/useCurrencies";
 import { useUndoableDelete } from "#hooks/useUndoableDelete";
+import { categoryTree, treeLabel } from "#lib/categories";
 import {
   addMonths,
   currentMonth,
@@ -82,6 +85,30 @@ export function transactionFilter(search: TransactionsSearch): TransactionFilter
   };
 }
 
+type OpenDialog = "add" | "edit" | "transfer" | "import";
+
+/** Which dialog is open. The last transaction edited stays mounted, so its dialog can animate closed. */
+interface DialogState {
+  open: OpenDialog | null;
+  lastEdited: Transaction | null;
+}
+
+type DialogAction =
+  | { type: "open"; dialog: Exclude<OpenDialog, "edit"> }
+  | { type: "edit"; transaction: Transaction }
+  | { type: "close" };
+
+function dialogReducer(state: DialogState, action: DialogAction): DialogState {
+  switch (action.type) {
+    case "open":
+      return { ...state, open: action.dialog };
+    case "edit":
+      return { open: "edit", lastEdited: action.transaction };
+    case "close":
+      return { ...state, open: null };
+  }
+}
+
 const selectClass =
   "h-9 rounded-md border border-input bg-background px-2 text-sm shadow-sm outline-none focus-visible:ring-1 focus-visible:ring-ring";
 
@@ -106,11 +133,10 @@ export function TransactionsView({ search, onSearchChange }: Props) {
   const categories = categoriesData?.categories ?? [];
   const accounts = accountsData?.accounts ?? [];
 
-  const [editing, setEditing] = useState<Transaction | null>(null);
-  const [adding, setAdding] = useState(false);
-  const [transferring, setTransferring] = useState(false);
-  const [importing, setImporting] = useState(false);
-  const [lastEdited, setLastEdited] = useState<Transaction | null>(null);
+  const [dialogs, dispatch] = useReducer(dialogReducer, { open: null, lastEdited: null });
+  const { lastEdited } = dialogs;
+  const openChange = (dialog: Exclude<OpenDialog, "edit">) => (open: boolean) =>
+    dispatch(open ? { type: "open", dialog } : { type: "close" });
 
   const [deleteTransaction] = useMutation(DELETE_TRANSACTION_MUTATION, {
     refetchQueries: TRANSACTIONS_REFETCH,
@@ -250,14 +276,23 @@ export function TransactionsView({ search, onSearchChange }: Props) {
           </div>
         )}
 
-        <div className="ml-auto flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => setImporting(true)}>
+        <div className="ml-auto flex flex-wrap gap-2">
+          {!review && <ExportCsvButton filter={filter} fileName={`transactions-${month}.csv`} />}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => dispatch({ type: "open", dialog: "import" })}
+          >
             <FileUp className="size-4" /> {t("finance.import.button")}
           </Button>
-          <Button size="sm" variant="outline" onClick={() => setTransferring(true)}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => dispatch({ type: "open", dialog: "transfer" })}
+          >
             <ArrowLeftRight className="size-4" /> {t("finance.transfer.title")}
           </Button>
-          <Button size="sm" onClick={() => setAdding(true)}>
+          <Button size="sm" onClick={() => dispatch({ type: "open", dialog: "add" })}>
             <Plus className="size-4" /> {t("finance.transactions.add")}
           </Button>
         </div>
@@ -289,9 +324,9 @@ export function TransactionsView({ search, onSearchChange }: Props) {
             onChange={(e) => onSearchChange({ category: e.target.value || undefined })}
           >
             <option value="">{t("common.allCategories")}</option>
-            {categories.map((c) => (
+            {categoryTree(categories).map(({ category: c, depth }) => (
               <option key={c.id} value={c.id}>
-                {c.icon} {categoryName(c)}
+                {treeLabel(depth, `${c.icon ?? ""} ${categoryName(c)}`.trim())}
               </option>
             ))}
           </select>
@@ -371,8 +406,7 @@ export function TransactionsView({ search, onSearchChange }: Props) {
                     categories={categories}
                     review={review}
                     onOpen={() => {
-                      setLastEdited(tx);
-                      setEditing(tx);
+                      dispatch({ type: "edit", transaction: tx });
                     }}
                     onCategorise={(categoryId) => categorise(tx, categoryId)}
                     onConfirm={() => confirmPending(tx)}
@@ -395,18 +429,18 @@ export function TransactionsView({ search, onSearchChange }: Props) {
         </Button>
       )}
 
-      <TransactionForm open={adding} onOpenChange={setAdding} />
-      <CsvImportDialog open={importing} onOpenChange={setImporting} />
+      <TransactionForm open={dialogs.open === "add"} onOpenChange={openChange("add")} />
+      <CsvImportDialog open={dialogs.open === "import"} onOpenChange={openChange("import")} />
       <TransferDialog
-        open={transferring}
-        onOpenChange={setTransferring}
+        open={dialogs.open === "transfer"}
+        onOpenChange={openChange("transfer")}
         preset={{ kind: "transfer" }}
       />
       {lastEdited && (
         <TransactionForm
           key={lastEdited.id}
-          open={editing !== null}
-          onOpenChange={(open) => !open && setEditing(null)}
+          open={dialogs.open === "edit"}
+          onOpenChange={(open) => !open && dispatch({ type: "close" })}
           transaction={lastEdited}
           onDelete={() => remove(lastEdited)}
         />
@@ -440,16 +474,22 @@ function TransactionRow({
       })
     : (tx.payee ?? tx.note ?? categoryName(tx.category));
   const tags = tx.tags.map((tag) => `#${tag}`);
+  const split = tx.splits.length > 0;
+  const splitLabel = `${t("finance.transactions.split.badge")}: ${tx.splits
+    .map((s) => categoryName(s.category))
+    .join(", ")}`;
   const detail = tx.isTransfer
     ? [tx.note, t("finance.transfer.title"), tx.account.name, ...tags].filter(Boolean)
     : [
         tx.payee && tx.note,
         // The inbox's own picker stands in for "To review"; a pending row shows its category.
-        review
-          ? tx.category && categoryName(tx.category)
-          : tx.category
-            ? categoryName(tx.category)
-            : t("finance.toReview"),
+        split
+          ? splitLabel
+          : review
+            ? tx.category && categoryName(tx.category)
+            : tx.category
+              ? categoryName(tx.category)
+              : t("finance.toReview"),
         tx.account.name,
         ...tags,
       ].filter(Boolean);
@@ -465,7 +505,13 @@ function TransactionRow({
           aria-hidden
           className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-base"
         >
-          {tx.isTransfer ? <ArrowLeftRight className="size-3.5" /> : (tx.category?.icon ?? "•")}
+          {tx.isTransfer ? (
+            <ArrowLeftRight className="size-3.5" />
+          ) : split ? (
+            <Scissors className="size-3.5" />
+          ) : (
+            (tx.category?.icon ?? "•")
+          )}
         </span>
         <span className="min-w-0">
           <span className="flex items-center gap-2">
@@ -475,7 +521,11 @@ function TransactionRow({
           <span
             className={cn(
               "block truncate text-xs text-muted-foreground",
-              !tx.category && !tx.isTransfer && !review && "text-amber-700 dark:text-amber-400",
+              !tx.category &&
+                !split &&
+                !tx.isTransfer &&
+                !review &&
+                "text-amber-700 dark:text-amber-400",
             )}
           >
             {detail.join(" · ")}
@@ -489,7 +539,7 @@ function TransactionRow({
         </Button>
       )}
 
-      {review && !tx.category && !tx.isTransfer && (
+      {review && !tx.category && !split && !tx.isTransfer && (
         <select
           aria-label={t("finance.transactions.categoryFor", { title })}
           data-categorise={tx.id}
@@ -500,13 +550,13 @@ function TransactionRow({
           <option value="" disabled>
             {t("finance.transactions.categorise")}
           </option>
-          {categories
-            .filter((c) => c.kind === (income ? "income" : "expense"))
-            .map((c) => (
+          {categoryTree(categories.filter((c) => c.kind === (income ? "income" : "expense"))).map(
+            ({ category: c, depth }) => (
               <option key={c.id} value={c.id}>
-                {c.icon} {categoryName(c)}
+                {treeLabel(depth, `${c.icon ?? ""} ${categoryName(c)}`.trim())}
               </option>
-            ))}
+            ),
+          )}
         </select>
       )}
 

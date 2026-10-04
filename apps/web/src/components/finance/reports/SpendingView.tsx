@@ -5,6 +5,8 @@ import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { moneyToneClass } from "#components/finance/Amount";
 import { CashFlowChart } from "#components/finance/reports/CashFlowChart";
+import { NetWorthChart } from "#components/finance/reports/NetWorthChart";
+import { TopPayees } from "#components/finance/reports/TopPayees";
 import { UnconvertedNote } from "#components/finance/reports/UnconvertedNote";
 import { Button } from "#components/ui/button";
 import { Card, CardContent } from "#components/ui/card";
@@ -158,7 +160,9 @@ export function SpendingView({ search, onSearchChange }: Props) {
         </>
       )}
 
+      {!search.account && <TopPayees month={month} />}
       <CashFlowChart month={month} onSelectMonth={(next) => onSearchChange({ month: next })} />
+      <NetWorthChart month={month} />
     </div>
   );
 }

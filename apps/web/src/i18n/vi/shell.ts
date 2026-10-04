@@ -22,6 +22,8 @@ export const shell: typeof en = {
     spending: "Chi tiêu",
     budgets: "Ngân sách",
     subscriptions: "Gói đăng ký",
+    goals: "Mục tiêu",
+    categories: "Danh mục",
     currencies: "Tiền tệ",
     comingSoonItem: "{{label}} (sắp ra mắt)",
     toReview: "{{count}} mục cần xem lại",
@@ -33,7 +35,7 @@ export const shell: typeof en = {
       title: "Danh sách",
       subtitle: "Các danh sách việc, mỗi danh sách có tiền tố mã riêng.",
     },
-    taskBoard: { title: "Bảng", subtitle: "Kéo việc giữa Cần làm, Đang làm và Xong." },
+    taskBoard: { title: "Bảng", subtitle: "Kéo việc giữa các cột của danh sách." },
     habitDetail: { title: "Thói quen", subtitle: "Mọi lần đánh dấu, theo từng ngày." },
     dashboard: { title: "Tổng quan", subtitle: "Giữ vững chuỗi ngày của bạn." },
     today: { title: "Hôm nay", subtitle: "Việc cần làm, theo từng giờ." },
@@ -51,7 +53,10 @@ export const shell: typeof en = {
       title: "Giao dịch",
       subtitle: "Mọi khoản đã ghi, và những gì còn cần phân loại.",
     },
-    spending: { title: "Chi tiêu", subtitle: "Tiền đã đi đâu, theo danh mục." },
+    spending: {
+      title: "Chi tiêu",
+      subtitle: "Tiền đã đi đâu, theo danh mục và người nhận, và tài sản ròng theo thời gian.",
+    },
     budgets: {
       title: "Ngân sách",
       subtitle: "Hạn mức hằng tháng, và tốc độ chi tiêu trong tháng.",
@@ -59,6 +64,14 @@ export const shell: typeof en = {
     subscriptions: {
       title: "Gói đăng ký",
       subtitle: "Khoản nào bị trừ, khi nào và bao nhiêu.",
+    },
+    goals: {
+      title: "Mục tiêu tiết kiệm",
+      subtitle: "Bạn đang tiết kiệm cho điều gì, và có đúng tiến độ không.",
+    },
+    categories: {
+      title: "Danh mục",
+      subtitle: "Danh mục của bạn, và quy tắc tự xếp người nhận vào danh mục.",
     },
     currencies: {
       title: "Tiền tệ",

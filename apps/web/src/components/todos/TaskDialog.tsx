@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@apollo/client/react";
 import { Lock, Trash2, X } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ConfirmPrompt } from "#components/todos/ConfirmPrompt";
 import { TaskPicker } from "#components/todos/TaskPicker";
@@ -24,9 +24,9 @@ import {
   TODO_REFETCH,
   UPDATE_TASK_MUTATION,
 } from "#graphql/todos";
-import type { Task, TaskRef, TaskStatus, TodoListsData } from "#graphql/types";
+import type { Task, TaskRef, TodoListsData } from "#graphql/types";
 import { formatShortDate, todayIsoDate } from "#lib/dates";
-import { TASK_STATUSES, listName } from "#lib/todos";
+import { columnName, listName } from "#lib/todos";
 import { cn } from "#lib/utils";
 
 const SELECT = "h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-sm";
@@ -38,9 +38,10 @@ interface Props {
 }
 
 /**
- * Everything about one task: title, notes, list, status and planned day,
- * and delete. Picking another list warns that the key will change (the
- * task takes that list's next number).
+ * Everything about one task: title, notes, list, column (which sets its
+ * status), planned day, due date, and delete. Picking another list warns
+ * that the key will change (the task takes that list's next number) and
+ * offers that list's columns, starting at the first with the same status.
  */
 export function TaskDialog({ task, onClose }: Props) {
   return (
@@ -51,19 +52,61 @@ export function TaskDialog({ task, onClose }: Props) {
   );
 }
 
+interface FormState {
+  title: string;
+  notes: string;
+  listId: string;
+  columnId: string;
+  /** "YYYY-MM-DD" or "" for none, as the date inputs hold them. */
+  plannedFor: string;
+  dueOn: string;
+  confirmingDelete: boolean;
+}
+
+type FormAction =
+  | { [K in keyof FormState]: { type: "set"; field: K; value: FormState[K] } }[keyof FormState]
+  | { type: "pickList"; listId: string; columnId: string };
+
+function formReducer(state: FormState, action: FormAction): FormState {
+  switch (action.type) {
+    case "set":
+      return { ...state, [action.field]: action.value };
+    case "pickList":
+      return { ...state, listId: action.listId, columnId: action.columnId };
+  }
+}
+
 function TaskForm({ task, onClose }: { task: Task; onClose: () => void }) {
   const { t } = useTranslation();
-  const [title, setTitle] = useState(task.title);
-  const [notes, setNotes] = useState(task.notes ?? "");
-  const [listId, setListId] = useState(task.listId);
-  const [status, setStatus] = useState<TaskStatus>(task.status);
-  const [plannedFor, setPlannedFor] = useState(task.plannedFor ?? "");
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [form, dispatch] = useReducer(formReducer, {
+    title: task.title,
+    notes: task.notes ?? "",
+    listId: task.listId,
+    columnId: task.columnId,
+    plannedFor: task.plannedFor ?? "",
+    dueOn: task.dueOn ?? "",
+    confirmingDelete: false,
+  });
+  const set = <K extends keyof FormState>(field: K, value: FormState[K]) =>
+    dispatch({ type: "set", field, value } as FormAction);
+  const { title, notes, listId, columnId, plannedFor, dueOn, confirmingDelete } = form;
 
   const { data: listsData } = useQuery<TodoListsData>(TODO_LISTS_QUERY);
   const lists = listsData?.todoLists ?? [];
   const target = lists.find((list) => list.id === listId);
   const moving = listId !== task.listId && target;
+  const columns = target?.columns ?? [];
+  const status = columns.find((column) => column.id === columnId)?.status ?? task.status;
+
+  function pickList(id: string) {
+    const next = lists.find((list) => list.id === id)?.columns ?? [];
+    const sameStatus = next.find((column) => column.status === status) ?? next[0];
+    dispatch({
+      type: "pickList",
+      listId: id,
+      columnId: id === task.listId ? task.columnId : (sameStatus?.id ?? ""),
+    });
+  }
 
   const [updateTask, updating] = useMutation(UPDATE_TASK_MUTATION, {
     refetchQueries: TODO_REFETCH,
@@ -81,8 +124,9 @@ function TaskForm({ task, onClose }: { task: Task; onClose: () => void }) {
         input: {
           title: title.trim(),
           notes: notes.trim() || null,
-          status: status !== task.status ? status : undefined,
+          columnId: columnId !== task.columnId ? columnId : undefined,
           plannedFor: plannedFor || null,
+          dueOn: dueOn || null,
           listId: listId !== task.listId ? listId : undefined,
         },
       },
@@ -106,7 +150,7 @@ function TaskForm({ task, onClose }: { task: Task; onClose: () => void }) {
             id="task-title"
             value={title}
             maxLength={300}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => set("title", e.target.value)}
           />
         </div>
 
@@ -118,7 +162,7 @@ function TaskForm({ task, onClose }: { task: Task; onClose: () => void }) {
             maxLength={5000}
             placeholder={t("todos.task.notesPlaceholder")}
             value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+            onChange={(e) => set("notes", e.target.value)}
           />
         </div>
 
@@ -129,7 +173,7 @@ function TaskForm({ task, onClose }: { task: Task; onClose: () => void }) {
               id="task-list"
               className={SELECT}
               value={listId}
-              onChange={(e) => setListId(e.target.value)}
+              onChange={(e) => pickList(e.target.value)}
             >
               {lists.map((list) => (
                 <option key={list.id} value={list.id}>
@@ -139,16 +183,18 @@ function TaskForm({ task, onClose }: { task: Task; onClose: () => void }) {
             </select>
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="task-status">{t("todos.task.status")}</Label>
+            <Label htmlFor="task-column">{t("todos.task.column")}</Label>
             <select
-              id="task-status"
+              id="task-column"
               className={SELECT}
-              value={status}
-              onChange={(e) => setStatus(e.target.value as TaskStatus)}
+              value={columnId}
+              onChange={(e) => set("columnId", e.target.value)}
             >
-              {TASK_STATUSES.map((value) => (
-                <option key={value} value={value}>
-                  {t(`todos.status.${value}`)}
+              {columns.map((column) => (
+                <option key={column.id} value={column.id}>
+                  {column.name
+                    ? `${column.name} (${t(`todos.status.${column.status}`)})`
+                    : columnName(column, t)}
                 </option>
               ))}
             </select>
@@ -164,24 +210,56 @@ function TaskForm({ task, onClose }: { task: Task; onClose: () => void }) {
           </p>
         )}
 
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="task-planned">{t("todos.task.plannedFor")}</Label>
-          <div className="flex gap-2">
-            <Input
-              id="task-planned"
-              type="date"
-              className="flex-1"
-              value={plannedFor}
-              onChange={(e) => setPlannedFor(e.target.value)}
-            />
-            <Button type="button" variant="outline" onClick={() => setPlannedFor(todayIsoDate())}>
-              {t("todos.task.planToday")}
-            </Button>
-            {plannedFor && (
-              <Button type="button" variant="ghost" onClick={() => setPlannedFor("")}>
-                {t("todos.task.clear")}
-              </Button>
-            )}
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="task-planned">{t("todos.task.plannedFor")}</Label>
+            <div className="flex gap-1.5">
+              <Input
+                id="task-planned"
+                type="date"
+                className="min-w-0 flex-1"
+                aria-describedby="task-planned-hint"
+                value={plannedFor}
+                onChange={(e) => set("plannedFor", e.target.value)}
+              />
+              {plannedFor ? (
+                <Button type="button" variant="ghost" onClick={() => set("plannedFor", "")}>
+                  {t("todos.task.clear")}
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => set("plannedFor", todayIsoDate())}
+                >
+                  {t("todos.task.planToday")}
+                </Button>
+              )}
+            </div>
+            <p id="task-planned-hint" className="text-xs text-muted-foreground">
+              {t("todos.task.plannedHint")}
+            </p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="task-due">{t("todos.task.dueOn")}</Label>
+            <div className="flex gap-1.5">
+              <Input
+                id="task-due"
+                type="date"
+                className="min-w-0 flex-1"
+                aria-describedby="task-due-hint"
+                value={dueOn}
+                onChange={(e) => set("dueOn", e.target.value)}
+              />
+              {dueOn && (
+                <Button type="button" variant="ghost" onClick={() => set("dueOn", "")}>
+                  {t("todos.task.clear")}
+                </Button>
+              )}
+            </div>
+            <p id="task-due-hint" className="text-xs text-muted-foreground">
+              {t("todos.task.dueHint")}
+            </p>
           </div>
         </div>
 
@@ -218,7 +296,7 @@ function TaskForm({ task, onClose }: { task: Task; onClose: () => void }) {
             }
             confirmLabel={t("todos.task.delete")}
             busy={deleting.loading}
-            onCancel={() => setConfirmingDelete(false)}
+            onCancel={() => set("confirmingDelete", false)}
             onConfirm={async () => {
               await deleteTask({ variables: { id: task.id } });
               onClose();
@@ -226,7 +304,7 @@ function TaskForm({ task, onClose }: { task: Task; onClose: () => void }) {
           />
         ) : (
           <DialogFooter className="sm:justify-between">
-            <Button type="button" variant="ghost" onClick={() => setConfirmingDelete(true)}>
+            <Button type="button" variant="ghost" onClick={() => set("confirmingDelete", true)}>
               <Trash2 className="size-4" /> {t("todos.task.delete")}
             </Button>
             <div className="flex gap-2">

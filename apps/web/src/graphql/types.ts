@@ -272,6 +272,87 @@ export interface Category {
   aliases: string[];
   /** Seeded categories: translate the name by this (see useCategoryName). Null for the user's own. */
   key: string | null;
+  /** "#rrggbb", or null. */
+  color: string | null;
+  /** Categories nest one level: the top-level category this one is under. */
+  parentId: string | null;
+  archivedAt: string | null;
+  sortOrder: number;
+}
+
+/** One part of a split transaction: same sign as the transaction. */
+export interface TransactionSplit {
+  id: string;
+  amountMinor: number;
+  note: string | null;
+  category: Category;
+}
+
+export interface PayeeRule {
+  id: string;
+  /** "TESCO*": `*` matches anything; without one, matches anywhere in the payee. */
+  pattern: string;
+  sortOrder: number;
+  category: Category;
+}
+
+export type BudgetAlert = "NEAR" | "REACHED";
+
+export interface BudgetAlertNotice {
+  level: BudgetAlert;
+  spentMinor: number;
+  availableMinor: number;
+  currency: string;
+  category: Category;
+}
+
+export interface TopPayee {
+  payee: string;
+  spentMinor: number;
+  transactionCount: number;
+}
+
+export interface TopPayeesData {
+  topPayees: { currency: string; unconverted: string[]; payees: TopPayee[] };
+}
+
+export interface NetWorthMonth {
+  /** "YYYY-MM" */
+  month: string;
+  assetsMinor: number;
+  liabilitiesMinor: number;
+  netWorthMinor: number;
+}
+
+export interface NetWorthHistoryData {
+  netWorthHistory: { currency: string; unconverted: string[]; months: NetWorthMonth[] };
+}
+
+export interface SavingsGoal {
+  id: string;
+  name: string;
+  emoji: string | null;
+  targetMinor: number;
+  currency: string;
+  /** "YYYY-MM-DD" or null. */
+  deadline: string | null;
+  startDate: string;
+  archivedAt: string | null;
+  savedMinor: number;
+  remainingMinor: number;
+  /** saved / target: 1 once reached. */
+  progress: number;
+  achieved: boolean;
+  overdue: boolean;
+  requiredPerMonthMinor: number | null;
+  onTrack: boolean | null;
+  expectedMinor: number | null;
+  /** Linked: its balance is what's saved. */
+  account: Pick<Account, "id" | "name" | "currency"> | null;
+}
+
+export interface SavingsGoalsData {
+  savingsGoals: SavingsGoal[];
 }
 
 export type TransactionStatus = "CLEARED" | "PENDING";
@@ -295,6 +376,8 @@ export interface Transaction {
   createdAt: string;
   account: Pick<Account, "id" | "name" | "currency">;
   category: Category | null;
+  /** Split across categories: then `category` is null and these add up to the amount. */
+  splits: TransactionSplit[];
 }
 
 export interface TransactionFilter {
@@ -336,7 +419,13 @@ export interface QuickLogContext {
 }
 
 export interface QuickLogData {
-  quickLog: { transaction: Transaction; suggestPreset: boolean; presetKey: string | null };
+  quickLog: {
+    transaction: Transaction;
+    suggestPreset: boolean;
+    presetKey: string | null;
+    /** This expense took its category's budget past 80% or 100% this month. */
+    budgetAlert: BudgetAlertNotice | null;
+  };
 }
 
 export interface CategorySpend {
@@ -386,6 +475,8 @@ export interface BudgetLine {
   /** "YYYY-MM" the limit was last set. */
   since: string;
   pace: BudgetPace;
+  /** 80% (NEAR) or 100% (REACHED) of the budget spent; null below 80%. */
+  alert: BudgetAlert | null;
   averageSpentMinor: number;
 }
 
@@ -554,6 +645,18 @@ export interface TodoList {
   position: number;
   openCount: number;
   doneCount: number;
+  /** Its board columns, left to right. */
+  columns: TodoColumn[];
+}
+
+/** A board column; `name` null shows the status's own name. Its status is its tasks' status. */
+export interface TodoColumn {
+  id: string;
+  listId: string;
+  name: string | null;
+  status: TaskStatus;
+  position: number;
+  taskCount: number;
 }
 
 /** A linked task, as shown in a dependency list. */
@@ -574,9 +677,15 @@ export interface Task {
   title: string;
   notes: string | null;
   status: TaskStatus;
+  /** Its board column; `status` is the column's. */
+  columnId: string;
   position: number;
   /** "YYYY-MM-DD", or null when not planned. */
   plannedFor: string | null;
+  /** Order within its planned day, for Today. */
+  dayPosition: number;
+  /** "YYYY-MM-DD" deadline, separate from the planned day. */
+  dueOn: string | null;
   completedAt: string | null;
   createdAt: string;
   /** Tasks this one waits for, in any list. */
@@ -592,7 +701,7 @@ export interface TodoListsData {
 }
 
 export interface TodayTasksData {
-  todayTasks: { today: Task[]; earlier: Task[] };
+  todayTasks: { today: Task[]; earlier: Task[]; dueSoon: Task[] };
 }
 
 export interface ListBoardData {

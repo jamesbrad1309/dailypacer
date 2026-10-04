@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
 import { describe, expect, it } from "vitest";
-import { PREFIX_PATTERN, fieldErrors, positionBetween, todoListSchema } from "#lib/todos";
+import { PREFIX_PATTERN, dueState, fieldErrors, positionBetween, todoListSchema } from "#lib/todos";
 
 describe("positionBetween", () => {
   it("goes between neighbours, or past either end", () => {
@@ -53,5 +53,18 @@ describe("todoListSchema", () => {
       name: "todos.lists.nameRequired",
       prefix: "todos.lists.prefixInvalid",
     });
+  });
+});
+
+describe("dueState", () => {
+  it("reads a deadline against today", () => {
+    expect(dueState("2026-10-01", "2026-10-04")).toBe("overdue");
+    expect(dueState("2026-10-04", "2026-10-04")).toBe("today");
+    expect(dueState("2026-10-07", "2026-10-04")).toBe("soon");
+    expect(dueState("2026-10-08", "2026-10-04")).toBe("later");
+  });
+
+  it("counts across a month end", () => {
+    expect(dueState("2026-11-02", "2026-10-31")).toBe("soon");
   });
 });

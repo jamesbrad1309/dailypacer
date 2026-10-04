@@ -21,6 +21,8 @@ export const shell = {
     spending: "Spending",
     budgets: "Budgets",
     subscriptions: "Subscriptions",
+    goals: "Goals",
+    categories: "Categories",
     currencies: "Currencies",
     comingSoonItem: "{{label}} (coming soon)",
     toReview: "{{count}} to review",
@@ -29,7 +31,7 @@ export const shell = {
   pages: {
     tasksToday: { title: "Today's tasks", subtitle: "What you plan to get done today." },
     tasksLists: { title: "Lists", subtitle: "Your to-do lists, each with its own key prefix." },
-    taskBoard: { title: "Board", subtitle: "Drag tasks between To do, In progress and Done." },
+    taskBoard: { title: "Board", subtitle: "Drag tasks between your list's columns." },
     habitDetail: { title: "Habit", subtitle: "Every check-in, day by day." },
     dashboard: { title: "Dashboard", subtitle: "Keep your streaks alive." },
     today: { title: "Today", subtitle: "What's due, hour by hour." },
@@ -44,9 +46,20 @@ export const shell = {
       title: "Transactions",
       subtitle: "Everything logged, and what's left to sort.",
     },
-    spending: { title: "Spending", subtitle: "Where the money went, by category." },
+    spending: {
+      title: "Spending",
+      subtitle: "Where the money went, by category and payee, and your net worth over time.",
+    },
     budgets: { title: "Budgets", subtitle: "Monthly limits, and how the month is pacing." },
     subscriptions: { title: "Subscriptions", subtitle: "What's charged, when, and how much." },
+    goals: {
+      title: "Savings goals",
+      subtitle: "What you're saving for, and whether you're on track.",
+    },
+    categories: {
+      title: "Categories",
+      subtitle: "Your categories, and rules that file payees automatically.",
+    },
     currencies: {
       title: "Currencies",
       subtitle: "The currencies you use, and the one totals are shown in.",

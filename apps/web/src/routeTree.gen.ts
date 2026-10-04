@@ -14,7 +14,9 @@ import { Route as LogRouteImport } from './routes/log'
 import { Route as FinanceIndexRouteImport } from './routes/finance/index'
 import { Route as FinanceAccountsRouteImport } from './routes/finance/accounts'
 import { Route as FinanceBudgetsRouteImport } from './routes/finance/budgets'
+import { Route as FinanceCategoriesRouteImport } from './routes/finance/categories'
 import { Route as FinanceCurrenciesRouteImport } from './routes/finance/currencies'
+import { Route as FinanceGoalsRouteImport } from './routes/finance/goals'
 import { Route as FinanceSpendingRouteImport } from './routes/finance/spending'
 import { Route as FinanceSubscriptionsRouteImport } from './routes/finance/subscriptions'
 import { Route as FinanceTransactionsRouteImport } from './routes/finance/transactions'
@@ -53,9 +55,19 @@ const FinanceBudgetsRoute = FinanceBudgetsRouteImport.update({
   path: '/finance/budgets',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FinanceCategoriesRoute = FinanceCategoriesRouteImport.update({
+  id: '/finance/categories',
+  path: '/finance/categories',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FinanceCurrenciesRoute = FinanceCurrenciesRouteImport.update({
   id: '/finance/currencies',
   path: '/finance/currencies',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FinanceGoalsRoute = FinanceGoalsRouteImport.update({
+  id: '/finance/goals',
+  path: '/finance/goals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FinanceSpendingRoute = FinanceSpendingRouteImport.update({
@@ -124,7 +136,9 @@ export interface FileRoutesByFullPath {
   '/log': typeof LogRoute
   '/finance/accounts': typeof FinanceAccountsRoute
   '/finance/budgets': typeof FinanceBudgetsRoute
+  '/finance/categories': typeof FinanceCategoriesRoute
   '/finance/currencies': typeof FinanceCurrenciesRoute
+  '/finance/goals': typeof FinanceGoalsRoute
   '/finance/spending': typeof FinanceSpendingRoute
   '/finance/subscriptions': typeof FinanceSubscriptionsRoute
   '/finance/transactions': typeof FinanceTransactionsRoute
@@ -144,7 +158,9 @@ export interface FileRoutesByTo {
   '/log': typeof LogRoute
   '/finance/accounts': typeof FinanceAccountsRoute
   '/finance/budgets': typeof FinanceBudgetsRoute
+  '/finance/categories': typeof FinanceCategoriesRoute
   '/finance/currencies': typeof FinanceCurrenciesRoute
+  '/finance/goals': typeof FinanceGoalsRoute
   '/finance/spending': typeof FinanceSpendingRoute
   '/finance/subscriptions': typeof FinanceSubscriptionsRoute
   '/finance/transactions': typeof FinanceTransactionsRoute
@@ -165,7 +181,9 @@ export interface FileRoutesById {
   '/log': typeof LogRoute
   '/finance/accounts': typeof FinanceAccountsRoute
   '/finance/budgets': typeof FinanceBudgetsRoute
+  '/finance/categories': typeof FinanceCategoriesRoute
   '/finance/currencies': typeof FinanceCurrenciesRoute
+  '/finance/goals': typeof FinanceGoalsRoute
   '/finance/spending': typeof FinanceSpendingRoute
   '/finance/subscriptions': typeof FinanceSubscriptionsRoute
   '/finance/transactions': typeof FinanceTransactionsRoute
@@ -187,7 +205,9 @@ export interface FileRouteTypes {
     | '/log'
     | '/finance/accounts'
     | '/finance/budgets'
+    | '/finance/categories'
     | '/finance/currencies'
+    | '/finance/goals'
     | '/finance/spending'
     | '/finance/subscriptions'
     | '/finance/transactions'
@@ -207,7 +227,9 @@ export interface FileRouteTypes {
     | '/log'
     | '/finance/accounts'
     | '/finance/budgets'
+    | '/finance/categories'
     | '/finance/currencies'
+    | '/finance/goals'
     | '/finance/spending'
     | '/finance/subscriptions'
     | '/finance/transactions'
@@ -227,7 +249,9 @@ export interface FileRouteTypes {
     | '/log'
     | '/finance/accounts'
     | '/finance/budgets'
+    | '/finance/categories'
     | '/finance/currencies'
+    | '/finance/goals'
     | '/finance/spending'
     | '/finance/subscriptions'
     | '/finance/transactions'
@@ -248,7 +272,9 @@ export interface RootRouteChildren {
   LogRoute: typeof LogRoute
   FinanceAccountsRoute: typeof FinanceAccountsRoute
   FinanceBudgetsRoute: typeof FinanceBudgetsRoute
+  FinanceCategoriesRoute: typeof FinanceCategoriesRoute
   FinanceCurrenciesRoute: typeof FinanceCurrenciesRoute
+  FinanceGoalsRoute: typeof FinanceGoalsRoute
   FinanceSpendingRoute: typeof FinanceSpendingRoute
   FinanceSubscriptionsRoute: typeof FinanceSubscriptionsRoute
   FinanceTransactionsRoute: typeof FinanceTransactionsRoute
@@ -301,11 +327,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FinanceBudgetsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/finance/categories': {
+      id: '/finance/categories'
+      path: '/finance/categories'
+      fullPath: '/finance/categories'
+      preLoaderRoute: typeof FinanceCategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/finance/currencies': {
       id: '/finance/currencies'
       path: '/finance/currencies'
       fullPath: '/finance/currencies'
       preLoaderRoute: typeof FinanceCurrenciesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/finance/goals': {
+      id: '/finance/goals'
+      path: '/finance/goals'
+      fullPath: '/finance/goals'
+      preLoaderRoute: typeof FinanceGoalsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/finance/spending': {
@@ -400,7 +440,9 @@ const rootRouteChildren: RootRouteChildren = {
   LogRoute: LogRoute,
   FinanceAccountsRoute: FinanceAccountsRoute,
   FinanceBudgetsRoute: FinanceBudgetsRoute,
+  FinanceCategoriesRoute: FinanceCategoriesRoute,
   FinanceCurrenciesRoute: FinanceCurrenciesRoute,
+  FinanceGoalsRoute: FinanceGoalsRoute,
   FinanceSpendingRoute: FinanceSpendingRoute,
   FinanceSubscriptionsRoute: FinanceSubscriptionsRoute,
   FinanceTransactionsRoute: FinanceTransactionsRoute,

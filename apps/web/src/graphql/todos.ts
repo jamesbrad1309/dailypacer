@@ -15,8 +15,11 @@ const TASK_FIELDS = gql`
     title
     notes
     status
+    columnId
     position
     plannedFor
+    dayPosition
+    dueOn
     completedAt
     createdAt
     blocked
@@ -35,7 +38,19 @@ const TASK_FIELDS = gql`
   }
 `;
 
+const COLUMN_FIELDS = gql`
+  fragment TodoColumnFields on TodoColumn {
+    id
+    listId
+    name
+    status
+    position
+    taskCount
+  }
+`;
+
 const LIST_FIELDS = gql`
+  ${COLUMN_FIELDS}
   fragment TodoListFields on TodoList {
     id
     name
@@ -45,6 +60,9 @@ const LIST_FIELDS = gql`
     position
     openCount
     doneCount
+    columns {
+      ...TodoColumnFields
+    }
   }
 `;
 
@@ -73,11 +91,14 @@ export const TODAY_TASKS_QUERY = gql`
       earlier {
         ...TaskFields
       }
+      dueSoon {
+        ...TaskFields
+      }
     }
   }
 `;
 
-/** A list's board: every open task and the latest `doneLimit` done ones. */
+/** A list's board: its columns, every open task and the latest `doneLimit` done ones. */
 export const LIST_BOARD_QUERY = gql`
   ${TASK_FIELDS}
   ${LIST_FIELDS}
@@ -134,6 +155,30 @@ export const UPDATE_TODO_LIST_MUTATION = gql`
 export const DELETE_TODO_LIST_MUTATION = gql`
   mutation DeleteTodoList($id: ID!) {
     deleteTodoList(id: $id)
+  }
+`;
+
+export const CREATE_TODO_COLUMN_MUTATION = gql`
+  ${COLUMN_FIELDS}
+  mutation CreateTodoColumn($listId: ID!, $input: CreateTodoColumnInput!) {
+    createTodoColumn(listId: $listId, input: $input) {
+      ...TodoColumnFields
+    }
+  }
+`;
+
+export const UPDATE_TODO_COLUMN_MUTATION = gql`
+  ${COLUMN_FIELDS}
+  mutation UpdateTodoColumn($id: ID!, $input: UpdateTodoColumnInput!) {
+    updateTodoColumn(id: $id, input: $input) {
+      ...TodoColumnFields
+    }
+  }
+`;
+
+export const DELETE_TODO_COLUMN_MUTATION = gql`
+  mutation DeleteTodoColumn($id: ID!, $moveTo: ID) {
+    deleteTodoColumn(id: $id, moveTo: $moveTo)
   }
 `;
 

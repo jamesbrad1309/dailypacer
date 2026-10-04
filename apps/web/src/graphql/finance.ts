@@ -74,6 +74,9 @@ export const TRANSACTIONS_REFETCH = [
   "SpendByCategory",
   "CashFlow",
   "Budget",
+  "TopPayees",
+  "NetWorthHistory",
+  "SavingsGoals",
   // A transaction can be a subscription charge: deleting or confirming it changes those views.
   "SubscriptionCharges",
   "PendingSubscriptionCharges",
@@ -145,9 +148,13 @@ export const CATEGORY_FIELDS = gql`
     id
     name
     icon
+    color
     kind
     aliases
     key
+    parentId
+    archivedAt
+    sortOrder
   }
 `;
 
@@ -185,6 +192,14 @@ const TRANSACTION_FIELDS = gql`
     }
     category {
       ...CategoryFields
+    }
+    splits {
+      id
+      amountMinor
+      note
+      category {
+        ...CategoryFields
+      }
     }
   }
 `;
@@ -296,6 +311,15 @@ export const QUICK_LOG_MUTATION = gql`
       }
       suggestPreset
       presetKey
+      budgetAlert {
+        level
+        spentMinor
+        availableMinor
+        currency
+        category {
+          ...CategoryFields
+        }
+      }
     }
   }
 `;
@@ -383,6 +407,7 @@ export const BUDGET_QUERY = gql`
         rollover
         since
         pace
+        alert
         averageSpentMinor
       }
       unbudgeted {
@@ -533,5 +558,206 @@ export const COMMIT_CSV_IMPORT_MUTATION = gql`
 export const DISCARD_CSV_IMPORT_MUTATION = gql`
   mutation DiscardCsvImport($uploadId: ID!) {
     discardCsvImport(uploadId: $uploadId)
+  }
+`;
+
+// ─── Categories and payee rules ──────────────────────────────────────────────
+
+/** Every category of the user's, archived ones too, for the Categories page. */
+export const MANAGE_CATEGORIES_QUERY = gql`
+  ${CATEGORY_FIELDS}
+  query ManageCategories {
+    categories(includeArchived: true) {
+      ...CategoryFields
+    }
+  }
+`;
+
+export const CREATE_CATEGORY_MUTATION = gql`
+  ${CATEGORY_FIELDS}
+  mutation CreateCategory($input: CreateCategoryInput!) {
+    createCategory(input: $input) {
+      ...CategoryFields
+    }
+  }
+`;
+
+export const UPDATE_CATEGORY_MUTATION = gql`
+  ${CATEGORY_FIELDS}
+  mutation UpdateCategory($id: ID!, $input: UpdateCategoryInput!) {
+    updateCategory(id: $id, input: $input) {
+      ...CategoryFields
+    }
+  }
+`;
+
+/** Category pickers and names across finance read these. */
+export const CATEGORIES_REFETCH = [
+  "Categories",
+  "ManageCategories",
+  "QuickLogContext",
+  "PayeeRules",
+  "Transactions",
+  "SpendByCategory",
+  "Budget",
+];
+
+export const PAYEE_RULES_QUERY = gql`
+  ${CATEGORY_FIELDS}
+  query PayeeRules {
+    payeeRules {
+      id
+      pattern
+      sortOrder
+      category {
+        ...CategoryFields
+      }
+    }
+  }
+`;
+
+export const PAYEE_RULE_MATCH_COUNT_QUERY = gql`
+  query PayeeRuleMatchCount($pattern: String!) {
+    payeeRuleMatchCount(pattern: $pattern)
+  }
+`;
+
+export const CREATE_PAYEE_RULE_MUTATION = gql`
+  mutation CreatePayeeRule($input: PayeeRuleInput!) {
+    createPayeeRule(input: $input) {
+      id
+    }
+  }
+`;
+
+export const UPDATE_PAYEE_RULE_MUTATION = gql`
+  mutation UpdatePayeeRule($id: ID!, $input: PayeeRuleInput!) {
+    updatePayeeRule(id: $id, input: $input) {
+      id
+    }
+  }
+`;
+
+export const DELETE_PAYEE_RULE_MUTATION = gql`
+  mutation DeletePayeeRule($id: ID!) {
+    deletePayeeRule(id: $id)
+  }
+`;
+
+export const APPLY_PAYEE_RULES_MUTATION = gql`
+  mutation ApplyPayeeRules {
+    applyPayeeRules
+  }
+`;
+
+// ─── Splits ──────────────────────────────────────────────────────────────────
+
+export const SET_TRANSACTION_SPLITS_MUTATION = gql`
+  ${TRANSACTION_FIELDS}
+  mutation SetTransactionSplits($id: ID!, $splits: [TransactionSplitInput!]!) {
+    setTransactionSplits(id: $id, splits: $splits) {
+      ...TransactionFields
+    }
+  }
+`;
+
+// ─── Reports: top payees, net worth over time ────────────────────────────────
+
+export const TOP_PAYEES_QUERY = gql`
+  query TopPayees($from: String!, $to: String!, $limit: Int) {
+    topPayees(from: $from, to: $to, limit: $limit) {
+      currency
+      unconverted
+      payees {
+        payee
+        spentMinor
+        transactionCount
+      }
+    }
+  }
+`;
+
+export const NET_WORTH_HISTORY_QUERY = gql`
+  query NetWorthHistory($to: String!, $months: Int) {
+    netWorthHistory(to: $to, months: $months) {
+      currency
+      unconverted
+      months {
+        month
+        assetsMinor
+        liabilitiesMinor
+        netWorthMinor
+      }
+    }
+  }
+`;
+
+// ─── Savings goals ───────────────────────────────────────────────────────────
+
+const GOAL_FIELDS = gql`
+  fragment SavingsGoalFields on SavingsGoal {
+    id
+    name
+    emoji
+    targetMinor
+    currency
+    deadline
+    startDate
+    archivedAt
+    savedMinor
+    remainingMinor
+    progress
+    achieved
+    overdue
+    requiredPerMonthMinor
+    onTrack
+    expectedMinor
+    account {
+      id
+      name
+      currency
+    }
+  }
+`;
+
+export const SAVINGS_GOALS_QUERY = gql`
+  ${GOAL_FIELDS}
+  query SavingsGoals($today: String!, $includeArchived: Boolean) {
+    savingsGoals(today: $today, includeArchived: $includeArchived) {
+      ...SavingsGoalFields
+    }
+  }
+`;
+
+export const CREATE_SAVINGS_GOAL_MUTATION = gql`
+  ${GOAL_FIELDS}
+  mutation CreateSavingsGoal($input: CreateSavingsGoalInput!, $today: String!) {
+    createSavingsGoal(input: $input, today: $today) {
+      ...SavingsGoalFields
+    }
+  }
+`;
+
+export const UPDATE_SAVINGS_GOAL_MUTATION = gql`
+  ${GOAL_FIELDS}
+  mutation UpdateSavingsGoal($id: ID!, $input: UpdateSavingsGoalInput!, $today: String!) {
+    updateSavingsGoal(id: $id, input: $input, today: $today) {
+      ...SavingsGoalFields
+    }
+  }
+`;
+
+export const CONTRIBUTE_TO_SAVINGS_GOAL_MUTATION = gql`
+  ${GOAL_FIELDS}
+  mutation ContributeToSavingsGoal($id: ID!, $amountMinor: Int!, $today: String!) {
+    contributeToSavingsGoal(id: $id, amountMinor: $amountMinor, today: $today) {
+      ...SavingsGoalFields
+    }
+  }
+`;
+
+export const DELETE_SAVINGS_GOAL_MUTATION = gql`
+  mutation DeleteSavingsGoal($id: ID!) {
+    deleteSavingsGoal(id: $id)
   }
 `;

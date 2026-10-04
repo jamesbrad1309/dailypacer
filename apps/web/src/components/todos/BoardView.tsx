@@ -25,8 +25,9 @@ import { ArrowLeft, CalendarDays, Plus } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ListSkeleton } from "#components/layout/Skeletons";
+import { ColumnsDialog } from "#components/todos/ColumnsDialog";
 import { TaskDialog } from "#components/todos/TaskDialog";
-import { BlockedBadge, TaskKey } from "#components/todos/TaskRow";
+import { BlockedBadge, DueBadge, TaskKey } from "#components/todos/TaskRow";
 import { Button } from "#components/ui/button";
 import { Input } from "#components/ui/input";
 import {
@@ -35,31 +36,35 @@ import {
   TODO_REFETCH,
   UPDATE_TASK_MUTATION,
 } from "#graphql/todos";
-import type { ListBoardData, Task, TaskStatus } from "#graphql/types";
+import type { ListBoardData, Task, TodoColumn } from "#graphql/types";
 import { formatShortDate, todayIsoDate } from "#lib/dates";
-import { TASK_STATUSES, listName, positionBetween } from "#lib/todos";
+import { columnName, listName, positionBetween } from "#lib/todos";
 import { cn } from "#lib/utils";
 
 const DONE_LIMIT = 50;
 
-type Columns = Record<TaskStatus, string[]>;
+/** Task ids per column id, in the order shown. */
+type Columns = Record<string, string[]>;
 
-function columnsOf(tasks: Task[]): Columns {
-  const columns: Columns = { TODO: [], IN_PROGRESS: [], DONE: [] };
+function columnsOf(columns: TodoColumn[], tasks: Task[]): Columns {
+  const result: Columns = Object.fromEntries(columns.map((column) => [column.id, []]));
   // The API sends open tasks by position and done ones newest first.
-  for (const task of tasks) columns[task.status].push(task.id);
-  return columns;
+  for (const task of tasks) result[task.columnId]?.push(task.id);
+  return result;
 }
 
-function columnOf(columns: Columns, id: string): TaskStatus | undefined {
-  if ((TASK_STATUSES as readonly string[]).includes(id)) return id as TaskStatus;
-  return TASK_STATUSES.find((status) => columns[status].includes(id));
+/** The column an id is (a column dropped on directly) or holds (a card). */
+function columnOf(columns: Columns, id: string): string | undefined {
+  if (id in columns) return id;
+  return Object.keys(columns).find((column) => columns[column].includes(id));
 }
 
 /**
- * A list's kanban board: To do, In progress, Done. Dragging a card (mouse,
- * touch, or Space + arrow keys) updates just that task: its status and a
- * position between its new neighbours. Done shows the latest completions.
+ * A list's kanban board, with the list's own columns (Edit columns adds,
+ * renames, reorders and deletes them). Dragging a card (mouse, touch, or
+ * Space + arrow keys) updates just that task: its column (and so its
+ * status) and a position between its new neighbours. Done columns are
+ * ordered by completion and show the latest completions.
  */
 export function BoardView({ listId }: { listId: string }) {
   const { t } = useTranslation();
@@ -85,12 +90,15 @@ export function BoardView({ listId }: { listId: string }) {
 
   const { list, tasks, doneTotal } = data.listBoard;
   const byId = new Map(tasks.map((task) => [task.id, task]));
-  const columns = dragColumns ?? columnsOf(tasks);
+  const columnById = new Map(list.columns.map((column) => [column.id, column]));
+  const serverColumns = columnsOf(list.columns, tasks);
+  const columns = dragColumns ?? serverColumns;
   const active = activeId ? byId.get(activeId) : undefined;
+  const doneShown = tasks.filter((task) => task.status === "DONE").length;
 
   function onDragStart({ active: dragged }: DragStartEvent) {
     setActiveId(String(dragged.id));
-    setDragColumns(columnsOf(tasks));
+    setDragColumns(serverColumns);
   }
 
   function onDragOver({ active: dragged, over }: DragOverEvent) {
@@ -118,37 +126,35 @@ export function BoardView({ listId }: { listId: string }) {
       setDragColumns(null);
       return;
     }
-    const status = columnOf(working, id) as TaskStatus;
-    let column = working[status];
+    const columnId = columnOf(working, id) as string;
+    const isDone = columnById.get(columnId)?.status === "DONE";
+    let column = working[columnId];
     const overIndex = column.indexOf(String(over.id));
     if (overIndex !== -1 && overIndex !== column.indexOf(id)) {
       column = arrayMove(column, column.indexOf(id), overIndex);
     }
-    const final = { ...working, [status]: column };
-    setDragColumns(final);
+    setDragColumns({ ...working, [columnId]: column });
 
     const index = column.indexOf(id);
-    const statusChanged = status !== task.status;
-    // Done is ordered by completion time, so a position there means nothing.
-    const position =
-      status === "DONE"
-        ? undefined
-        : positionBetween(
-            index > 0 ? (byId.get(column[index - 1])?.position ?? null) : null,
-            index < column.length - 1 ? (byId.get(column[index + 1])?.position ?? null) : null,
-          );
-    if (!statusChanged && (status === "DONE" || index === columnsOf(tasks)[status].indexOf(id))) {
+    const columnChanged = columnId !== task.columnId;
+    // Done columns are ordered by completion time, so a position there means nothing.
+    const position = isDone
+      ? undefined
+      : positionBetween(
+          index > 0 ? (byId.get(column[index - 1])?.position ?? null) : null,
+          index < column.length - 1 ? (byId.get(column[index + 1])?.position ?? null) : null,
+        );
+    if (!columnChanged && (isDone || index === serverColumns[columnId].indexOf(id))) {
       setDragColumns(null);
       return;
     }
     await updateTask({
       variables: {
         id,
-        input: { status: statusChanged ? status : undefined, position },
+        input: { columnId: columnChanged ? columnId : undefined, position },
       },
       awaitRefetchQueries: true,
-    });
-    setDragColumns(null);
+    }).finally(() => setDragColumns(null));
   }
 
   return (
@@ -166,6 +172,9 @@ export function BoardView({ listId }: { listId: string }) {
           {t("todos.lists.open", { count: list.openCount })} ·{" "}
           {t("todos.lists.done", { count: list.doneCount })}
         </span>
+        <div className="ml-auto">
+          <ColumnsDialog list={list} />
+        </div>
       </div>
       <p className="text-xs text-muted-foreground">{t("todos.board.dragHint")}</p>
 
@@ -180,25 +189,24 @@ export function BoardView({ listId }: { listId: string }) {
           setDragColumns(null);
         }}
       >
-        <div className="grid items-start gap-4 md:grid-cols-3">
-          {TASK_STATUSES.map((status) => (
+        {/* Scrolls sideways when there are more columns than fit. */}
+        <div className="-mx-1 flex items-start gap-4 overflow-x-auto px-1 pb-2">
+          {list.columns.map((column) => (
             <Column
-              key={status}
-              status={status}
-              ids={columns[status]}
+              key={column.id}
+              column={column}
+              ids={columns[column.id] ?? []}
               byId={byId}
               listId={list.id}
               onOpen={setOpen}
-              footer={
-                status === "DONE" && doneTotal > columns.DONE.length ? (
-                  <p className="px-1 text-xs text-muted-foreground">
-                    {t("todos.board.doneShown", { shown: columns.DONE.length, total: doneTotal })}
-                  </p>
-                ) : null
-              }
             />
           ))}
         </div>
+        {doneTotal > doneShown && (
+          <p className="text-xs text-muted-foreground">
+            {t("todos.board.doneShown", { shown: doneShown, total: doneTotal })}
+          </p>
+        )}
         <DragOverlay>{active ? <Card task={active} dragging /> : null}</DragOverlay>
       </DndContext>
 
@@ -208,37 +216,39 @@ export function BoardView({ listId }: { listId: string }) {
 }
 
 function Column({
-  status,
+  column,
   ids,
   byId,
   listId,
   onOpen,
-  footer,
 }: {
-  status: TaskStatus;
+  column: TodoColumn;
   ids: string[];
   byId: Map<string, Task>;
   listId: string;
   onOpen: (task: Task) => void;
-  footer: React.ReactNode;
 }) {
   const { t } = useTranslation();
   // The column itself is a drop target, so an empty column still accepts cards.
-  const { setNodeRef, isOver } = useDroppable({ id: status });
+  const { setNodeRef, isOver } = useDroppable({ id: column.id });
+  const name = columnName(column, t);
   return (
     <section
       ref={setNodeRef}
-      aria-label={t(`todos.status.${status}`)}
+      aria-label={name}
       className={cn(
-        "flex min-h-40 flex-col gap-2 rounded-xl border bg-muted/30 p-2 transition-colors",
+        "flex min-h-40 w-72 shrink-0 flex-col gap-2 rounded-xl border bg-muted/30 p-2 transition-colors",
         isOver && "bg-accent/60",
       )}
     >
-      <h3 className="flex items-center justify-between px-1 pt-1 text-sm font-medium">
-        {t(`todos.status.${status}`)}
-        <span className="text-xs font-normal text-muted-foreground tabular-nums">{ids.length}</span>
+      <h3 className="flex items-center justify-between gap-2 px-1 pt-1 text-sm font-medium">
+        <span className="truncate">{name}</span>
+        <span className="flex shrink-0 items-center gap-1.5 text-xs font-normal text-muted-foreground">
+          {column.name && <span>{t(`todos.status.${column.status}`)}</span>}
+          <span className="tabular-nums">{ids.length}</span>
+        </span>
       </h3>
-      {status === "TODO" && <AddTask listId={listId} />}
+      {column.status === "TODO" && <AddTask listId={listId} columnId={column.id} />}
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
         {ids.map((id) => {
           const task = byId.get(id);
@@ -250,7 +260,6 @@ function Column({
           {t("todos.board.empty")}
         </p>
       )}
-      {footer}
     </section>
   );
 }
@@ -296,6 +305,7 @@ function Card({ task, onOpen, dragging }: { task: Task; onOpen?: () => void; dra
       <div className="flex flex-wrap items-center gap-2">
         <TaskKey taskKey={task.key} />
         <BlockedBadge task={task} />
+        <DueBadge task={task} />
         {task.plannedFor && (
           <span
             className={cn(
@@ -316,7 +326,7 @@ function Card({ task, onOpen, dragging }: { task: Task; onOpen?: () => void; dra
   );
 }
 
-function AddTask({ listId }: { listId: string }) {
+function AddTask({ listId, columnId }: { listId: string; columnId: string }) {
   const { t } = useTranslation();
   const [title, setTitle] = useState("");
   const [createTask, creating] = useMutation(CREATE_TASK_MUTATION, {
@@ -326,7 +336,7 @@ function AddTask({ listId }: { listId: string }) {
   async function add(e: FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
-    await createTask({ variables: { input: { title: title.trim(), listId } } });
+    await createTask({ variables: { input: { title: title.trim(), listId, columnId } } });
     setTitle("");
   }
   return (

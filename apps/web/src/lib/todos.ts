@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
 import { z } from "zod";
-import type { TodoList } from "#graphql/types";
+import type { TaskStatus, TodoList } from "#graphql/types";
 
 /** Same rule as the API: a letter, then 1–5 letters or digits. */
 export const PREFIX_PATTERN = /^[A-Z][A-Z0-9]{1,5}$/;
@@ -13,6 +13,24 @@ export function positionBetween(before: number | null, after: number | null): nu
   if (before === null) return (after as number) - 1;
   if (after === null) return before + 1;
   return (before + after) / 2;
+}
+
+/** A column's name, or its status's translated name when it has none. */
+export function columnName(column: { name: string | null; status: TaskStatus }, t: TFunction) {
+  return column.name ?? t(`todos.status.${column.status}`);
+}
+
+/**
+ * How a due date reads next to a task: overdue, due today, due within the
+ * next few days, or later. Done tasks are never overdue.
+ */
+export type DueState = "overdue" | "today" | "soon" | "later";
+export function dueState(dueOn: string, today: string, soonDays = 3): DueState {
+  if (dueOn < today) return "overdue";
+  if (dueOn === today) return "today";
+  const soon = new Date(`${today}T00:00:00Z`);
+  soon.setUTCDate(soon.getUTCDate() + soonDays);
+  return dueOn <= soon.toISOString().slice(0, 10) ? "soon" : "later";
 }
 
 /** The Inbox's name is stored in English; show it in the UI language. */

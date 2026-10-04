@@ -1,5 +1,6 @@
 import { useQuery } from "@apollo/client/react";
 import {
+  BellRing,
   ChevronLeft,
   ChevronRight,
   CircleAlert,
@@ -124,6 +125,7 @@ export function BudgetsView({ month: requested, onMonthChange }: Props) {
       {report && report.lines.length > 0 && (
         <>
           <Summary report={report} isPast={isPast} />
+          {!isPast && <Alerts lines={report.lines} currency={report.currency} />}
           <UnconvertedNote codes={report.unconverted} />
           <Card>
             <ul className="divide-y">
@@ -257,6 +259,43 @@ function Summary({ report, isPast }: { report: BudgetReport; isPast: boolean }) 
 }
 
 /**
+ * In-app budget alerts: the categories that have used 80% or all of their
+ * budget this month, worst first. (Quick log also raises a toast the
+ * moment an expense crosses either line.)
+ */
+function Alerts({ lines, currency }: { lines: BudgetLine[]; currency: string }) {
+  const { t } = useTranslation();
+  const categoryName = useCategoryName();
+  const alerting = lines
+    .filter((line) => line.alert)
+    .sort((a, b) => Number(b.alert === "REACHED") - Number(a.alert === "REACHED"));
+  if (alerting.length === 0) return null;
+  return (
+    <section
+      aria-labelledby="budget-alerts"
+      className="flex flex-col gap-1.5 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm"
+    >
+      <h3 id="budget-alerts" className="flex items-center gap-2 font-medium">
+        <BellRing className="size-4 text-amber-700 dark:text-status-warning" aria-hidden />
+        {t("finance.budgets.alert.title", { count: alerting.length })}
+      </h3>
+      <ul className="flex flex-col gap-0.5 pl-6">
+        {alerting.map((line) => (
+          <li key={line.category.id}>
+            {t(`finance.budgets.alert.line.${line.alert as "NEAR" | "REACHED"}`, {
+              name: categoryName(line.category),
+              percent: Math.round((line.spentMinor / Math.max(1, line.availableMinor)) * 100),
+              spent: formatMoney(line.spentMinor, currency),
+              available: formatMoney(line.availableMinor, currency),
+            })}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+/**
  * One budget: a bar of spend against what's available, in the pace's status
  * colour, with a tick where "on pace" would be today.
  */
@@ -286,6 +325,12 @@ function BudgetRow({
           <span className="min-w-0 flex-1 truncate text-sm font-medium">
             {categoryName(line.category)}
           </span>
+          {line.alert && (
+            <span className="flex items-center gap-1 rounded bg-amber-500/15 px-1.5 text-[11px] text-amber-800 dark:text-amber-300">
+              <BellRing className="size-3" aria-hidden />
+              {t(`finance.budgets.alert.badge.${line.alert}`)}
+            </span>
+          )}
           <span className={cn("flex items-center gap-1 text-xs font-medium", status.text)}>
             <status.icon className="size-3.5" aria-hidden />
             {t(`finance.budgets.pace.${line.pace}`)}
