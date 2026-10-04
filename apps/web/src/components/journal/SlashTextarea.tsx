@@ -1,4 +1,4 @@
-import { type Ref, useId, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
+import { type Ref, useId, useImperativeHandle, useLayoutEffect, useReducer, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { caretCoordinates } from "#lib/caret";
 import { KIND_BY_ID } from "#lib/journal-kinds";
@@ -35,6 +35,41 @@ interface Props {
  * start of an item opens a menu of entry kinds, `/feeling ` then offers
  * emotion words, Enter continues the list and Tab / Shift+Tab nest items.
  */
+/** Where the caret is, and the suggestion menu's state. */
+interface MenuState {
+  caret: number;
+  focused: boolean;
+  /** The highlighted suggestion. */
+  active: number;
+  /** Escape hides the menu until the text changes again. */
+  dismissedFor: string | null;
+  /** Pixel position under the caret. */
+  menuPos: { top: number; left: number };
+}
+
+type MenuAction =
+  /** The caret moved; `typed` when the text changed too (back to the first suggestion). */
+  | { type: "caret"; caret: number; typed?: boolean }
+  | { type: "focus"; on: boolean }
+  | { type: "highlight"; index: number }
+  | { type: "dismiss"; value: string }
+  | { type: "menuPos"; menuPos: MenuState["menuPos"] };
+
+function menuReducer(state: MenuState, action: MenuAction): MenuState {
+  switch (action.type) {
+    case "caret":
+      return { ...state, caret: action.caret, active: action.typed ? 0 : state.active };
+    case "focus":
+      return { ...state, focused: action.on };
+    case "highlight":
+      return { ...state, active: action.index };
+    case "dismiss":
+      return { ...state, dismissedFor: action.value };
+    case "menuPos":
+      return { ...state, menuPos: action.menuPos };
+  }
+}
+
 export function SlashTextarea({
   value,
   onChange,
@@ -50,12 +85,14 @@ export function SlashTextarea({
   const { t } = useTranslation();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const pendingCaret = useRef<number | null>(null);
-  const [caret, setCaret] = useState(0);
-  const [focused, setFocused] = useState(false);
-  const [active, setActive] = useState(0);
-  /** Escape hides the menu until the text changes again. */
-  const [dismissedFor, setDismissedFor] = useState<string | null>(null);
-  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const [menu, dispatch] = useReducer(menuReducer, {
+    caret: 0,
+    focused: false,
+    active: 0,
+    dismissedFor: null,
+    menuPos: { top: 0, left: 0 },
+  });
+  const { caret, focused, active, dismissedFor, menuPos } = menu;
   const menuId = useId();
   const caretPlaced = useRef(false);
 
@@ -65,8 +102,7 @@ export function SlashTextarea({
 
   function update(next: string, nextCaret: number) {
     pendingCaret.current = nextCaret;
-    setCaret(nextCaret);
-    setActive(0);
+    dispatch({ type: "caret", caret: nextCaret, typed: true });
     onChange(next);
   }
 
@@ -99,9 +135,12 @@ export function SlashTextarea({
     const el = textareaRef.current;
     if (menuFrom === undefined || !el) return;
     const coords = caretCoordinates(el, menuFrom);
-    setMenuPos({
-      top: coords.top + coords.lineHeight + 4,
-      left: Math.max(0, Math.min(coords.left, el.clientWidth - MENU_WIDTH)),
+    dispatch({
+      type: "menuPos",
+      menuPos: {
+        top: coords.top + coords.lineHeight + 4,
+        left: Math.max(0, Math.min(coords.left, el.clientWidth - MENU_WIDTH)),
+      },
     });
   }, [menuFrom, value]);
 
@@ -130,7 +169,10 @@ export function SlashTextarea({
       const count = suggestions.items.length;
       if (e.key === "ArrowDown" || e.key === "ArrowUp") {
         e.preventDefault();
-        setActive((activeIndex + (e.key === "ArrowDown" ? 1 : count - 1)) % count);
+        dispatch({
+          type: "highlight",
+          index: (activeIndex + (e.key === "ArrowDown" ? 1 : count - 1)) % count,
+        });
         return;
       }
       if ((e.key === "Enter" && !e.metaKey && !e.ctrlKey) || e.key === "Tab") {
@@ -141,7 +183,7 @@ export function SlashTextarea({
       if (e.key === "Escape") {
         e.preventDefault();
         e.stopPropagation();
-        setDismissedFor(value);
+        dispatch({ type: "dismiss", value });
         return;
       }
     }
@@ -218,16 +260,15 @@ export function SlashTextarea({
         aria-activedescendant={suggestions ? `${menuId}-${activeIndex}` : undefined}
         spellCheck
         onChange={(e) => {
-          setCaret(e.target.selectionStart);
-          setActive(0);
+          dispatch({ type: "caret", caret: e.target.selectionStart, typed: true });
           onChange(e.target.value);
         }}
-        onSelect={(e) => setCaret(e.currentTarget.selectionStart)}
+        onSelect={(e) => dispatch({ type: "caret", caret: e.currentTarget.selectionStart })}
         onKeyDown={onKeyDown}
         // biome-ignore lint/a11y/noAutofocus: only set when the user just clicked Edit on an entry
         autoFocus={autoFocus}
         onFocus={(e) => {
-          setFocused(true);
+          dispatch({ type: "focus", on: true });
           if (autoFocus && !caretPlaced.current) {
             caretPlaced.current = true;
             const end = e.currentTarget.value.length;
@@ -236,7 +277,7 @@ export function SlashTextarea({
           if (multiline && value === "") update("- ", 2);
         }}
         onBlur={() => {
-          setFocused(false);
+          dispatch({ type: "focus", on: false });
           if (value.trim() === "-") onChange("");
         }}
         className="w-full resize-none overflow-hidden rounded-md border border-input bg-background px-3 py-2 font-mono text-sm leading-6 outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
@@ -271,7 +312,7 @@ export function SlashTextarea({
                 e.preventDefault();
                 choose(item);
               }}
-              onMouseEnter={() => setActive(i)}
+              onMouseEnter={() => dispatch({ type: "highlight", index: i })}
               className={cn(
                 "flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm",
                 i === activeIndex && "bg-accent",

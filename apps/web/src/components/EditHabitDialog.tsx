@@ -1,6 +1,6 @@
 import { useMutation } from "@apollo/client/react";
 import { Settings } from "lucide-react";
-import { useState } from "react";
+import { useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScheduleEditor } from "#components/ScheduleEditor";
 import { Button } from "#components/ui/button";
@@ -16,19 +16,22 @@ import { Input } from "#components/ui/input";
 import { Label } from "#components/ui/label";
 import { Textarea } from "#components/ui/textarea";
 import { DASHBOARD_STATS_QUERY, HABITS_QUERY, UPDATE_HABIT_MUTATION } from "#graphql/habits";
-import type { Habit, HabitSchedule } from "#graphql/types";
-import { formatTags, parseTags } from "#lib/tags";
+import type { Habit } from "#graphql/types";
+import {
+  type HabitDraft,
+  type HabitDraftAction,
+  habitDraftFrom,
+  habitDraftReducer,
+} from "#lib/habit-draft";
+import { parseTags } from "#lib/tags";
 
 export function EditHabitDialog({ habit }: { habit: Habit }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState(habit.name);
-  const [description, setDescription] = useState(habit.description ?? "");
-  const [tags, setTags] = useState(formatTags(habit.tags));
-  const [unit, setUnit] = useState(habit.unit ?? "");
-  const [targetValue, setTargetValue] = useState(habit.targetValue?.toString() ?? "");
-  const [startTime, setStartTime] = useState(habit.startTime ?? "");
-  const [schedule, setSchedule] = useState<HabitSchedule>(habit.schedule);
+  const [draft, dispatch] = useReducer(habitDraftReducer, habit, habitDraftFrom);
+  const set = <K extends keyof HabitDraft>(field: K, value: HabitDraft[K]) =>
+    dispatch({ type: "set", field, value } as HabitDraftAction);
+  const { name, description, tags, unit, targetValue, startTime, schedule } = draft;
 
   const [updateHabit, { loading }] = useMutation(UPDATE_HABIT_MUTATION, {
     // A schedule change moves which days count as missed (HabitRecords).
@@ -39,13 +42,7 @@ export function EditHabitDialog({ habit }: { habit: Habit }) {
     if (next) {
       // Reset the form to the habit's current values each time it's opened,
       // so a cancelled edit never leaves stale draft state for next time.
-      setName(habit.name);
-      setDescription(habit.description ?? "");
-      setTags(formatTags(habit.tags));
-      setUnit(habit.unit ?? "");
-      setTargetValue(habit.targetValue?.toString() ?? "");
-      setStartTime(habit.startTime ?? "");
-      setSchedule(habit.schedule);
+      dispatch({ type: "reset", draft: habitDraftFrom(habit) });
     }
     setOpen(next);
   }
@@ -83,7 +80,7 @@ export function EditHabitDialog({ habit }: { habit: Habit }) {
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="edit-name">{t("habits.edit.name")}</Label>
-            <Input id="edit-name" value={name} onChange={(e) => setName(e.target.value)} />
+            <Input id="edit-name" value={name} onChange={(e) => set("name", e.target.value)} />
           </div>
 
           <div className="flex flex-col gap-2">
@@ -94,7 +91,7 @@ export function EditHabitDialog({ habit }: { habit: Habit }) {
               maxLength={500}
               placeholder={t("habits.edit.descriptionPlaceholder")}
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => set("description", e.target.value)}
             />
           </div>
 
@@ -104,7 +101,7 @@ export function EditHabitDialog({ habit }: { habit: Habit }) {
               id="edit-tags"
               placeholder={t("habits.edit.tagsPlaceholder")}
               value={tags}
-              onChange={(e) => setTags(e.target.value)}
+              onChange={(e) => set("tags", e.target.value)}
             />
           </div>
 
@@ -115,7 +112,7 @@ export function EditHabitDialog({ habit }: { habit: Habit }) {
                 id="edit-unit"
                 placeholder={t("habits.edit.unitPlaceholder")}
                 value={unit}
-                onChange={(e) => setUnit(e.target.value)}
+                onChange={(e) => set("unit", e.target.value)}
               />
             </div>
             <div className="flex flex-1 flex-col gap-2">
@@ -124,7 +121,7 @@ export function EditHabitDialog({ habit }: { habit: Habit }) {
                 id="edit-target"
                 type="number"
                 value={targetValue}
-                onChange={(e) => setTargetValue(e.target.value)}
+                onChange={(e) => set("targetValue", e.target.value)}
               />
             </div>
           </div>
@@ -135,11 +132,11 @@ export function EditHabitDialog({ habit }: { habit: Habit }) {
               id="edit-start-time"
               type="time"
               value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
+              onChange={(e) => set("startTime", e.target.value)}
             />
           </div>
 
-          <ScheduleEditor value={schedule} onChange={setSchedule} />
+          <ScheduleEditor value={schedule} onChange={(value) => set("schedule", value)} />
         </div>
 
         <DialogFooter>

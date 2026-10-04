@@ -1,7 +1,7 @@
 import { useApolloClient, useMutation, useQuery } from "@apollo/client/react";
 import { Link } from "@tanstack/react-router";
 import { Pencil, Plus, Search, Trash2 } from "lucide-react";
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ListSkeleton } from "#components/layout/Skeletons";
 import { ConfirmPrompt } from "#components/todos/ConfirmPrompt";
@@ -157,14 +157,57 @@ function ListFields({
   );
 }
 
+/** The new/edit list form: its two fields, and which have been touched (to time error messages). */
+interface ListFormState {
+  name: string;
+  prefix: string;
+  /** New list only: the prefix follows the name's suggestion until the user types their own. */
+  prefixTouched: boolean;
+  touched: { name: boolean; prefix: boolean };
+  confirmingDelete: boolean;
+}
+
+type ListFormAction =
+  | { type: "name"; name: string }
+  | { type: "prefix"; prefix: string }
+  /** Submitting shows every field's error. */
+  | { type: "touchAll" }
+  | { type: "confirmDelete"; on: boolean }
+  | { type: "reset"; state: ListFormState };
+
+function listFormReducer(state: ListFormState, action: ListFormAction): ListFormState {
+  switch (action.type) {
+    case "name":
+      return { ...state, name: action.name, touched: { ...state.touched, name: true } };
+    case "prefix":
+      return {
+        ...state,
+        prefix: action.prefix,
+        prefixTouched: true,
+        touched: { ...state.touched, prefix: true },
+      };
+    case "touchAll":
+      return { ...state, touched: { name: true, prefix: true } };
+    case "confirmDelete":
+      return { ...state, confirmingDelete: action.on };
+    case "reset":
+      return action.state;
+  }
+}
+
+const listForm = (name = "", prefix = ""): ListFormState => ({
+  name,
+  prefix,
+  prefixTouched: false,
+  touched: { name: false, prefix: false },
+  confirmingDelete: false,
+});
+
 function NewListDialog({ lists }: { lists: TodoList[] }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [prefix, setPrefix] = useState("");
-  // The prefix follows the name's suggestion until the user types their own.
-  const [prefixTouched, setPrefixTouched] = useState(false);
-  const [touched, setTouched] = useState({ name: false, prefix: false });
+  const [form, dispatch] = useReducer(listFormReducer, listForm());
+  const { name, prefix, prefixTouched, touched } = form;
 
   const [debounced, setDebounced] = useState("");
   useEffect(() => {
@@ -186,10 +229,7 @@ function NewListDialog({ lists }: { lists: TodoList[] }) {
 
   function handleOpenChange(next: boolean) {
     if (next) {
-      setName("");
-      setPrefix("");
-      setPrefixTouched(false);
-      setTouched({ name: false, prefix: false });
+      dispatch({ type: "reset", state: listForm() });
       creating.reset();
     }
     setOpen(next);
@@ -197,7 +237,7 @@ function NewListDialog({ lists }: { lists: TodoList[] }) {
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    setTouched({ name: true, prefix: true });
+    dispatch({ type: "touchAll" });
     if (!result.success) return;
     const created = await createList({ variables: { input: result.data } }).catch(() => null);
     if (created) setOpen(false);
@@ -221,15 +261,8 @@ function NewListDialog({ lists }: { lists: TodoList[] }) {
             errors={errors}
             // A suggested prefix is checked straight away: it can't be "untouched" and wrong.
             touched={{ name: touched.name, prefix: touched.prefix || shownPrefix !== "" }}
-            onName={(value) => {
-              setName(value);
-              setTouched((current) => ({ ...current, name: true }));
-            }}
-            onPrefix={(value) => {
-              setPrefixTouched(true);
-              setPrefix(value);
-              setTouched((current) => ({ ...current, prefix: true }));
-            }}
+            onName={(value) => dispatch({ type: "name", name: value })}
+            onPrefix={(value) => dispatch({ type: "prefix", prefix: value })}
             hint={t("todos.lists.prefixHint", {
               example: `${shownPrefix || "GRO"}-1, ${shownPrefix || "GRO"}-2…`,
             })}
@@ -259,10 +292,8 @@ function EditListForm({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
-  const [name, setName] = useState(list.name);
-  const [prefix, setPrefix] = useState(list.prefix);
-  const [touched, setTouched] = useState({ name: false, prefix: false });
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [form, dispatch] = useReducer(listFormReducer, listForm(list.name, list.prefix));
+  const { name, prefix, touched, confirmingDelete } = form;
 
   const result = todoListSchema(t, lists, list.id).safeParse({ name, prefix });
   const errors = fieldErrors(result.error);
@@ -276,7 +307,7 @@ function EditListForm({
 
   async function save(e: FormEvent) {
     e.preventDefault();
-    setTouched({ name: true, prefix: true });
+    dispatch({ type: "touchAll" });
     if (!result.success) return;
     const saved = await updateList({
       variables: {
@@ -305,7 +336,7 @@ function EditListForm({
               value={prefix}
               maxLength={6}
               aria-invalid={!!errors.prefix}
-              onChange={(e) => setPrefix(e.target.value.toUpperCase())}
+              onChange={(e) => dispatch({ type: "prefix", prefix: e.target.value.toUpperCase() })}
             />
             <p
               className={
@@ -325,11 +356,8 @@ function EditListForm({
             errors={errors}
             // Editing starts from valid values, so show problems as soon as they appear.
             touched={{ name: touched.name || !!errors.name, prefix: true }}
-            onName={(value) => {
-              setName(value);
-              setTouched((current) => ({ ...current, name: true }));
-            }}
-            onPrefix={setPrefix}
+            onName={(value) => dispatch({ type: "name", name: value })}
+            onPrefix={(value) => dispatch({ type: "prefix", prefix: value })}
             hint={
               prefix !== list.prefix
                 ? t("todos.lists.renameHint", { from: `${list.prefix}-1`, to: `${prefix}-1` })
@@ -347,7 +375,7 @@ function EditListForm({
             })} ${t("todos.cannotUndo")}`}
             confirmLabel={t("todos.lists.delete")}
             busy={deleting.loading}
-            onCancel={() => setConfirmingDelete(false)}
+            onCancel={() => dispatch({ type: "confirmDelete", on: false })}
             onConfirm={async () => {
               await deleteList({ variables: { id: list.id } });
               onClose();
@@ -360,7 +388,11 @@ function EditListForm({
               {t("todos.lists.inboxNoDelete")}
             </p>
           ) : (
-            <Button type="button" variant="ghost" onClick={() => setConfirmingDelete(true)}>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => dispatch({ type: "confirmDelete", on: true })}
+            >
               <Trash2 className="size-4" /> {t("todos.lists.delete")}
             </Button>
           )}

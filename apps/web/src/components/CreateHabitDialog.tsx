@@ -1,6 +1,6 @@
 import { useMutation } from "@apollo/client/react";
 import { Plus } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScheduleEditor } from "#components/ScheduleEditor";
 import { Button } from "#components/ui/button";
@@ -16,22 +16,22 @@ import { Input } from "#components/ui/input";
 import { Label } from "#components/ui/label";
 import { Textarea } from "#components/ui/textarea";
 import { CREATE_HABIT_MUTATION, DASHBOARD_STATS_QUERY, HABITS_QUERY } from "#graphql/habits";
-import type { HabitSchedule } from "#graphql/types";
+import {
+  BLANK_HABIT_DRAFT,
+  type HabitDraft,
+  type HabitDraftAction,
+  habitDraftReducer,
+} from "#lib/habit-draft";
 import { HABIT_TEMPLATES, type HabitTemplate } from "#lib/habit-templates";
 import { formatTags, parseTags } from "#lib/tags";
-
-const DEFAULT_SCHEDULE: HabitSchedule = { type: "daily" };
 
 export function CreateHabitDialog() {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [tags, setTags] = useState("");
-  const [unit, setUnit] = useState("");
-  const [targetValue, setTargetValue] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [schedule, setSchedule] = useState<HabitSchedule>(DEFAULT_SCHEDULE);
+  const [draft, dispatch] = useReducer(habitDraftReducer, BLANK_HABIT_DRAFT);
+  const set = <K extends keyof HabitDraft>(field: K, value: HabitDraft[K]) =>
+    dispatch({ type: "set", field, value } as HabitDraftAction);
+  const { name, description, tags, unit, targetValue, startTime, schedule } = draft;
 
   const [createHabit, { loading }] = useMutation(CREATE_HABIT_MUTATION, {
     refetchQueries: [{ query: HABITS_QUERY }, { query: DASHBOARD_STATS_QUERY }],
@@ -39,25 +39,24 @@ export function CreateHabitDialog() {
 
   function applyTemplate(template: HabitTemplate) {
     const words = `habits.templates.${template.id}` as const;
-    setName(t(`${words}.name`));
-    setDescription(t(`${words}.description`));
-    setUnit(t(`${words}.unit`));
-    setTargetValue(template.target?.toString() ?? "");
-    setStartTime(template.startTime ?? "");
-    setSchedule(template.schedule);
-    setTags(formatTags(template.tags));
+    dispatch({
+      type: "reset",
+      draft: {
+        name: t(`${words}.name`),
+        description: t(`${words}.description`),
+        unit: t(`${words}.unit`),
+        targetValue: template.target?.toString() ?? "",
+        startTime: template.startTime ?? "",
+        schedule: template.schedule,
+        tags: formatTags(template.tags),
+      },
+    });
   }
 
   function handleOpenChange(next: boolean) {
     if (next) {
       // Start from a blank form each time, so a cancelled draft doesn't linger.
-      setName("");
-      setDescription("");
-      setTags("");
-      setUnit("");
-      setTargetValue("");
-      setStartTime("");
-      setSchedule(DEFAULT_SCHEDULE);
+      dispatch({ type: "reset", draft: BLANK_HABIT_DRAFT });
     }
     setOpen(next);
   }
@@ -122,7 +121,7 @@ export function CreateHabitDialog() {
               autoFocus
               placeholder={t("habits.newPlaceholder")}
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => set("name", e.target.value)}
             />
           </div>
 
@@ -134,7 +133,7 @@ export function CreateHabitDialog() {
               maxLength={500}
               placeholder={t("habits.edit.descriptionPlaceholder")}
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => set("description", e.target.value)}
             />
           </div>
 
@@ -144,7 +143,7 @@ export function CreateHabitDialog() {
               id="create-tags"
               placeholder={t("habits.edit.tagsPlaceholder")}
               value={tags}
-              onChange={(e) => setTags(e.target.value)}
+              onChange={(e) => set("tags", e.target.value)}
             />
           </div>
 
@@ -155,7 +154,7 @@ export function CreateHabitDialog() {
                 id="create-unit"
                 placeholder={t("habits.edit.unitPlaceholder")}
                 value={unit}
-                onChange={(e) => setUnit(e.target.value)}
+                onChange={(e) => set("unit", e.target.value)}
               />
             </div>
             <div className="flex flex-1 flex-col gap-2">
@@ -164,7 +163,7 @@ export function CreateHabitDialog() {
                 id="create-target"
                 type="number"
                 value={targetValue}
-                onChange={(e) => setTargetValue(e.target.value)}
+                onChange={(e) => set("targetValue", e.target.value)}
               />
             </div>
           </div>
@@ -175,11 +174,11 @@ export function CreateHabitDialog() {
               id="create-start-time"
               type="time"
               value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
+              onChange={(e) => set("startTime", e.target.value)}
             />
           </div>
 
-          <ScheduleEditor value={schedule} onChange={setSchedule} />
+          <ScheduleEditor value={schedule} onChange={(value) => set("schedule", value)} />
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>

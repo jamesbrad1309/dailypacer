@@ -1,5 +1,5 @@
 import { useQuery } from "@apollo/client/react";
-import { type KeyboardEvent, useEffect, useId, useState } from "react";
+import { type KeyboardEvent, useEffect, useId, useReducer } from "react";
 import { useTranslation } from "react-i18next";
 import { TaskKey } from "#components/todos/TaskRow";
 import { Input } from "#components/ui/input";
@@ -20,16 +20,49 @@ interface Props {
  * An ARIA combobox: ↑/↓ move through results, Enter picks, Escape closes the
  * results (and only then the dialog around it).
  */
+interface PickerState {
+  /** As typed. */
+  query: string;
+  /** The query once typing pauses: what's searched. */
+  debounced: string;
+  open: boolean;
+  /** The highlighted result. */
+  active: number;
+}
+
+type PickerAction =
+  | { type: "type"; query: string }
+  | { type: "settle"; query: string }
+  | { type: "open"; on: boolean }
+  /** Arrow keys or the mouse: highlight a result (and open the list). */
+  | { type: "highlight"; index: number }
+  | { type: "reset" };
+
+const CLOSED: PickerState = { query: "", debounced: "", open: false, active: 0 };
+
+function pickerReducer(state: PickerState, action: PickerAction): PickerState {
+  switch (action.type) {
+    case "type":
+      return { ...state, query: action.query, open: true, active: 0 };
+    case "settle":
+      return { ...state, debounced: action.query };
+    case "open":
+      return { ...state, open: action.on };
+    case "highlight":
+      return { ...state, open: true, active: action.index };
+    case "reset":
+      return CLOSED;
+  }
+}
+
 export function TaskPicker({ excludeDependenciesOf, onPick, disabled }: Props) {
   const { t } = useTranslation();
   const listboxId = useId();
-  const [query, setQuery] = useState("");
-  const [debounced, setDebounced] = useState("");
-  const [open, setOpen] = useState(false);
-  const [active, setActive] = useState(0);
+  const [state, dispatch] = useReducer(pickerReducer, CLOSED);
+  const { query, debounced, open, active } = state;
 
   useEffect(() => {
-    const timer = setTimeout(() => setDebounced(query.trim()), 200);
+    const timer = setTimeout(() => dispatch({ type: "settle", query: query.trim() }), 200);
     return () => clearTimeout(timer);
   }, [query]);
 
@@ -44,19 +77,17 @@ export function TaskPicker({ excludeDependenciesOf, onPick, disabled }: Props) {
 
   function pick(task: Task) {
     onPick(task);
-    setQuery("");
-    setDebounced("");
-    setOpen(false);
-    setActive(0);
+    dispatch({ type: "reset" });
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
-      setOpen(true);
-      if (results.length === 0) return;
       const step = e.key === "ArrowDown" ? 1 : -1;
-      setActive((activeIndex + step + results.length) % results.length);
+      dispatch({
+        type: "highlight",
+        index: results.length === 0 ? 0 : (activeIndex + step + results.length) % results.length,
+      });
     } else if (e.key === "Enter") {
       // Pick the highlighted result; never submit the form around the picker.
       e.preventDefault();
@@ -64,7 +95,7 @@ export function TaskPicker({ excludeDependenciesOf, onPick, disabled }: Props) {
     } else if (e.key === "Escape" && showList) {
       e.preventDefault();
       e.stopPropagation();
-      setOpen(false);
+      dispatch({ type: "open", on: false });
     }
   }
 
@@ -84,13 +115,11 @@ export function TaskPicker({ excludeDependenciesOf, onPick, disabled }: Props) {
         value={query}
         disabled={disabled}
         onChange={(e) => {
-          setQuery(e.target.value);
-          setOpen(true);
-          setActive(0);
+          dispatch({ type: "type", query: e.target.value });
         }}
-        onFocus={() => setOpen(true)}
+        onFocus={() => dispatch({ type: "open", on: true })}
         // Delay so a click on a result lands before the list closes.
-        onBlur={() => setTimeout(() => setOpen(false), 120)}
+        onBlur={() => setTimeout(() => dispatch({ type: "open", on: false }), 120)}
         onKeyDown={onKeyDown}
       />
       <span className="sr-only" aria-live="polite">
@@ -125,7 +154,7 @@ export function TaskPicker({ excludeDependenciesOf, onPick, disabled }: Props) {
                   e.preventDefault();
                   pick(task);
                 }}
-                onMouseEnter={() => setActive(index)}
+                onMouseEnter={() => dispatch({ type: "highlight", index })}
                 className={cn(
                   "flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm",
                   index === activeIndex && "bg-accent",

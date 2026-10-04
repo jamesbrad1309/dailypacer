@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@apollo/client/react";
 import { ArrowLeft, Pause, Play, Plus, Search, Trash2, Undo2 } from "lucide-react";
-import { type FormEvent, type ReactNode, useState } from "react";
+import { type FormEvent, type ReactNode, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MoneyInput } from "#components/finance/MoneyInput";
 import { ServiceLogo } from "#components/finance/subscriptions/ServiceLogo";
@@ -471,6 +471,27 @@ function SubscriptionForm({
   );
 }
 
+/** The manage section's open panels and their inputs. */
+interface ManageState {
+  editingPrice: boolean;
+  price: string;
+  /** "YYYY-MM-DD" the new price applies from. */
+  priceFrom: string;
+  cancelling: boolean;
+  /** "YYYY-MM-DD" the subscription runs until when cancelled. */
+  endsOn: string;
+  deleting: boolean;
+  error: string | null;
+}
+
+type ManageAction = {
+  [K in keyof ManageState]: { type: "set"; field: K; value: ManageState[K] };
+}[keyof ManageState];
+
+function manageReducer(state: ManageState, action: ManageAction): ManageState {
+  return { ...state, [action.field]: action.value };
+}
+
 /** Price changes, pause, cancel and delete: each takes effect at once, apart from the form. */
 function ManageSubscription({
   subscription: sub,
@@ -482,13 +503,18 @@ function ManageSubscription({
   const { t } = useTranslation();
   const today = todayIsoDate();
   const nextOrToday = sub.nextChargeOn ?? today;
-  const [editingPrice, setEditingPrice] = useState(false);
-  const [price, setPrice] = useState(() => toMoneyInput(sub.amountMinor, sub.currency));
-  const [priceFrom, setPriceFrom] = useState(nextOrToday);
-  const [cancelling, setCancelling] = useState(false);
-  const [endsOn, setEndsOn] = useState(nextOrToday);
-  const [deleting, setDeleting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [state, dispatch] = useReducer(manageReducer, {
+    editingPrice: false,
+    price: toMoneyInput(sub.amountMinor, sub.currency),
+    priceFrom: nextOrToday,
+    cancelling: false,
+    endsOn: nextOrToday,
+    deleting: false,
+    error: null,
+  });
+  const set = <K extends keyof ManageState>(field: K, value: ManageState[K]) =>
+    dispatch({ type: "set", field, value } as ManageAction);
+  const { editingPrice, price, priceFrom, cancelling, endsOn, deleting, error } = state;
 
   const options = { refetchQueries: SUBSCRIPTIONS_REFETCH, awaitRefetchQueries: true };
   const [changePrice, changingPrice] = useMutation(CHANGE_SUBSCRIPTION_PRICE_MUTATION, options);
@@ -499,23 +525,23 @@ function ManageSubscription({
   const [remove] = useMutation(DELETE_SUBSCRIPTION_MUTATION, options);
 
   async function run(action: () => Promise<unknown>) {
-    setError(null);
+    set("error", null);
     try {
       await action();
       return true;
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("common.couldntSave"));
+      set("error", err instanceof Error ? err.message : t("common.couldntSave"));
       return false;
     }
   }
 
   async function savePrice() {
     const amountMinor = parseMoneyInput(price, sub.currency);
-    if (!amountMinor) return setError(t("finance.subscriptions.dialog.enterPrice"));
+    if (!amountMinor) return set("error", t("finance.subscriptions.dialog.enterPrice"));
     const ok = await run(() =>
       changePrice({ variables: { id: sub.id, amountMinor, effectiveFrom: priceFrom, today } }),
     );
-    if (ok) setEditingPrice(false);
+    if (ok) set("editingPrice", false);
   }
 
   const vars = { variables: { id: sub.id, today } };
@@ -527,7 +553,7 @@ function ManageSubscription({
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium">{t("finance.subscriptions.manage.priceTitle")}</h3>
           {!editingPrice && (
-            <Button size="sm" variant="outline" onClick={() => setEditingPrice(true)}>
+            <Button size="sm" variant="outline" onClick={() => set("editingPrice", true)}>
               {t("finance.subscriptions.manage.changePrice")}
             </Button>
           )}
@@ -540,7 +566,7 @@ function ManageSubscription({
                 currency={sub.currency}
                 autoFocus
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
+                onChange={(e) => set("price", e.target.value)}
               />
             </Field>
             <Field label={t("finance.subscriptions.manage.from")} id="sub-price-from">
@@ -548,7 +574,7 @@ function ManageSubscription({
                 id="sub-price-from"
                 type="date"
                 value={priceFrom}
-                onChange={(e) => setPriceFrom(e.target.value)}
+                onChange={(e) => set("priceFrom", e.target.value)}
               />
             </Field>
             <Button disabled={changingPrice.loading} onClick={savePrice}>
@@ -597,14 +623,14 @@ function ManageSubscription({
               id="sub-ends"
               type="date"
               value={endsOn}
-              onChange={(e) => setEndsOn(e.target.value)}
+              onChange={(e) => set("endsOn", e.target.value)}
             />
           </Field>
           <Button
             variant="destructive"
             onClick={async () => {
               if (await run(() => cancel({ variables: { id: sub.id, endsOn, today } }))) {
-                setCancelling(false);
+                set("cancelling", false);
               }
             }}
           >
@@ -619,7 +645,7 @@ function ManageSubscription({
             {t("finance.subscriptions.manage.deleteHint", { name: sub.name })}
           </p>
           <div className="flex gap-2">
-            <Button size="sm" variant="ghost" onClick={() => setDeleting(false)}>
+            <Button size="sm" variant="ghost" onClick={() => set("deleting", false)}>
               {t("common.cancel")}
             </Button>
             <Button
@@ -658,7 +684,7 @@ function ManageSubscription({
           </Button>
         ) : (
           !cancelling && (
-            <Button size="sm" variant="outline" onClick={() => setCancelling(true)}>
+            <Button size="sm" variant="outline" onClick={() => set("cancelling", true)}>
               {t("finance.subscriptions.manage.cancel")}
             </Button>
           )
@@ -668,7 +694,7 @@ function ManageSubscription({
             size="sm"
             variant="ghost"
             className="ml-auto text-muted-foreground"
-            onClick={() => setDeleting(true)}
+            onClick={() => set("deleting", true)}
           >
             <Trash2 className="size-3.5" /> {t("finance.subscriptions.manage.delete")}
           </Button>

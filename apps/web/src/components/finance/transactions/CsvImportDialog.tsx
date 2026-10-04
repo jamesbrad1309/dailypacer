@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@apollo/client/react";
 import { Loader2, Upload } from "lucide-react";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Amount } from "#components/finance/Amount";
 import { Button } from "#components/ui/button";
@@ -80,18 +80,66 @@ async function uploadCsv(file: File, accountId: string): Promise<CsvUpload> {
  * then imports it and deletes the file. Closing without importing deletes
  * the upload too.
  */
+/** An import in progress: the file uploaded, how its columns map, and the account it goes to. */
+interface ImportState {
+  accountId: string;
+  upload: CsvUpload | null;
+  uploading: boolean;
+  error: string | null;
+  mapping: CsvMapping | null;
+  /** Also import rows that look like transactions already logged by hand. */
+  includeMatched: boolean;
+}
+
+type ImportAction =
+  | { type: "start"; accountId: string }
+  | { type: "account"; accountId: string }
+  | { type: "uploading" }
+  | { type: "uploaded"; upload: CsvUpload }
+  | { type: "mapping"; patch: Partial<CsvMapping> }
+  | { type: "includeMatched"; on: boolean }
+  | { type: "error"; message: string | null }
+  /** Imported or closed: the upload is gone. */
+  | { type: "done" };
+
+const FRESH_IMPORT = {
+  upload: null,
+  uploading: false,
+  error: null,
+  mapping: null,
+  includeMatched: false,
+} satisfies Omit<ImportState, "accountId">;
+
+function importReducer(state: ImportState, action: ImportAction): ImportState {
+  switch (action.type) {
+    case "start":
+      return { ...FRESH_IMPORT, accountId: action.accountId };
+    case "account":
+      return { ...state, accountId: action.accountId };
+    case "uploading":
+      return { ...state, upload: null, mapping: null, error: null, uploading: true };
+    case "uploaded":
+      return { ...state, upload: action.upload, mapping: action.upload.mapping, uploading: false };
+    case "mapping":
+      return { ...state, mapping: state.mapping ? { ...state.mapping, ...action.patch } : null };
+    case "includeMatched":
+      return { ...state, includeMatched: action.on };
+    case "error":
+      return { ...state, error: action.message, uploading: false };
+    case "done":
+      return { ...state, upload: null };
+  }
+}
+
 export function CsvImportDialog({ open, onOpenChange }: Props) {
   const { t } = useTranslation();
   const categoryName = useCategoryName();
   const { data } = useQuery<AccountsData>(ACCOUNTS_QUERY);
   const accounts = data?.accounts ?? [];
 
-  const [accountId, setAccountId] = useState("");
-  const [upload, setUpload] = useState<CsvUpload | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [mapping, setMapping] = useState<CsvMapping | null>(null);
-  const [includeMatched, setIncludeMatched] = useState(false);
+  const [state, dispatch] = useReducer(importReducer, { ...FRESH_IMPORT, accountId: "" });
+  const { accountId, upload, uploading, error, mapping, includeMatched } = state;
+  const setError = (message: string | null) => dispatch({ type: "error", message });
 
   const [previewCsv, previewState] = useMutation<{ previewCsvImport: CsvImportPreview }>(
     PREVIEW_CSV_IMPORT_MUTATION,
@@ -106,11 +154,10 @@ export function CsvImportDialog({ open, onOpenChange }: Props) {
   if (open !== wasOpen) {
     setWasOpen(open);
     if (open) {
-      setAccountId(accounts.find((a) => a.isDefault)?.id ?? accounts[0]?.id ?? "");
-      setUpload(null);
-      setMapping(null);
-      setError(null);
-      setIncludeMatched(false);
+      dispatch({
+        type: "start",
+        accountId: accounts.find((a) => a.isDefault)?.id ?? accounts[0]?.id ?? "",
+      });
       previewState.reset();
     }
   }
@@ -118,24 +165,17 @@ export function CsvImportDialog({ open, onOpenChange }: Props) {
   /** Closing without importing: the server deletes the file now rather than at the hourly sweep. */
   function close() {
     if (upload) void discardCsv({ variables: { uploadId: upload.id } }).catch(() => {});
-    setUpload(null);
+    dispatch({ type: "done" });
     onOpenChange(false);
   }
 
   async function chooseFile(file: File) {
     if (upload) void discardCsv({ variables: { uploadId: upload.id } }).catch(() => {});
-    setError(null);
-    setUpload(null);
-    setMapping(null);
-    setUploading(true);
+    dispatch({ type: "uploading" });
     try {
-      const uploaded = await uploadCsv(file, accountId);
-      setUpload(uploaded);
-      setMapping(uploaded.mapping);
+      dispatch({ type: "uploaded", upload: await uploadCsv(file, accountId) });
     } catch (err) {
       setError(err instanceof Error ? err.message : t("finance.import.readError"));
-    } finally {
-      setUploading(false);
     }
   }
 
@@ -157,7 +197,7 @@ export function CsvImportDialog({ open, onOpenChange }: Props) {
       const result = await commitCsv({
         variables: { uploadId: upload.id, accountId, mapping, includeMatched },
       });
-      setUpload(null);
+      dispatch({ type: "done" });
       onOpenChange(false);
       toast(t("finance.import.done", { count: result.data?.commitCsvImport.imported ?? 0 }));
     } catch (err) {
@@ -181,7 +221,7 @@ export function CsvImportDialog({ open, onOpenChange }: Props) {
       </option>
     );
   });
-  const update = (patch: Partial<CsvMapping>) => setMapping((m) => (m ? { ...m, ...patch } : m));
+  const update = (patch: Partial<CsvMapping>) => dispatch({ type: "mapping", patch });
   const columnSelect = (
     id: string,
     value: number | null,
@@ -213,7 +253,7 @@ export function CsvImportDialog({ open, onOpenChange }: Props) {
               id="import-account"
               className={selectClass}
               value={accountId}
-              onChange={(e) => setAccountId(e.target.value)}
+              onChange={(e) => dispatch({ type: "account", accountId: e.target.value })}
             >
               {accounts.map((a) => (
                 <option key={a.id} value={a.id}>
@@ -410,7 +450,7 @@ export function CsvImportDialog({ open, onOpenChange }: Props) {
                     type="checkbox"
                     className="accent-primary"
                     checked={includeMatched}
-                    onChange={(e) => setIncludeMatched(e.target.checked)}
+                    onChange={(e) => dispatch({ type: "includeMatched", on: e.target.checked })}
                   />
                   {t("finance.import.includeMatched")}
                 </label>
