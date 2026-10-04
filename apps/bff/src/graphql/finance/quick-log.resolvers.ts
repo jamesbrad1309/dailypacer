@@ -5,6 +5,7 @@ import type {
   ApiQuickPreset,
 } from "#clients/api-types";
 import type { GraphQLContext } from "#graphql/context";
+import { budgetAlert } from "#graphql/finance/budget-alert";
 import { queryString } from "#graphql/finance/query-string";
 
 export default {
@@ -30,6 +31,11 @@ export default {
     accounts: (_: ApiQuickLogContext, __: unknown, ctx: GraphQLContext) =>
       ctx.api.get<ApiAccount[]>("/accounts"),
     recentPayees: (c: ApiQuickLogContext) => c.recentPayees,
+  },
+  BudgetAlertNotice: {
+    category: (n: { categoryId: string }, _: unknown, ctx: GraphQLContext) =>
+      ctx.loaders.categoryById.load(n.categoryId),
+    level: (n: { level: "near" | "reached" }) => budgetAlert(n.level),
   },
   PayeeHint: {
     category: (p: { categoryId: string | null }, _: unknown, ctx: GraphQLContext) =>

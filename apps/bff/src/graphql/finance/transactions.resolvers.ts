@@ -1,4 +1,9 @@
-import type { ApiCategory, ApiTransaction, ApiTransactionPage } from "#clients/api-types";
+import type {
+  ApiCategory,
+  ApiTransaction,
+  ApiTransactionPage,
+  ApiTransactionSplit,
+} from "#clients/api-types";
 import type { GraphQLContext } from "#graphql/context";
 import { queryString } from "#graphql/finance/query-string";
 
@@ -21,8 +26,10 @@ interface TransactionFilter {
  */
 export default {
   Query: {
-    categories: (_: unknown, __: unknown, ctx: GraphQLContext) =>
-      ctx.api.get<ApiCategory[]>("/categories"),
+    categories: (_: unknown, args: { includeArchived?: boolean }, ctx: GraphQLContext) =>
+      ctx.api.get<ApiCategory[]>(
+        `/categories${queryString({ includeArchived: args.includeArchived || null })}`,
+      ),
     transactions: (
       _: unknown,
       args: { filter?: TransactionFilter | null; first: number; after?: string | null },
@@ -85,6 +92,13 @@ export default {
       (await ctx.api.delete<{ ids: string[] }>(transactionPath(args.id))).ids,
     createCategory: (_: unknown, args: { input: unknown }, ctx: GraphQLContext) =>
       ctx.api.post<ApiCategory>("/categories", args.input),
+    updateCategory: (_: unknown, args: { id: string; input: unknown }, ctx: GraphQLContext) =>
+      ctx.api.patch<ApiCategory>(`/categories/${encodeURIComponent(args.id)}`, args.input),
+    setTransactionSplits: (
+      _: unknown,
+      args: { id: string; splits: unknown[] },
+      ctx: GraphQLContext,
+    ) => ctx.api.put<ApiTransaction>(`${transactionPath(args.id)}/splits`, { splits: args.splits }),
     dismissPresetSuggestion: async (
       _: unknown,
       args: { categoryId: string; key: string },
@@ -103,6 +117,7 @@ export default {
     category: (t: ApiTransaction, _: unknown, ctx: GraphQLContext) =>
       t.categoryId ? ctx.loaders.categoryById.load(t.categoryId) : null,
     isTransfer: (t: ApiTransaction) => t.transferId != null,
+    splits: (t: ApiTransaction) => t.splits ?? [],
     transferAccount: (t: ApiTransaction, _: unknown, ctx: GraphQLContext) => {
       const id = (t.metadata as { transferAccountId?: string }).transferAccountId;
       return t.transferId && id ? ctx.loaders.accountById.load(id) : null;
@@ -119,5 +134,11 @@ export default {
   Category: {
     aliases: (c: ApiCategory) => c.metadata?.aliases ?? [],
     key: (c: ApiCategory) => c.metadata?.key ?? null,
+    parent: (c: ApiCategory, _: unknown, ctx: GraphQLContext) =>
+      c.parentId ? ctx.loaders.categoryById.load(c.parentId) : null,
+  },
+  TransactionSplit: {
+    category: (s: ApiTransactionSplit, _: unknown, ctx: GraphQLContext) =>
+      ctx.loaders.categoryById.load(s.categoryId),
   },
 };

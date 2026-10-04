@@ -17,7 +17,24 @@ type TodoList {
   position: Float!
   openCount: Int!
   doneCount: Int!
+  """Its board columns, left to right."""
+  columns: [TodoColumn!]!
   createdAt: String!
+}
+
+"""
+A board column. Its status is what its tasks' status is, so "done" works
+whatever it's called. Every list keeps at least one column per status.
+"""
+type TodoColumn {
+  id: ID!
+  listId: ID!
+  """Null: show the status's own name ("To do", "In progress", "Done")."""
+  name: String
+  status: TaskStatus!
+  """Left-to-right order."""
+  position: Float!
+  taskCount: Int!
 }
 
 """A trimmed TodoList, embedded in each task."""
@@ -46,9 +63,15 @@ type Task {
   title: String!
   notes: String
   status: TaskStatus!
+  """Its board column (the status is the column's)."""
+  columnId: ID!
   position: Float!
   """YYYY-MM-DD it's planned for (any list), or null."""
   plannedFor: String
+  """Order within its planned day, for Today."""
+  dayPosition: Float!
+  """YYYY-MM-DD deadline, separate from the planned day, or null."""
+  dueOn: String
   completedAt: String
   createdAt: String!
   """Tasks this one waits for, in any list."""
@@ -64,6 +87,8 @@ type TodayTasks {
   today: [Task!]!
   """Planned for an earlier day and still not done."""
   earlier: [Task!]!
+  """Open, due within 3 days or overdue, and not planned for today or earlier."""
+  dueSoon: [Task!]!
 }
 
 type ListBoard {
@@ -91,18 +116,39 @@ input CreateTaskInput {
   """The Inbox when left out."""
   listId: ID
   plannedFor: String
+  dueOn: String
   status: TaskStatus
+  """A column of the list; the first column of `status` when left out."""
+  columnId: ID
 }
 
-"""Only the fields sent change; null clears notes or plannedFor."""
+"""Only the fields sent change; null clears notes, plannedFor or dueOn."""
 input UpdateTaskInput {
   title: String
   notes: String
   plannedFor: String
+  dueOn: String
+  """Moves it to the first column of that status."""
   status: TaskStatus
+  """A column of its (new) list; the status becomes the column's."""
+  columnId: ID
   position: Float
+  """Order within its planned day (a drag in Today)."""
+  dayPosition: Float
   """Moving lists gives the task the new list's next number."""
   listId: ID
+}
+
+input CreateTodoColumnInput {
+  name: String!
+  status: TaskStatus!
+}
+
+"""name: null goes back to the status's own name."""
+input UpdateTodoColumnInput {
+  name: String
+  status: TaskStatus
+  position: Float
 }
 
 extend type Query {
@@ -126,6 +172,15 @@ extend type Mutation {
   updateTodoList(id: ID!, input: UpdateTodoListInput!): TodoList!
   """Deletes the list and its tasks. Returns its id."""
   deleteTodoList(id: ID!): ID!
+  """Adds a column at the right end (10 at most)."""
+  createTodoColumn(listId: ID!, input: CreateTodoColumnInput!): TodoColumn!
+  """A new status applies to every task in the column."""
+  updateTodoColumn(id: ID!, input: UpdateTodoColumnInput!): TodoColumn!
+  """
+  Its tasks go to the end of `moveTo` (required when it has any). Refused for
+  a list's last column of a status. Returns its id.
+  """
+  deleteTodoColumn(id: ID!, moveTo: ID): ID!
   createTask(input: CreateTaskInput!): Task!
   updateTask(id: ID!, input: UpdateTaskInput!): Task!
   """Returns the deleted task's id."""

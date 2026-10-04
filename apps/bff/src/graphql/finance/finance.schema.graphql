@@ -181,6 +181,56 @@ type Category {
   name by. Null for the user's own categories, which show `name` as is.
   """
   key: String
+  """Categories nest one level: "Food" for "Food › Eating out"."""
+  parentId: ID
+  parent: Category
+  """Set when archived: kept on old transactions, not offered for new ones."""
+  archivedAt: String
+  sortOrder: Int!
+}
+
+"""One part of a split transaction: same sign as the transaction."""
+type TransactionSplit {
+  id: ID!
+  category: Category!
+  amountMinor: Int!
+  note: String
+}
+
+input TransactionSplitInput {
+  categoryId: ID!
+  """Same sign as the transaction; the parts add up to its amount."""
+  amountMinor: Int!
+  note: String
+}
+
+input UpdateCategoryInput {
+  name: String
+  icon: String
+  """#rrggbb"""
+  color: String
+  """null: top-level. A parent is top-level and of the same kind."""
+  parentId: ID
+  aliases: [String!]
+  """true archives it with its subcategories; false brings it back."""
+  archived: Boolean
+}
+
+"""
+"TESCO*" → Groceries. `*` matches anything; without one the pattern matches
+anywhere in the payee. Case, accents and punctuation don't matter. Tried in
+order before payee history when quick log or a CSV import files a payee.
+"""
+type PayeeRule {
+  id: ID!
+  pattern: String!
+  category: Category!
+  sortOrder: Int!
+}
+
+input PayeeRuleInput {
+  pattern: String!
+  categoryId: ID!
 }
 
 enum TransactionStatus {
@@ -209,6 +259,8 @@ type Transaction {
   """quick | form | import | recurring | adjustment | transfer"""
   source: String!
   status: TransactionStatus!
+  """Split across categories: then `category` is null and these add up to the amount."""
+  splits: [TransactionSplit!]!
   """ISO timestamp it was logged."""
   createdAt: String!
 }
@@ -333,6 +385,10 @@ type ImportResult {
 }
 
 input CreateCategoryInput {
+  """#rrggbb"""
+  color: String
+  """A top-level category of the same kind, to nest under."""
+  parentId: ID
   name: String!
   icon: String
   """expense (default) | income"""
@@ -399,6 +455,23 @@ type QuickLogPayload {
   suggestPreset: Boolean!
   """Pass to dismissPresetSuggestion if the user says no."""
   presetKey: String
+  """This expense took its category's budget past 80% or 100% this month."""
+  budgetAlert: BudgetAlertNotice
+}
+
+"""How much of a budget is spent: 80% or more, or all of it."""
+enum BudgetAlert {
+  NEAR
+  REACHED
+}
+
+type BudgetAlertNotice {
+  category: Category!
+  level: BudgetAlert!
+  spentMinor: Int!
+  availableMinor: Int!
+  """The main currency the amounts are in."""
+  currency: String!
 }
 
 input CreateQuickPresetInput {
@@ -411,8 +484,12 @@ input CreateQuickPresetInput {
 }
 
 extend type Query {
-  """Active, pickable categories."""
-  categories: [Category!]!
+  """Active, pickable categories; archived ones too with includeArchived (for managing them)."""
+  categories(includeArchived: Boolean = false): [Category!]!
+  """In the order they're tried."""
+  payeeRules: [PayeeRule!]!
+  """How many transactions waiting in "To review" a pattern would file now."""
+  payeeRuleMatchCount(pattern: String!): Int!
   """Newest first."""
   transactions(filter: TransactionFilter, first: Int = 50, after: String): TransactionPage!
   """The "To review" inbox: uncategorised transactions plus subscription charges to confirm. `today` is the user's YYYY-MM-DD."""
@@ -442,6 +519,18 @@ extend type Mutation {
   """Returns the deleted preset's id."""
   deleteQuickPreset(id: ID!): ID!
   createCategory(input: CreateCategoryInput!): Category!
+  updateCategory(id: ID!, input: UpdateCategoryInput!): Category!
+  """
+  Split a transaction across categories; the parts add up to its amount.
+  An empty list undoes the split (back to "To review").
+  """
+  setTransactionSplits(id: ID!, splits: [TransactionSplitInput!]!): Transaction!
+  createPayeeRule(input: PayeeRuleInput!): PayeeRule!
+  updatePayeeRule(id: ID!, input: PayeeRuleInput!): PayeeRule!
+  """Returns its id."""
+  deletePayeeRule(id: ID!): ID!
+  """Files every transaction in "To review" that a rule matches; returns how many."""
+  applyPayeeRules: Int!
   """Never offer "Save as preset?" for this combination again."""
   dismissPresetSuggestion(categoryId: ID!, key: String!): Boolean!
 }
@@ -490,11 +579,115 @@ type CashFlowReport {
   months: [CashFlowMonth!]!
 }
 
+type TopPayee {
+  """As most often written."""
+  payee: String!
+  """Out minus refunds, in the main currency."""
+  spentMinor: Int!
+  transactionCount: Int!
+}
+
+type TopPayeesReport {
+  from: String!
+  to: String!
+  currency: String!
+  unconverted: [String!]!
+  """Biggest spend first. Transfers, adjustments and income aren't counted."""
+  payees: [TopPayee!]!
+}
+
+type NetWorthMonth {
+  """YYYY-MM: balances at its end (today, for the current month)."""
+  month: String!
+  assetsMinor: Int!
+  """Owed, as a positive amount."""
+  liabilitiesMinor: Int!
+  netWorthMinor: Int!
+}
+
+type NetWorthReport {
+  currency: String!
+  unconverted: [String!]!
+  """Oldest first."""
+  months: [NetWorthMonth!]!
+}
+
 extend type Query {
   """month is YYYY-MM in the user's calendar; optionally one account only."""
   spendByCategory(month: String!, accountId: ID): SpendReport!
   """Money in vs out for `months` months ending with `to` (YYYY-MM)."""
   cashFlow(to: String!, months: Int = 12): CashFlowReport!
+  """Where the money went, by payee, between two days (YYYY-MM-DD)."""
+  topPayees(from: String!, to: String!, limit: Int = 10): TopPayeesReport!
+  """Assets, debts and net worth at the end of each of `months` months up to `to`."""
+  netWorthHistory(to: String!, months: Int = 12): NetWorthReport!
+}
+
+# ─── Savings goals ───────────────────────────────────────────────────────────
+
+type SavingsGoal {
+  id: ID!
+  name: String!
+  emoji: String
+  """Positive, in `currency`."""
+  targetMinor: Int!
+  """The linked account's currency, else the main one when it was made."""
+  currency: String!
+  """YYYY-MM-DD, or null for no deadline."""
+  deadline: String
+  """Linked: this account's balance is what's saved."""
+  account: Account
+  """YYYY-MM-DD: "on track" is measured from here."""
+  startDate: String!
+  archivedAt: String
+  savedMinor: Int!
+  remainingMinor: Int!
+  """saved / target: 1 once reached, more once beaten."""
+  progress: Float!
+  achieved: Boolean!
+  """The deadline passed before it was reached."""
+  overdue: Boolean!
+  """Monthly saving needed from now to make the deadline; null without one."""
+  requiredPerMonthMinor: Int
+  """Keeping up with a steady pace from the start; null without a deadline."""
+  onTrack: Boolean
+  """Where a steady pace would be by today; null without a deadline."""
+  expectedMinor: Int
+}
+
+input CreateSavingsGoalInput {
+  name: String!
+  emoji: String
+  targetMinor: Int!
+  deadline: String
+  """Link an account: its balance is what's saved."""
+  accountId: ID
+  """Unlinked only: what's already put aside."""
+  savedMinor: Int
+}
+
+"""Only the fields sent change; null clears the deadline or unlinks the account."""
+input UpdateSavingsGoalInput {
+  name: String
+  emoji: String
+  targetMinor: Int
+  deadline: String
+  accountId: ID
+  archived: Boolean
+}
+
+extend type Query {
+  """`today` (YYYY-MM-DD, the user's calendar) drives progress and "on track"."""
+  savingsGoals(today: String!, includeArchived: Boolean = false): [SavingsGoal!]!
+}
+
+extend type Mutation {
+  createSavingsGoal(input: CreateSavingsGoalInput!, today: String!): SavingsGoal!
+  updateSavingsGoal(id: ID!, input: UpdateSavingsGoalInput!, today: String!): SavingsGoal!
+  """Unlinked goals: add money (or take it out, negative)."""
+  contributeToSavingsGoal(id: ID!, amountMinor: Int!, today: String!): SavingsGoal!
+  """Returns its id."""
+  deleteSavingsGoal(id: ID!): ID!
 }
 
 # ─── Budgets (phase 3) ───────────────────────────────────────────────────────
@@ -525,6 +718,8 @@ type BudgetLine {
   """YYYY-MM the limit was last set: budgets carry forward until changed."""
   since: String!
   pace: BudgetPace!
+  """80% or 100% of the budget spent; null below 80%."""
+  alert: BudgetAlert
   """Average monthly spend over the 3 months before, to judge the limit by."""
   averageSpentMinor: Int!
 }

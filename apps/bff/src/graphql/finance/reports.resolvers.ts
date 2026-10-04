@@ -11,5 +11,12 @@ export default {
     ) => ctx.api.get<unknown>(`/reports/spend-by-category${queryString(args)}`),
     cashFlow: (_: unknown, args: { to: string; months?: number }, ctx: GraphQLContext) =>
       ctx.api.get<unknown>(`/reports/cash-flow${queryString(args)}`),
+    topPayees: (
+      _: unknown,
+      args: { from: string; to: string; limit?: number },
+      ctx: GraphQLContext,
+    ) => ctx.api.get<unknown>(`/reports/top-payees${queryString(args)}`),
+    netWorthHistory: (_: unknown, args: { to: string; months?: number }, ctx: GraphQLContext) =>
+      ctx.api.get<unknown>(`/reports/net-worth${queryString(args)}`),
   },
 };

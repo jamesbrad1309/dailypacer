@@ -39,6 +39,19 @@ export default {
       await ctx.api.delete(`/todo-lists/${enc(args.id)}`);
       return args.id;
     },
+    createTodoColumn: (_: unknown, args: { listId: string; input: unknown }, ctx: GraphQLContext) =>
+      ctx.api.post(`/todo-lists/${enc(args.listId)}/columns`, args.input),
+    updateTodoColumn: (_: unknown, args: { id: string; input: unknown }, ctx: GraphQLContext) =>
+      ctx.api.patch(`/todo-columns/${enc(args.id)}`, args.input),
+    deleteTodoColumn: async (
+      _: unknown,
+      args: { id: string; moveTo?: string },
+      ctx: GraphQLContext,
+    ) => {
+      const query = args.moveTo ? `?moveTo=${enc(args.moveTo)}` : "";
+      await ctx.api.delete(`/todo-columns/${enc(args.id)}${query}`);
+      return args.id;
+    },
     createTask: (_: unknown, args: { input: unknown }, ctx: GraphQLContext) =>
       ctx.api.post("/tasks", args.input),
     updateTask: (_: unknown, args: { id: string; input: unknown }, ctx: GraphQLContext) =>

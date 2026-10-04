@@ -1,4 +1,5 @@
 import type { GraphQLContext } from "#graphql/context";
+import { type BudgetAlertLevel, budgetAlert } from "#graphql/finance/budget-alert";
 import { queryString } from "#graphql/finance/query-string";
 
 const PACE = { "on-track": "ON_TRACK", close: "CLOSE", over: "OVER" } as const;
@@ -25,5 +26,6 @@ export default {
   },
   BudgetLine: {
     pace: (line: { pace: keyof typeof PACE }) => PACE[line.pace],
+    alert: (line: { alert: BudgetAlertLevel | null }) => budgetAlert(line.alert),
   },
 };

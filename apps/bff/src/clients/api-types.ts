@@ -190,8 +190,46 @@ export interface ApiTransaction {
   source: string;
   status: "CLEARED" | "PENDING";
   metadata: Record<string, unknown>;
+  /** Empty unless the transaction is split across categories. */
+  splits: ApiTransactionSplit[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ApiTransactionSplit {
+  id: string;
+  categoryId: string;
+  amountMinor: number;
+  note: string | null;
+}
+
+export interface ApiPayeeRule {
+  id: string;
+  pattern: string;
+  categoryId: string;
+  sortOrder: number;
+  createdAt: string;
+}
+
+export interface ApiSavingsGoal {
+  id: string;
+  name: string;
+  emoji: string | null;
+  targetMinor: number;
+  currency: string;
+  deadline: string | null;
+  accountId: string | null;
+  accountName: string | null;
+  startDate: string;
+  archivedAt: string | null;
+  savedMinor: number;
+  remainingMinor: number;
+  progress: number;
+  achieved: boolean;
+  overdue: boolean;
+  requiredPerMonthMinor: number | null;
+  onTrack: boolean | null;
+  expectedMinor: number | null;
 }
 
 export interface ApiSubscription {
@@ -261,4 +299,11 @@ export interface ApiQuickLogResult {
   transaction: ApiTransaction;
   suggestPreset: boolean;
   presetKey: string | null;
+  budgetAlert: {
+    categoryId: string;
+    level: "near" | "reached";
+    spentMinor: number;
+    availableMinor: number;
+    currency: string;
+  } | null;
 }
