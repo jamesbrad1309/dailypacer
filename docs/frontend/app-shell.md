@@ -42,15 +42,21 @@ works on a fresh clone; never edit it by hand).
 | URL | File | Page |
 | --- | ---- | ---- |
 | `/` | `routes/index.tsx` | Redirects to `/habits` |
+| `/progress?weeks=4\|12\|26` | `routes/progress.tsx` | Progress: habits, tasks and mood over a period against the one before ([progress.md](../domain/progress.md)) |
 | `/habits` | `routes/habits/index.tsx` | Habits dashboard |
 | `/habits/today` | `routes/habits/today.tsx` | Today's schedule |
 | `/habits/history` | `routes/habits/history.tsx` | Every habit over the last 30 days |
+| `/habits/calendar?view=week\|month&date=&day=` | `routes/habits/calendar.tsx` | Habits across a week or a month; tick past days |
+| `/habits/review?week=` | `routes/habits/review.tsx` | The weekly review (last week on Sunday/Monday) |
+| `/habits/rewards` | `routes/habits/rewards.tsx` | Points wallet, reward shop, challenges, achievements |
 | `/habits/$habitId` | `routes/habits/$habitId.tsx` | One habit: stats, heatmap, week chart, insights, records (paged on the server) |
 | `/tasks` | `routes/tasks/index.tsx` | Today's tasks from every list, and earlier ones not done ([todos.md](../domain/todos.md)) |
 | `/tasks/lists` | `routes/tasks/lists/index.tsx` | To-do lists with key prefixes; new list modal; go to a task by key |
 | `/tasks/lists/$listId` | `routes/tasks/lists/$listId.tsx` | A list's kanban board |
 | `/journal?date=YYYY-MM-DD` | `routes/journal/index.tsx` | Journal. No `date` means today |
 | `/journal/calendar?month=YYYY-MM` | `routes/journal/calendar.tsx` | A month of journal days with the mood score ([journal.md](../domain/journal.md)) |
+| `/journal/search?q=&tag=&kind=` | `routes/journal/search.tsx` | Search every day ([journal.md](../domain/journal.md#search-mood-streak-and-patterns)) |
+| `/journal/insights` | `routes/journal/insights.tsx` | Mood check-in streak, mood heatmap, what drives your feelings |
 | `/finance` | `routes/finance/index.tsx` | Redirects to `/finance/accounts` |
 | `/finance/accounts` | `routes/finance/accounts.tsx` | Money setup ([account-setup.md](../finance/account-setup.md)) |
 | `/finance/transactions?view=review&month=&account=&category=&q=` | `routes/finance/transactions.tsx` | Transactions and the "To review" inbox. The default `view=all` is stripped from the URL |

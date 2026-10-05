@@ -104,6 +104,35 @@ Unique constraint on `(habitId, date)` — one entry per habit per day (adjust
 if a habit can be logged multiple times/day, e.g. water glasses as separate
 rows instead of a summed `value`).
 
+## Beyond the basics: avoid habits, time boxes, freezes, challenges, routines, points
+
+| What | Where | How it's read |
+| ---- | ----- | ------------- |
+| **Avoid habits** ("no sugar") | `Habit.polarity` = `avoid` | A due day counts as done unless an entry records a slip (not completed, `value` > 0 = slips that day; 0 undoes it). `polarity.util.ts` turns the slips into the check-ins a build habit would have, so streaks, points, heatmaps and insights need no special cases. A slip today breaks the streak at once |
+| **Time-boxed habits** | `Habit.endDate` | Days after it aren't due (they join the not-due ranges below), and the habit archives itself once it has passed (`HabitsService.archiveEnded`, run before listing habits) |
+| **Streak freezes** | `StreakFreeze(habitId, date)` | A missed day from the last 7, bought back for 50 points; it's a one-day not-due range, exactly like a pause |
+| **Challenges** | `HabitChallenge(habitId, startDate, endDate, target, multiplier)` | Met (target check-ins in the range), its check-ins earn (multiplier − 1) × 10 extra points, in the habit's points and the wallet (`challenge.util.ts`). One at a time per habit, 31 days at most |
+| **Routines** | `Routine` + `RoutineHabit(routineId, habitId, position)` | Ordered habits done together; a habit is in one routine at most (`habitId` is unique) |
+| **Points wallet** | `Reward`, `PointsSpend` | Earned = 10 per check-in ever (archived habits too) + challenge bonuses, derived; spent = the ledger (rewards redeemed, freezes); balance = earned − spent. Separate from the level, which stays on the 120-day window, so spending never lowers it |
+| **Custom fields** | `Habit.metadata.fields: [{ label, value }]` | The JSONB option below, edited in the habit dialogs |
+
+**Not-due ranges.** `HabitsService.pausesFor` returns, per habit, its pause
+stretches, each frozen day, and everything after a time-boxed habit's end,
+as one list of ranges. Every rule that asks "was this day due?" (streaks,
+misses, insights) uses it, so the three behave the same way.
+
+**Per-day status.** `day-status.util.ts` names how a habit went on a day:
+DONE, PARTIAL, SLIPPED, MISSED, DUE (today or later, not done yet), FROZEN,
+PAUSED, OFF (not due) or NONE (outside tracking). The heatmap, the
+week/month calendar, the weekly review, achievements and correlations all
+read it, through `HabitHistoryService`, which loads a set of habits with
+their entries, not-due ranges, freezes and challenges once.
+
+**Today is pending.** The current streak doesn't break on today while it
+isn't done yet: it counts today once done, and otherwise counts back from
+yesterday (a slip on an avoid habit is the exception). Records and insights
+already treated today this way.
+
 ## Handling "custom" fields: JSONB vs. EAV
 
 Two ways to let users attach arbitrary extra info to a habit or entry:

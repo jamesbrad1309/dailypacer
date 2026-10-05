@@ -61,6 +61,15 @@ job.
 | `POST /habits/:id/pause` · `/resume` | `Habit` | Optional body `{ date }` (user's local day); records the stretch in `habit_pauses` |
 | `GET /habits/:id/records?filter=&page=&pageSize=&today=` | `HabitRecordsPage` | Entries plus misses, paged on the server; `filter` ALL / DONE / NOT_DONE / MISSED; `pageSize` ≤ 100 |
 | `GET /habits/:id/insights?today=` | `HabitInsights` | Completion by weekday (12 weeks) and this month vs last |
+| `GET /habit-calendar?from=&to=&today=` | `{ habitId, days }[]` | Each active habit's per-day status (`day-status.util.ts`); at most 62 days |
+| `GET /habit-review/weekly?weekStart=&today=` | `WeeklyReview` | A Monday–Sunday week against the one before; wins, misses, streaks at risk, best day |
+| `GET /habit-review/progress?weeks=&today=` · `GET /tasks/progress?weeks=&today=` | Weekly habit totals · tasks done per week | For the Progress page; up to 52 weeks (the page asks for twice its period, to compare) |
+| `GET /habit-review/achievements?today=` · `GET /habit-review/correlations?today=` | `Achievement[]` · `Correlation[]` | Derived from history every time |
+| `GET /points?today=` · `DELETE /points/spends/:id` | Wallet · `{ id }` | Earned, spent, balance, latest spends; undo refunds (and unfreezes) |
+| `GET/POST /rewards` · `PATCH/DELETE /rewards/:id` · `POST /rewards/:id/redeem` | `Reward` · `PointsSpend` | Delete archives; redeem refuses without enough points |
+| `POST /habits/:id/freezes` · `DELETE /habits/:id/freezes/:date` | Freeze | A missed day from the last 7, for 50 points |
+| `GET /challenges?today=` · `POST /habits/:id/challenges` · `DELETE /challenges/:id` | Challenges with progress | One at a time per habit, 31 days at most |
+| `GET/POST /routines` · `PATCH/DELETE /routines/:id` | `Routine` (`habitIds` in order) | A habit moves out of any other routine |
 | `GET /todo-lists` · `POST` · `PATCH /:id` · `DELETE /:id` | `TodoList` | Lists with open/done counts; prefix unique (409 if taken); the Inbox can't be deleted |
 | `GET /todo-lists/suggest-prefix?name=` | `{ prefix }` | A free prefix from the name |
 | `GET /todo-lists/:id/tasks?doneLimit=50` | `{ list, tasks, doneTotal }` | A board: the list with its `columns`, open tasks by position, latest `doneLimit` done |
@@ -78,6 +87,9 @@ job.
 | `GET /journal-entries?date=YYYY-MM-DD` | `JournalEntry[]` | One day, in time order, each with a trimmed `trigger` |
 | `GET /journal-entries/days?from=&to=` | Per-day summaries | Counts per kind + emotions (with intensity); at most 62 days |
 | `GET /journal-entries/first-date` | Earliest entry's date | `{ date }`, null when empty; the calendar's "missed" cut-off |
+| `GET /journal-entries/search?q=&tag=&kind=&from=&to=&limit=&offset=` | `{ items, total }` | Across every day, newest first |
+| `GET /journal-entries/range?from=&to=` | `JournalEntry[]` | Whole entries with trigger tags and tone; a year at most |
+| `GET /journal-entries/feelings?from=&to=` | `{ date, emotion, intensity }[]` | Feelings only; up to 400 days |
 | `POST /journal-entries` · `POST /journal-entries/batch` | `JournalEntry` · `JournalEntry[]` | Batch is one transaction; `triggerIndex` links to an earlier EVENT in the list |
 | `PUT /journal-entries/:id` · `DELETE /journal-entries/:id` | `JournalEntry` · `{ id }` | PUT replaces the whole entry |
 | `GET /health` | `{ status: "ok" }` | Runs `SELECT 1`; used by the Compose healthcheck |

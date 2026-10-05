@@ -18,18 +18,18 @@ improves UX · `2` edge case / power-user · `1` speculative.
 
 | Area | Built | Open | Top open item (impact) |
 | ---- | :---: | :--: | ---------------------- |
-| Habit management | 9 | 1 | Attach arbitrary custom fields to a habit (1) |
+| Habit management | 10 | 0 | — |
 | Daily tracking | 5 | 0 | — |
 | Dashboard & gamification | 4 | 0 | — |
-| Calendar | 2 | 1 | Week or month calendar view (2) |
+| Calendar | 3 | 0 | — |
 | History & review | 3 | 0 | — |
-| Motivation & rewards | 0 | 5 | Streak freeze (3) |
-| Routines & structure | 1 | 3 | Habit stacking / routines (3) |
-| Insights | 2 | 2 | Weekly review screen (3) |
-| Journaling & mood | 9 | 4 | Which events drive which feelings (3) |
+| Motivation & rewards | 5 | 0 | — |
+| Routines & structure | 4 | 0 | — |
+| Insights | 4 | 0 | — |
+| Journaling & mood | 13 | 0 | — |
 | Cross-module (habits × finance) | 0 | 5 | "No-spend day" habit auto-checked from transactions (3) |
-| **To-do lists** | 10 | 3 | Reorder tasks within Today (5) |
-| **Finance** (separate doc) | 50 | 10 | Savings goals, custom categories, payee rules (1 partly built), see [finance/use-cases.md](../finance/use-cases.md) |
+| **To-do lists** | 13 | 0 | — |
+| **Finance** (separate doc) | 60 | 0 | Habits integration next, see [finance/use-cases.md](../finance/use-cases.md) |
 
 ## Use cases
 
@@ -44,7 +44,7 @@ improves UX · `2` edge case / power-user · `1` speculative.
 |  | ✅ | **Unarchive / view archived habits** | 2 | Collapsible "Archived habits" list under the dashboard (`archivedHabits`, fetched only when opened), Restore calls `unarchiveHabit` |
 |  | ✅ | **Describe a habit**: a short "why / how" shown under its name | 3 | `Habit.description` (≤500 chars), set in the create/edit dialogs, 2 lines on the card |
 |  | ✅ | **Tag habits and filter the dashboard by tag** ("health", "morning") | 3 | `Habit.tags` (lowercased, de-duplicated, ≤20); chips above the habit list, and a card's `#tag` filters to it. Filter is not kept in the URL |
-|  | ⬜ | **Attach arbitrary custom fields to a habit** | 1 | Backend accepts `metadata` JSON on create — no UI to add/edit it |
+|  | ✅ | **Attach arbitrary custom fields to a habit** | 1 | Labelled fields ("Coach: Sam") in the create/edit dialogs, stored in `Habit.metadata.fields` in order, shown on the habit's page |
 | **Daily tracking** | ✅ | **See which habits are due today** | 5 | `Query.todayHabits`; day view applies the same `isDueOn` filter client-side |
 |  | ✅ | **Check a habit off for today** | 5 | `Mutation.upsertHabitEntry` (`completed: true`) |
 |  | ✅ | **Log a quantitative value for today** | 4 | `Mutation.upsertHabitEntry` (`value: 5`) |
@@ -56,23 +56,23 @@ improves UX · `2` edge case / power-user · `1` speculative.
 |  | ✅ | **See longest streak / total completions per habit** | 2 | "Best 12d · 48 check-ins in 120 days" under the card's heatmap |
 | **Calendar** | ✅ | **Day view: today's due habits on a time-of-day timeline** | 4 | `DayCalendar`, positions habits by `startTime`; untimed habits in a checkable "Anytime today" list beside it |
 |  | ✅ | **Check a habit off directly from the day view** | 4 | Same `upsertHabitEntry` mutation as the dashboard card |
-|  | ⬜ | **Week or month calendar view** | 2 | Only a single day view exists so far |
+|  | ✅ | **Week or month calendar view** | 2 | `/habits/calendar`: a week (a row per habit, Monday to Sunday) or a month (each day's done / due, the chosen day's habits below). Past days and today can be ticked from it. `Query.habitCalendar`, per-day statuses from `day-status.util.ts` |
 | **History & review** | ✅ | **Compare all habits over the last 30 days**: one row per habit, a green box per day done, plus a done/30 count | 3 | `/habits/history` (`HabitHistory`); reads the last 30 days of each habit's `Habit.heatmap`, no query of its own. The percentage counts all 30 days, not only scheduled ones |
 |  | ✅ | **View a single habit's full entry history** (list, not just heatmap) | 2 | Records table on the habit detail page: date, status (done / partly done / not done), value against target, note; filter All / Done / Not done / **Missed (n)**, 25 rows a page, newest first, **paged on the server** (`Query.habitRecords`, `GET /habits/:id/records`): the browser holds one page. Misses are due days with no entry, or for "times a week" habits each finished week under its target, at most a year back, skipping paused days and weeks (`habit-records.util.ts`); today and this week aren't counted until they're over. Beside the 120-day heatmap, a **this week vs last week** line chart of running check-in counts (`lib/week-comparison.ts`) |
 |  | ✅ | **Habit detail page** | 1 | `/habits/$habitId` (`HabitDetail`), opened from a card's name or a History row: description, schedule, tags, streak stats, heatmap, and the records table. One `HabitDetail` query (`habit` + `habitEntries`) |
-| **Motivation & rewards** | ⬜ | **Streak freeze**: spend earned points to protect a streak on a missed day | 3 | A `StreakFreeze(habitId, date)` row; `streak.util.ts` treats a frozen day as "not due", like a paused habit |
-|  | ⬜ | **Achievements / badges** ("First 7-day streak", "100 check-ins", "Perfect week") | 3 | Derived from entries at query time, the same way points are; no stored "unlocked" flag is needed until unlocks need a timestamp |
-|  | ⬜ | **Milestone celebration** when a streak reaches 7 / 30 / 100 days | 2 | Frontend only: compare `currentStreak` before and after `upsertHabitEntry` |
-|  | ⬜ | **Weekly challenge**: a temporary target, e.g. "meditate 5× this week for 2× XP" | 2 | `Challenge` entity with a date range and a multiplier fed into `computePoints` |
-|  | ⬜ | **Reward shop**: trade points for self-defined rewards ("takeaway night = 500 pts") | 2 | Needs a spent-points ledger, because points are currently derived and can't be decreased |
-| **Routines & structure** | ⬜ | **Habit stacking / routines**: group habits into an ordered "Morning routine" and check them off in sequence | 3 | `Routine` plus an ordered join table; the day view renders a routine as one block at its first habit's `startTime` |
-|  | ⬜ | **Negative habits** ("no sugar", "no doomscrolling"): success is the *absence* of an event | 3 | A `polarity: "avoid"` flag; a due day counts as successful unless an entry marks a slip |
+| **Motivation & rewards** | ✅ | **Streak freeze**: spend earned points to protect a streak on a missed day | 3 | On a habit's page: a missed (or slipped) day from the last 7 can be frozen for 50 points (`StreakFreeze`); it then counts as not due, like a paused day, everywhere (streaks, misses, insights). Undo refunds it |
+|  | ✅ | **Achievements / badges** ("First 7-day streak", "100 check-ins", "Perfect week") | 3 | Nine badges on `/habits/rewards`, derived from history at query time (`achievements.util.ts`), with the day each was reached and progress towards the rest |
+|  | ✅ | **Milestone celebration** when a streak reaches 7 / 30 / 100 days | 2 | A dialog the moment your own check-in takes a streak to 7, 30 or 100 days (`lib/celebrate.ts`, `useStreakCelebration`); the flame only bounces without reduced motion |
+|  | ✅ | **Weekly challenge**: a temporary target, e.g. "meditate 5× this week for 2× XP" | 2 | `HabitChallenge`: N check-ins between two days (this week, 7 or 14 days) for 1.5–3× points; met, its check-ins earn the extra (`challenge.util.ts`). Started from a habit's page, listed on Rewards |
+|  | ✅ | **Reward shop**: trade points for self-defined rewards ("takeaway night = 500 pts") | 2 | `Reward` + a `PointsSpend` ledger: points earned from every check-in ever (10 each, plus challenge bonuses) minus spends; spending never lowers the level. Redeem with undo; history on `/habits/rewards` |
+| **Routines & structure** | ✅ | **Habit stacking / routines**: group habits into an ordered "Morning routine" and check them off in sequence | 3 | `Routine` + ordered `RoutineHabit` (a habit is in one routine at most). The day view shows a routine as one block at its time (or under Anytime), its habits in order with the next one marked |
+|  | ✅ | **Negative habits** ("no sugar", "no doomscrolling"): success is the *absence* of an event | 3 | `Habit.polarity` AVOID: a due day is done unless a slip is logged (`polarity.util.ts` derives the check-ins, so streaks, points, heatmaps and insights work unchanged). An "I slipped" toggle replaces the tick; slips show in records and heatmaps |
 |  | ✅ | **Habit templates**: start from a preset such as "Drink water" or "Read" | 2 | Eight presets at the top of the Add habit modal (`lib/habit-templates.ts`), filling name, description, tags, unit, target, start time and schedule in the UI language; nothing about a template is stored |
-|  | ⬜ | **Time-boxed habits / programs**: "30-day push-up challenge" that ends on its own | 2 | Optional `endDate` on `Habit`; auto-archive after it passes |
+|  | ✅ | **Time-boxed habits / programs**: "30-day push-up challenge" that ends on its own | 2 | `Habit.endDate` (with 7 / 30 / 90-day shortcuts): days after it aren't due, the card counts the days left, and the habit archives itself once it has passed |
 | **Insights** | ✅ | **Best / worst weekday per habit** ("you skip gym on Fridays") | 3 | Habit detail page, "By weekday": completion rate per weekday over the last 12 weeks (`Query.habitInsights`, `habit-insights.util.ts`), counting due, unpaused days since tracking began; best and worst are named only once each weekday has 3+ due days and they differ. "Times a week" habits compare where check-ins fall |
 |  | ✅ | **Completion-rate trend** (this month vs last month) | 3 | Same query: this month so far vs the whole of last month, as done / due days (today counts only once done); "times a week" habits measure against the weekly target. The difference in points shows once this month has 5+ counted days |
-|  | ⬜ | **Weekly review screen**: a summary each Sunday with wins, misses, and streaks at risk | 3 | A `weeklyReview(weekStart)` query that aggregates existing stats |
-|  | ⬜ | **Habit correlations** ("on days you exercise you sleep 40 min more") | 2 | Pairwise comparison of entry values across habits on the same dates; needs enough history to mean anything |
+|  | ✅ | **Weekly review screen**: a summary each Sunday with wins, misses, and streaks at risk | 3 | `/habits/review`: done vs due against the week before, habits done every time, days missed, streaks at risk today, the best day, and correlations. Opens on last week on Sunday/Monday, with a dashboard banner those days. `Query.weeklyReview` |
+|  | ✅ | **Habit correlations** ("on days you exercise you sleep 40 min more") | 2 | `correlations.util.ts` over 90 days: how often (or, with a unit, how much) a habit goes on days another is done vs not, kept only with 5+ days each side and a big enough gap. On the habit page and the weekly review |
 | **Journaling & mood** | ✅ | **Log what you did** (an ACTION, with optional duration) | 4 | One textarea: bulleted `/action` lines, parsed by `apps/web/src/lib/journal-syntax.ts`; saved atomically by `Mutation.createJournalEntries` |
 |  | ✅ | **Log how you felt** (a FEELING: emotion word + 1–5 intensity, optional "why") | 4 | `/feeling anxious 4/5 why…`; the slash menu autocompletes emotions from `apps/web/src/lib/emotions.ts` |
 |  | ✅ | **Log what happened** (an EVENT, tagged good / neutral / rough) | 4 | `/event … (+)` / `(=)` / `(-)` for tone |
@@ -82,10 +82,10 @@ improves UX · `2` edge case / power-user · `1` speculative.
 |  | ✅ | **Journal calendar**: a month of days, each with its dominant emotion and kinds written, and the days you skipped marked as missed | 3 | `/journal/calendar?month=YYYY-MM` (`JournalCalendar`), one `journalDays` call per month grid. Days before `Query.journalFirstDate` are never "missed", nor is today; any day opens that day's journal |
 |  | ✅ | **Daily mood score**: grade each day from −1 (unpleasant) to +1 (pleasant) from the feelings logged, in any language | 3 | `apps/web/src/lib/mood.ts`: each FEELING counts +1 / 0 / −1 by its emotion's valence, weighted by intensity (3 if unset); no feelings = no score. Tints the journal calendar (teal ↔ orange, colourblind-checked) with a monthly average and a "Daily mood" bar chart. 57 emotions plus English/Vietnamese aliases; unknown words are left out, or scored by the optional local NRC lexicon (`pnpm lexicon:fetch`, see [journal.md](journal.md)). Free text isn't read; that would need an AI pass |
 |  | ✅ | **#tags and filters** by kind or tag within a day | 2 | `tags` parsed from `text` by the API |
-|  | ⬜ | **Which events drive which feelings** (e.g. "#work events are followed by stress 70% of the time") | 3 | Group FEELING entries by their trigger's tags over a window |
-|  | ⬜ | **Search the whole journal** by text or tag across all days | 2 | `journalEntries` only takes a single `date` today |
-|  | ⬜ | **Daily mood as a streakable habit** | 2 | FEELING entries capture mood, but there's no daily "checked in" streak or heatmap for it |
-|  | ⬜ | **Mood overlay on heatmaps**: tint a habit's heatmap by that day's mood | 1 | Join FEELING entries' valence onto `Habit.heatmap` by date |
+|  | ✅ | **Which events drive which feelings** (e.g. "#work events are followed by stress 70% of the time") | 3 | `/journal/insights`: feelings linked to an event, grouped by the event's #tags over 180 days: the most common emotion and the pleasant / unpleasant share (`triggerPatterns` in `lib/habit-mood.ts`, `Query.journalRange`) |
+|  | ✅ | **Search the whole journal** by text or tag across all days | 2 | `/journal/search`: text or emotion, a #tag and a kind across every day, newest first, grouped by day, matches highlighted. `Query.journalSearch` |
+|  | ✅ | **Daily mood as a streakable habit** | 2 | `/journal/insights`: a check-in streak (days in a row with a feeling; today pending until logged), the best run, and a 120-day heatmap tinted by mood (`Query.journalFeelings`) |
+|  | ✅ | **Mood overlay on heatmaps**: tint a habit's heatmap by that day's mood | 1 | "Mood" toggle on a habit's 120-day heatmap: each day tinted by that day's mood, with a dot where the habit was done |
 | **Cross-module (habits × finance)** | ⬜ | **"No-spend day" habit auto-checked from transactions** | 3 | Finance upserts `HabitEntry`, see [habits-integration.md §1](../finance/habits-integration.md#1-no-spend-day-habit-auto-checked) |
 |  | ⬜ | **Savings-goal contributions count as check-ins** ("save £10/day") | 3 | `SavingsGoal.habitId`, see [habits-integration.md §2](../finance/habits-integration.md#2-savings-goal-as-a-habit) |
 |  | ⬜ | **"Log today's spending" habit**: an evening habit that opens quick log and counts as done once anything is logged that day | 3 | Auto-checked like no-spend days; see [habits-integration.md §5](../finance/habits-integration.md#5-log-todays-spending-habit) |

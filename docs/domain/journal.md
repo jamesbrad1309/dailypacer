@@ -138,6 +138,31 @@ today, and a past day is `/journal?date=2026-09-24`, so back/forward steps
 through the days you visited and a day can be bookmarked. Future and
 malformed dates show today.
 
+## Search, mood streak and patterns
+
+- **Search** (`/journal/search?q=&tag=&kind=`, `Query.journalSearch`,
+  `GET /journal-entries/search`): text in the entry or its emotion
+  (case-insensitive), a `#tag` and a kind across every day, newest first,
+  25 at a time with the total. Results are grouped by day (each opens it),
+  with the match highlighted and tags that refine the search. The journal
+  page links to it.
+- **Mood & patterns** (`/journal/insights`):
+  - a **check-in streak**: days in a row with at least one feeling; today
+    doesn't break it until it's over (`moodStreak` in `lib/habit-mood.ts`),
+    with the best run, from `Query.journalFeelings` (feelings only, up to
+    400 days);
+  - a **120-day mood heatmap**, each day tinted by its mood score;
+  - **what drives your feelings**: feelings linked to an event, grouped by
+    the event's `#tags` over 180 days (`Query.journalRange`, whole entries
+    with their trigger's tags and tone, a year at most). Each tag with 3+
+    linked feelings shows its most common emotion and the pleasant /
+    unpleasant share (`triggerPatterns`).
+- **Mood overlay on a habit's heatmap**: a "Mood" toggle on the habit page
+  tints each of its 120 days by that day's mood and dots the days the habit
+  was done (`moodByDay`).
+
+All mood scoring stays in the browser (`lib/mood.ts`), as before.
+
 **In Vietnamese** the commands are `/làm`, `/cảm` and `/sựkiện` (accents
 optional: `/lam`, `/cam`, `/sukien`), and emotions can be written in
 Vietnamese (`/cảm lo âu 4/5`). Emotions are always stored by their English
