@@ -1,4 +1,4 @@
-import type { Habit, HabitSchedule } from "#graphql/types";
+import type { Habit, HabitCustomField, HabitPolarity, HabitSchedule } from "#graphql/types";
 import { formatTags } from "#lib/tags";
 
 /** A habit's fields as the create and edit forms hold them: text, as typed. */
@@ -12,6 +12,18 @@ export interface HabitDraft {
   /** "HH:mm" or "" for anytime. */
   startTime: string;
   schedule: HabitSchedule;
+  polarity: HabitPolarity;
+  /** "YYYY-MM-DD" or "" for open-ended. */
+  endDate: string;
+  customFields: DraftField[];
+}
+
+/** A custom field row as edited, with a stable key so rows keep focus when one is removed. */
+export type DraftField = HabitCustomField & { key: number };
+
+let nextFieldKey = 1;
+export function draftField(label = "", value = ""): DraftField {
+  return { key: nextFieldKey++, label, value };
 }
 
 export type HabitDraftAction =
@@ -36,6 +48,9 @@ export const BLANK_HABIT_DRAFT: HabitDraft = {
   targetValue: "",
   startTime: "",
   schedule: { type: "daily" },
+  polarity: "BUILD",
+  endDate: "",
+  customFields: [],
 };
 
 /** The edit form's starting point: the habit as it is now. */
@@ -48,5 +63,15 @@ export function habitDraftFrom(habit: Habit): HabitDraft {
     targetValue: habit.targetValue?.toString() ?? "",
     startTime: habit.startTime ?? "",
     schedule: habit.schedule,
+    polarity: habit.polarity,
+    endDate: habit.endDate ?? "",
+    customFields: habit.customFields.map(({ label, value }) => draftField(label, value)),
   };
+}
+
+/** Fields worth saving: a label is required; blank rows are dropped. */
+export function cleanCustomFields(fields: DraftField[]): HabitCustomField[] {
+  return fields
+    .map((f) => ({ label: f.label.trim(), value: f.value.trim() }))
+    .filter((f) => f.label !== "");
 }

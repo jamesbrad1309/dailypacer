@@ -5,6 +5,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { QuickLogButton } from "#components/finance/quick-log/QuickLogButton";
 import { QuickLogSheet } from "#components/finance/quick-log/QuickLogSheet";
+import { Celebration } from "#components/layout/Celebration";
 import { Sidebar } from "#components/layout/Sidebar";
 import { Toaster } from "#components/layout/Toaster";
 import { Button } from "#components/ui/button";
@@ -126,6 +127,7 @@ export function AppShell({ actions, children }: Props) {
       <QuickLogButton />
       <QuickLogSheet />
       <Toaster />
+      <Celebration />
     </div>
   );
 }

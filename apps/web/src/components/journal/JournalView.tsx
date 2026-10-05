@@ -1,4 +1,6 @@
 import { useMutation, useQuery } from "@apollo/client/react";
+import { Link } from "@tanstack/react-router";
+import { Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { type ComposerHandle, JournalComposer } from "#components/journal/JournalComposer";
@@ -118,11 +120,18 @@ export function JournalView({ date, onDateChange }: Props) {
 
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-xl font-semibold">{formatDayHeading(date)}</h2>
-          {date !== today && (
-            <Button variant="outline" size="sm" onClick={() => goTo(today)}>
-              {t("journal.view.backToToday")}
+          <div className="flex gap-2">
+            {date !== today && (
+              <Button variant="outline" size="sm" onClick={() => goTo(today)}>
+                {t("journal.view.backToToday")}
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/journal/search">
+                <Search className="size-4" /> {t("journal.search.button")}
+              </Link>
             </Button>
-          )}
+          </div>
         </div>
 
         <Card>

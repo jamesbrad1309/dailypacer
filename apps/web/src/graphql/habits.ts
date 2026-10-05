@@ -11,6 +11,12 @@ const HABIT_FIELDS = gql`
     targetValue
     startTime
     schedule
+    polarity
+    endDate
+    customFields {
+      label
+      value
+    }
     paused
     currentStreak
     longestStreak
@@ -28,6 +34,7 @@ const HABIT_FIELDS = gql`
       date
       completed
       value
+      status
     }
   }
 `;
@@ -220,3 +227,257 @@ export const HABIT_INSIGHTS_QUERY = gql`
     }
   }
 `;
+
+// ─── Calendar, review, achievements, correlations ────────────────────────────
+
+export const HABIT_CALENDAR_QUERY = gql`
+  query HabitCalendar($from: String!, $to: String!, $today: String!) {
+    habitCalendar(from: $from, to: $to, today: $today) {
+      habitId
+      days {
+        date
+        status
+        value
+      }
+    }
+  }
+`;
+
+export const WEEKLY_REVIEW_QUERY = gql`
+  query WeeklyReview($weekStart: String!, $today: String!) {
+    weeklyReview(weekStart: $weekStart, today: $today) {
+      weekStart
+      weekEnd
+      complete
+      totals {
+        done
+        due
+        rate
+      }
+      previous {
+        done
+        due
+        rate
+      }
+      habits {
+        id
+        name
+        done
+        due
+        rate
+        missed
+        frozen
+      }
+      wins
+      atRisk {
+        id
+        name
+        currentStreak
+      }
+      bestDay {
+        date
+        done
+      }
+    }
+  }
+`;
+
+export const ACHIEVEMENTS_QUERY = gql`
+  query Achievements($today: String!) {
+    achievements(today: $today) {
+      key
+      progress
+      target
+      unlocked
+      achievedOn
+    }
+  }
+`;
+
+export const HABIT_CORRELATIONS_QUERY = gql`
+  query HabitCorrelations($today: String!) {
+    habitCorrelations(today: $today) {
+      habitId
+      otherId
+      kind
+      withValue
+      withoutValue
+      daysWith
+      daysWithout
+    }
+  }
+`;
+
+// ─── Points, rewards, freezes, challenges ────────────────────────────────────
+
+export const POINTS_WALLET_QUERY = gql`
+  query PointsWallet($today: String!) {
+    pointsWallet(today: $today) {
+      earned
+      spent
+      balance
+      freezeCost
+      spends {
+        id
+        points
+        kind
+        label
+        createdAt
+      }
+    }
+  }
+`;
+
+export const REWARDS_QUERY = gql`
+  query Rewards {
+    rewards {
+      id
+      name
+      emoji
+      cost
+      timesRedeemed
+    }
+  }
+`;
+
+export const CREATE_REWARD_MUTATION = gql`
+  mutation CreateReward($input: RewardInput!) {
+    createReward(input: $input) {
+      id
+    }
+  }
+`;
+
+export const UPDATE_REWARD_MUTATION = gql`
+  mutation UpdateReward($id: ID!, $input: RewardInput!) {
+    updateReward(id: $id, input: $input) {
+      id
+    }
+  }
+`;
+
+export const DELETE_REWARD_MUTATION = gql`
+  mutation DeleteReward($id: ID!) {
+    deleteReward(id: $id)
+  }
+`;
+
+export const REDEEM_REWARD_MUTATION = gql`
+  mutation RedeemReward($id: ID!, $today: String!) {
+    redeemReward(id: $id, today: $today) {
+      id
+      points
+      label
+    }
+  }
+`;
+
+export const UNDO_POINTS_SPEND_MUTATION = gql`
+  mutation UndoPointsSpend($id: ID!) {
+    undoPointsSpend(id: $id)
+  }
+`;
+
+export const FREEZE_HABIT_DAY_MUTATION = gql`
+  mutation FreezeHabitDay($habitId: ID!, $date: String!, $today: String!) {
+    freezeHabitDay(habitId: $habitId, date: $date, today: $today)
+  }
+`;
+
+export const UNFREEZE_HABIT_DAY_MUTATION = gql`
+  mutation UnfreezeHabitDay($habitId: ID!, $date: String!) {
+    unfreezeHabitDay(habitId: $habitId, date: $date)
+  }
+`;
+
+export const CHALLENGES_QUERY = gql`
+  query Challenges($today: String!) {
+    challenges(today: $today) {
+      id
+      habitId
+      habitName
+      startDate
+      endDate
+      target
+      multiplier
+      done
+      status
+      bonusPoints
+    }
+  }
+`;
+
+export const CREATE_CHALLENGE_MUTATION = gql`
+  mutation CreateChallenge($habitId: ID!, $input: ChallengeInput!, $today: String!) {
+    createChallenge(habitId: $habitId, input: $input, today: $today) {
+      id
+    }
+  }
+`;
+
+export const DELETE_CHALLENGE_MUTATION = gql`
+  mutation DeleteChallenge($id: ID!) {
+    deleteChallenge(id: $id)
+  }
+`;
+
+// ─── Routines ────────────────────────────────────────────────────────────────
+
+const ROUTINE_FIELDS = gql`
+  fragment RoutineFields on Routine {
+    id
+    name
+    icon
+    startTime
+    position
+    habitIds
+  }
+`;
+
+export const ROUTINES_QUERY = gql`
+  ${ROUTINE_FIELDS}
+  query Routines {
+    routines {
+      ...RoutineFields
+    }
+  }
+`;
+
+export const CREATE_ROUTINE_MUTATION = gql`
+  ${ROUTINE_FIELDS}
+  mutation CreateRoutine($input: RoutineInput!) {
+    createRoutine(input: $input) {
+      ...RoutineFields
+    }
+  }
+`;
+
+export const UPDATE_ROUTINE_MUTATION = gql`
+  ${ROUTINE_FIELDS}
+  mutation UpdateRoutine($id: ID!, $input: UpdateRoutineInput!) {
+    updateRoutine(id: $id, input: $input) {
+      ...RoutineFields
+    }
+  }
+`;
+
+export const DELETE_ROUTINE_MUTATION = gql`
+  mutation DeleteRoutine($id: ID!) {
+    deleteRoutine(id: $id)
+  }
+`;
+
+/**
+ * Everything a check-in can change: points and streaks (dashboard, wallet,
+ * achievements), challenges, the calendar and the review. Refetched by
+ * name, so only the queries on screen run again.
+ */
+export const HABIT_PROGRESS_REFETCH = [
+  "DashboardStats",
+  "HabitRecords",
+  "PointsWallet",
+  "Achievements",
+  "Challenges",
+  "HabitCalendar",
+  "WeeklyReview",
+];

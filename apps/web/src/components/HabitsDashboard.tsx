@@ -1,4 +1,6 @@
 import { useQuery } from "@apollo/client/react";
+import { Link } from "@tanstack/react-router";
+import { ClipboardCheck } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ArchivedHabits } from "#components/ArchivedHabits";
@@ -20,6 +22,17 @@ export function HabitsDashboard() {
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Sunday and Monday: the week's review is ready. */}
+      {[0, 1].includes(new Date().getDay()) && (count ?? 0) > 0 && (
+        <Link
+          to="/habits/review"
+          className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm hover:bg-primary/10"
+        >
+          <ClipboardCheck className="size-4 text-primary" aria-hidden />
+          <span className="flex-1">{t("habits.review.banner")}</span>
+          <span className="font-medium text-primary">{t("habits.review.bannerAction")} →</span>
+        </Link>
+      )}
       <StatTiles />
 
       <section className="flex flex-col gap-4">

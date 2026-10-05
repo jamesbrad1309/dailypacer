@@ -3,17 +3,23 @@ export const shell = {
   appName: "LifeOS",
   nav: {
     groups: {
+      overview: "Overview",
       habits: "Habits",
       todos: "To-do",
       mind: "Mind",
       money: "Money",
       comingSoon: "Coming soon",
     },
+    progress: "Progress",
     tasksToday: "Today",
     tasksLists: "Lists",
     dashboard: "Dashboard",
     today: "Today",
     history: "History",
+    habitCalendar: "Calendar",
+    habitReview: "Weekly review",
+    habitRewards: "Rewards",
+    journalInsights: "Mood & patterns",
     journal: "Journal",
     journalCalendar: "Journal calendar",
     accounts: "Accounts",
@@ -29,6 +35,7 @@ export const shell = {
     mainLabel: "Main",
   },
   pages: {
+    progress: { title: "Progress", subtitle: "How your habits, tasks and mood are going." },
     tasksToday: { title: "Today's tasks", subtitle: "What you plan to get done today." },
     tasksLists: { title: "Lists", subtitle: "Your to-do lists, each with its own key prefix." },
     taskBoard: { title: "Board", subtitle: "Drag tasks between your list's columns." },
@@ -36,6 +43,20 @@ export const shell = {
     dashboard: { title: "Dashboard", subtitle: "Keep your streaks alive." },
     today: { title: "Today", subtitle: "What's due, hour by hour." },
     history: { title: "History", subtitle: "The last 30 days, habit by habit." },
+    habitCalendar: { title: "Calendar", subtitle: "Your habits across a week or a month." },
+    habitReview: {
+      title: "Weekly review",
+      subtitle: "Wins, misses, streaks at risk, and what goes together.",
+    },
+    habitRewards: {
+      title: "Rewards",
+      subtitle: "Points to spend, badges earned and challenges on the go.",
+    },
+    journalSearch: { title: "Search the journal", subtitle: "Every day, by words, #tag or kind." },
+    journalInsights: {
+      title: "Mood & patterns",
+      subtitle: "Your check-in streak, mood over time, and what drives your feelings.",
+    },
     journal: { title: "Journal", subtitle: "What you did, felt, and what happened." },
     journalCalendar: {
       title: "Journal calendar",

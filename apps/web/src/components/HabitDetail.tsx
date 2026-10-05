@@ -2,18 +2,36 @@ import { useQuery } from "@apollo/client/react";
 import { Link } from "@tanstack/react-router";
 import type { TFunction } from "i18next";
 import { ArrowLeft, Check, Clock, Flame, Star, Trophy } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { EditHabitDialog } from "#components/EditHabitDialog";
+import { HabitCorrelations } from "#components/HabitCorrelations";
 import { HabitInsights } from "#components/HabitInsights";
+import { HabitChallengeCard, StreakFreezes } from "#components/HabitMotivation";
 import { HabitRecordsTable, RECORDS_PAGE_SIZE } from "#components/HabitRecordsTable";
 import { HeatmapGrid } from "#components/HeatmapGrid";
 import { WeekComparisonChart } from "#components/WeekComparisonChart";
 import { HabitDetailSkeleton } from "#components/layout/Skeletons";
 import { Badge } from "#components/ui/badge";
-import { HABIT_DETAIL_QUERY, HABIT_RECORDS_QUERY } from "#graphql/habits";
-import type { HabitDetailData, HabitRecordsData, HabitSchedule } from "#graphql/types";
+import { Button } from "#components/ui/button";
+import {
+  HABITS_QUERY,
+  HABIT_CORRELATIONS_QUERY,
+  HABIT_DETAIL_QUERY,
+  HABIT_RECORDS_QUERY,
+} from "#graphql/habits";
+import { JOURNAL_FEELINGS_QUERY } from "#graphql/journal";
+import type {
+  HabitCorrelation,
+  HabitDetailData,
+  HabitRecordsData,
+  HabitSchedule,
+  HabitsData,
+  JournalFeeling,
+} from "#graphql/types";
+import { useLexicon } from "#hooks/useLexicon";
 import { formatShortDate, formatWeekday, fromIsoDate, todayIsoDate } from "#lib/dates";
+import { moodByDay } from "#lib/habit-mood";
 import { cn } from "#lib/utils";
 
 /**
@@ -37,10 +55,31 @@ export function HabitDetail({ habitId }: { habitId: string }) {
     },
   });
 
+  const [showMood, setShowMood] = useState(false);
+  const lexicon = useLexicon();
+  const { data: habitsData } = useQuery<HabitsData>(HABITS_QUERY);
+  const { data: correlationsData } = useQuery<{ habitCorrelations: HabitCorrelation[] }>(
+    HABIT_CORRELATIONS_QUERY,
+    { variables: { today: todayIsoDate() } },
+  );
+  const heatmapFrom = data?.habit.heatmap[0]?.date;
+  const { data: feelingsData } = useQuery<{ journalFeelings: JournalFeeling[] }>(
+    JOURNAL_FEELINGS_QUERY,
+    {
+      variables: { from: heatmapFrom ?? todayIsoDate(), to: todayIsoDate() },
+      skip: !showMood || !heatmapFrom,
+    },
+  );
+
   if (loading && !data) return <HabitDetailSkeleton />;
   if (error || !data) return <p className="text-destructive">{error?.message}</p>;
 
   const { habit } = data;
+  const mood =
+    showMood && feelingsData ? moodByDay(feelingsData.journalFeelings, lexicon) : undefined;
+  const correlations = (correlationsData?.habitCorrelations ?? []).filter(
+    (c) => c.habitId === habit.id || c.otherId === habit.id,
+  );
   const trackedSince = firstPage?.habitRecords.trackedSince ?? habit.createdAt.slice(0, 10);
 
   return (
@@ -76,6 +115,16 @@ export function HabitDetail({ habitId }: { habitId: string }) {
               </span>
             ))}
           </div>
+          {habit.customFields.length > 0 && (
+            <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm">
+              {habit.customFields.map((field) => (
+                <div key={field.label} className="contents">
+                  <dt className="text-muted-foreground">{field.label}</dt>
+                  <dd>{field.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
           <p className="text-xs text-muted-foreground">
             {t("habits.detail.created", {
               date: formatShortDate(trackedSince),
@@ -110,26 +159,69 @@ export function HabitDetail({ habitId }: { habitId: string }) {
 
       <div className="grid items-stretch gap-4 lg:grid-cols-2">
         <section className="flex flex-col gap-3 rounded-xl border bg-card p-4">
-          <h3 className="text-xs text-muted-foreground">
-            {t("habits.detail.heatmapTitle", { count: habit.heatmap.length })}
-          </h3>
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-xs text-muted-foreground">
+              {t("habits.detail.heatmapTitle", { count: habit.heatmap.length })}
+            </h3>
+            <Button
+              size="sm"
+              variant={showMood ? "default" : "outline"}
+              aria-pressed={showMood}
+              onClick={() => setShowMood(!showMood)}
+            >
+              {t("habits.detail.moodOverlay")}
+            </Button>
+          </div>
           <div className="flex flex-1 items-center justify-center">
-            <HeatmapGrid days={habit.heatmap} size="lg" />
+            <HeatmapGrid days={habit.heatmap} size="lg" mood={mood} />
           </div>
-          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-            <HeatmapKey className="bg-muted" label={t("habits.detail.statusNotDone")} />
-            <HeatmapKey
-              className="bg-emerald-300 dark:bg-emerald-800"
-              label={t("habits.detail.statusPartial")}
-            />
-            <HeatmapKey className="bg-emerald-500" label={t("habits.detail.statusDone")} />
-          </div>
+          {mood ? (
+            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+              <HeatmapKey className="bg-teal-600/70" label={t("journal.mood.bands.good")} />
+              <HeatmapKey
+                className="bg-muted-foreground/30"
+                label={t("journal.mood.bands.mixed")}
+              />
+              <HeatmapKey className="bg-orange-600/70" label={t("journal.mood.bands.low")} />
+              <HeatmapKey className="bg-muted/60" label={t("habits.detail.noMood")} />
+              <span className="flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-foreground" />{" "}
+                {t("habits.detail.statusDone")}
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+              <HeatmapKey className="bg-muted" label={t("habits.detail.statusNotDone")} />
+              <HeatmapKey
+                className="bg-emerald-300 dark:bg-emerald-800"
+                label={t("habits.detail.statusPartial")}
+              />
+              <HeatmapKey className="bg-emerald-500" label={t("habits.detail.statusDone")} />
+              <HeatmapKey className="bg-sky-400/70" label={t("habits.heatmap.frozen")} />
+              {habit.polarity === "AVOID" && (
+                <HeatmapKey className="bg-orange-500/80" label={t("habits.heatmap.slipped")} />
+              )}
+            </div>
+          )}
         </section>
 
         <WeekComparisonChart days={habit.heatmap} />
       </div>
 
       <HabitInsights habitId={habit.id} />
+
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+        <StreakFreezes habit={habit} />
+        <HabitChallengeCard habit={habit} />
+      </div>
+
+      <section className="flex flex-col gap-3 rounded-xl border bg-card p-4">
+        <div>
+          <h3 className="text-sm font-medium">{t("habits.correlations.title")}</h3>
+          <p className="text-xs text-muted-foreground">{t("habits.correlations.hint")}</p>
+        </div>
+        <HabitCorrelations correlations={correlations} habits={habitsData?.habits ?? []} />
+      </section>
 
       <HabitRecordsTable habit={habit} />
     </div>

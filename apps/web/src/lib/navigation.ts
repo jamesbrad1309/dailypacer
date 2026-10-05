@@ -1,12 +1,16 @@
 import {
+  Award,
   CalendarClock,
   CalendarDays,
+  CalendarRange,
   ChartBar,
+  ClipboardCheck,
   Coins,
   Grid3x3,
   KanbanSquare,
   Landmark,
   LayoutDashboard,
+  Lightbulb,
   ListTodo,
   type LucideIcon,
   NotebookPen,
@@ -15,6 +19,7 @@ import {
   Repeat,
   Tags,
   Target,
+  TrendingUp,
 } from "lucide-react";
 import type { shell } from "#i18n/en/shell";
 import type { FileRouteTypes } from "../routeTree.gen";
@@ -49,11 +54,18 @@ export interface NavGroup {
 
 export const NAV_GROUPS: NavGroup[] = [
   {
+    label: "overview",
+    items: [{ label: "progress", icon: TrendingUp, to: "/progress" }],
+  },
+  {
     label: "habits",
     items: [
       { label: "dashboard", icon: LayoutDashboard, to: "/habits", exact: true },
       { label: "today", icon: CalendarClock, to: "/habits/today" },
       { label: "history", icon: Grid3x3, to: "/habits/history" },
+      { label: "habitCalendar", icon: CalendarRange, to: "/habits/calendar" },
+      { label: "habitReview", icon: ClipboardCheck, to: "/habits/review" },
+      { label: "habitRewards", icon: Award, to: "/habits/rewards" },
     ],
   },
   {
@@ -68,6 +80,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "journal", icon: NotebookPen, to: "/journal", exact: true },
       { label: "journalCalendar", icon: CalendarDays, to: "/journal/calendar" },
+      { label: "journalInsights", icon: Lightbulb, to: "/journal/insights" },
     ],
   },
   {

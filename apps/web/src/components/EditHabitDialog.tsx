@@ -2,6 +2,7 @@ import { useMutation } from "@apollo/client/react";
 import { Settings } from "lucide-react";
 import { useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { HabitExtraFields } from "#components/HabitExtraFields";
 import { ScheduleEditor } from "#components/ScheduleEditor";
 import { Button } from "#components/ui/button";
 import {
@@ -20,6 +21,7 @@ import type { Habit } from "#graphql/types";
 import {
   type HabitDraft,
   type HabitDraftAction,
+  cleanCustomFields,
   habitDraftFrom,
   habitDraftReducer,
 } from "#lib/habit-draft";
@@ -59,6 +61,9 @@ export function EditHabitDialog({ habit }: { habit: Habit }) {
           targetValue: targetValue.trim() === "" ? null : Number(targetValue),
           startTime: startTime === "" ? null : startTime,
           schedule,
+          polarity: draft.polarity,
+          endDate: draft.endDate || null,
+          customFields: cleanCustomFields(draft.customFields),
         },
       },
     });
@@ -137,6 +142,15 @@ export function EditHabitDialog({ habit }: { habit: Habit }) {
           </div>
 
           <ScheduleEditor value={schedule} onChange={(value) => set("schedule", value)} />
+
+          <HabitExtraFields
+            polarity={draft.polarity}
+            onPolarity={(value) => set("polarity", value)}
+            endDate={draft.endDate}
+            onEndDate={(value) => set("endDate", value)}
+            customFields={draft.customFields}
+            onCustomFields={(value) => set("customFields", value)}
+          />
         </div>
 
         <DialogFooter>

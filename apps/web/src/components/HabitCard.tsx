@@ -1,6 +1,6 @@
 import { useMutation } from "@apollo/client/react";
 import { Link } from "@tanstack/react-router";
-import { Archive, Clock, Flame, Pause, Play, Star } from "lucide-react";
+import { Archive, Ban, CalendarClock, Clock, Flame, Pause, Play, Star } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { EditHabitDialog } from "#components/EditHabitDialog";
@@ -15,12 +15,14 @@ import {
   ARCHIVE_HABIT_MUTATION,
   DASHBOARD_STATS_QUERY,
   HABITS_QUERY,
+  HABIT_PROGRESS_REFETCH,
   PAUSE_HABIT_MUTATION,
   RESUME_HABIT_MUTATION,
   UPSERT_HABIT_ENTRY_MUTATION,
 } from "#graphql/habits";
 import type { Habit } from "#graphql/types";
-import { todayIsoDate } from "#lib/dates";
+import { useStreakCelebration } from "#hooks/useStreakCelebration";
+import { daysBetween, formatShortDate, todayIsoDate } from "#lib/dates";
 import { cn } from "#lib/utils";
 
 interface Props {
@@ -38,7 +40,7 @@ export function HabitCard({ habit, onTagClick }: Props) {
   // since DashboardStats isn't keyed by habit id — refetch it explicitly.
   // "HabitRecords" by name: a habit's detail page (if it's been opened) shows
   // its check-ins and misses, which all of these change.
-  const refetchQueries = [{ query: DASHBOARD_STATS_QUERY }, "HabitRecords"];
+  const refetchQueries = [{ query: DASHBOARD_STATS_QUERY }, ...HABIT_PROGRESS_REFETCH];
   // Archiving removes a row from the `habits` list query's array, which
   // normalization also can't do on its own (it only updates existing
   // entities, never a list's membership) — refetch both lists it moves between.
@@ -54,6 +56,11 @@ export function HabitCard({ habit, onTagClick }: Props) {
   const [archiveHabit] = useMutation(ARCHIVE_HABIT_MUTATION, { refetchQueries: refetchList });
 
   const entry = habit.todayEntry;
+  const arm = useStreakCelebration(habit);
+  const avoid = habit.polarity === "AVOID";
+  // An avoid habit's slip: not done, with slips counted in `value`.
+  const slipped = avoid && !entry?.completed && (entry?.value ?? 0) > 0;
+  const daysLeft = habit.endDate ? daysBetween(todayIsoDate(), habit.endDate) + 1 : null;
 
   return (
     <Card className={cn(habit.paused && "opacity-60")}>
@@ -83,6 +90,22 @@ export function HabitCard({ habit, onTagClick }: Props) {
               {t("habits.card.level", { level: habit.level, points: habit.points })}
             </Badge>
             {habit.paused && <Badge variant="outline">{t("habits.card.paused")}</Badge>}
+            {avoid && (
+              <Badge variant="outline" className="gap-1">
+                <Ban className="size-3" />
+                {t("habits.card.avoid")}
+              </Badge>
+            )}
+            {habit.endDate && daysLeft !== null && (
+              <Badge
+                variant="outline"
+                className="gap-1"
+                title={t("habits.card.endsOn", { date: formatShortDate(habit.endDate) })}
+              >
+                <CalendarClock className="size-3" />
+                {t("habits.card.daysLeft", { count: daysLeft })}
+              </Badge>
+            )}
             {habit.startTime && (
               <Badge variant="outline" className="gap-1">
                 <Clock className="size-3" />
@@ -121,27 +144,52 @@ export function HabitCard({ habit, onTagClick }: Props) {
               {t("habits.card.streakLabel")}
             </span>
           </div>
-          <Checkbox
-            checked={entry?.completed ?? false}
-            disabled={habit.paused}
-            onCheckedChange={(checked) =>
-              upsertEntry({
-                variables: {
-                  input: {
-                    habitId: habit.id,
-                    date: todayIsoDate(),
-                    completed: checked === true,
-                    value: entry?.value ?? undefined,
+          {avoid ? (
+            <Button
+              size="sm"
+              variant={slipped ? "destructive" : "outline"}
+              aria-pressed={slipped}
+              disabled={habit.paused}
+              onClick={() =>
+                upsertEntry({
+                  variables: {
+                    input: {
+                      habitId: habit.id,
+                      date: todayIsoDate(),
+                      completed: false,
+                      value: slipped ? 0 : 1,
+                    },
                   },
-                },
-              })
-            }
-          />
+                })
+              }
+            >
+              {slipped ? t("habits.card.slipped") : t("habits.card.slip")}
+            </Button>
+          ) : (
+            <Checkbox
+              checked={entry?.completed ?? false}
+              disabled={habit.paused}
+              aria-label={t("habits.card.doneToday", { name: habit.name })}
+              onCheckedChange={(checked) => {
+                if (checked === true) arm();
+                upsertEntry({
+                  variables: {
+                    input: {
+                      habitId: habit.id,
+                      date: todayIsoDate(),
+                      completed: checked === true,
+                      value: entry?.value ?? undefined,
+                    },
+                  },
+                });
+              }}
+            />
+          )}
         </div>
       </CardHeader>
 
       <CardContent className="flex flex-col gap-3">
-        {habit.unit ? (
+        {habit.unit && !avoid ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Input
               type="number"

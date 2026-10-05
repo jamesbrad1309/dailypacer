@@ -1,5 +1,5 @@
 import { useQuery } from "@apollo/client/react";
-import { Check, CircleDashed, Minus } from "lucide-react";
+import { Check, CircleDashed, Minus, X } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ListSkeleton } from "#components/layout/Skeletons";
@@ -22,7 +22,7 @@ const FILTERS: {
 ];
 
 type StatusLabel =
-  `habits.detail.status${"Done" | "Partial" | "NotDone" | "Missed" | "MissedWeek"}`;
+  `habits.detail.status${"Done" | "Partial" | "NotDone" | "Missed" | "MissedWeek" | "Slipped"}`;
 
 const MISSED_STYLE = "border border-dashed border-muted-foreground/40 text-muted-foreground";
 
@@ -46,6 +46,11 @@ const STATUS: Record<
     label: "habits.detail.statusNotDone",
   },
   MISSED: { icon: CircleDashed, className: MISSED_STYLE, label: "habits.detail.statusMissed" },
+  SLIPPED: {
+    icon: X,
+    className: "bg-orange-500/15 text-orange-800 dark:text-orange-300",
+    label: "habits.detail.statusSlipped",
+  },
   MISSED_WEEK: {
     icon: CircleDashed,
     className: MISSED_STYLE,

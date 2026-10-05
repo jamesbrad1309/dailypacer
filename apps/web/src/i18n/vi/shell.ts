@@ -4,18 +4,24 @@ export const shell: typeof en = {
   appName: "LifeOS",
   nav: {
     groups: {
+      overview: "Tổng quan",
       habits: "Thói quen",
       todos: "Việc cần làm",
       mind: "Tâm trí",
       money: "Tài chính",
       comingSoon: "Sắp ra mắt",
     },
+    progress: "Tiến bộ",
     tasksToday: "Hôm nay",
     tasksLists: "Danh sách",
     dashboard: "Tổng quan",
     today: "Hôm nay",
     history: "Lịch sử",
+    habitCalendar: "Lịch",
+    habitReview: "Tổng kết tuần",
+    habitRewards: "Phần thưởng",
     journal: "Nhật ký",
+    journalInsights: "Tâm trạng & quy luật",
     journalCalendar: "Lịch nhật ký",
     accounts: "Tài khoản",
     transactions: "Giao dịch",
@@ -30,6 +36,10 @@ export const shell: typeof en = {
     mainLabel: "Chính",
   },
   pages: {
+    progress: {
+      title: "Tiến bộ",
+      subtitle: "Thói quen, công việc và tâm trạng của bạn đang thế nào.",
+    },
     tasksToday: { title: "Việc hôm nay", subtitle: "Những việc bạn định làm hôm nay." },
     tasksLists: {
       title: "Danh sách",
@@ -40,6 +50,21 @@ export const shell: typeof en = {
     dashboard: { title: "Tổng quan", subtitle: "Giữ vững chuỗi ngày của bạn." },
     today: { title: "Hôm nay", subtitle: "Việc cần làm, theo từng giờ." },
     history: { title: "Lịch sử", subtitle: "30 ngày qua, theo từng thói quen." },
+    habitCalendar: { title: "Lịch", subtitle: "Các thói quen của bạn theo tuần hoặc theo tháng." },
+    habitReview: {
+      title: "Tổng kết tuần",
+      subtitle: "Thành công, bỏ lỡ, chuỗi sắp đứt, và những gì đi cùng nhau.",
+    },
+    habitRewards: {
+      title: "Phần thưởng",
+      subtitle: "Điểm để tiêu, huy hiệu đã đạt và thử thách đang diễn ra.",
+    },
+    journalSearch: { title: "Tìm trong nhật ký", subtitle: "Mọi ngày, theo từ, #thẻ hoặc loại." },
+    journalInsights: {
+      title: "Tâm trạng & quy luật",
+      subtitle:
+        "Chuỗi ngày ghi cảm xúc, tâm trạng theo thời gian, và điều gì khiến bạn cảm thấy vậy.",
+    },
     journal: {
       title: "Nhật ký",
       subtitle: "Bạn đã làm gì, cảm thấy ra sao, và điều gì đã xảy ra.",

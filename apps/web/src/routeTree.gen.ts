@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LogRouteImport } from './routes/log'
+import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as FinanceIndexRouteImport } from './routes/finance/index'
 import { Route as FinanceAccountsRouteImport } from './routes/finance/accounts'
 import { Route as FinanceBudgetsRouteImport } from './routes/finance/budgets'
@@ -22,10 +23,15 @@ import { Route as FinanceSubscriptionsRouteImport } from './routes/finance/subsc
 import { Route as FinanceTransactionsRouteImport } from './routes/finance/transactions'
 import { Route as HabitsIndexRouteImport } from './routes/habits/index'
 import { Route as HabitsHabitIdRouteImport } from './routes/habits/$habitId'
+import { Route as HabitsCalendarRouteImport } from './routes/habits/calendar'
 import { Route as HabitsHistoryRouteImport } from './routes/habits/history'
+import { Route as HabitsReviewRouteImport } from './routes/habits/review'
+import { Route as HabitsRewardsRouteImport } from './routes/habits/rewards'
 import { Route as HabitsTodayRouteImport } from './routes/habits/today'
 import { Route as JournalIndexRouteImport } from './routes/journal/index'
 import { Route as JournalCalendarRouteImport } from './routes/journal/calendar'
+import { Route as JournalInsightsRouteImport } from './routes/journal/insights'
+import { Route as JournalSearchRouteImport } from './routes/journal/search'
 import { Route as TasksIndexRouteImport } from './routes/tasks/index'
 import { Route as TasksListsIndexRouteImport } from './routes/tasks/lists/index'
 import { Route as TasksListsListIdRouteImport } from './routes/tasks/lists/$listId'
@@ -38,6 +44,11 @@ const IndexRoute = IndexRouteImport.update({
 const LogRoute = LogRouteImport.update({
   id: '/log',
   path: '/log',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProgressRoute = ProgressRouteImport.update({
+  id: '/progress',
+  path: '/progress',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FinanceIndexRoute = FinanceIndexRouteImport.update({
@@ -95,9 +106,24 @@ const HabitsHabitIdRoute = HabitsHabitIdRouteImport.update({
   path: '/habits/$habitId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HabitsCalendarRoute = HabitsCalendarRouteImport.update({
+  id: '/habits/calendar',
+  path: '/habits/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HabitsHistoryRoute = HabitsHistoryRouteImport.update({
   id: '/habits/history',
   path: '/habits/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HabitsReviewRoute = HabitsReviewRouteImport.update({
+  id: '/habits/review',
+  path: '/habits/review',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HabitsRewardsRoute = HabitsRewardsRouteImport.update({
+  id: '/habits/rewards',
+  path: '/habits/rewards',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HabitsTodayRoute = HabitsTodayRouteImport.update({
@@ -113,6 +139,16 @@ const JournalIndexRoute = JournalIndexRouteImport.update({
 const JournalCalendarRoute = JournalCalendarRouteImport.update({
   id: '/journal/calendar',
   path: '/journal/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JournalInsightsRoute = JournalInsightsRouteImport.update({
+  id: '/journal/insights',
+  path: '/journal/insights',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JournalSearchRoute = JournalSearchRouteImport.update({
+  id: '/journal/search',
+  path: '/journal/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TasksIndexRoute = TasksIndexRouteImport.update({
@@ -134,6 +170,7 @@ const TasksListsListIdRoute = TasksListsListIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/log': typeof LogRoute
+  '/progress': typeof ProgressRoute
   '/finance/accounts': typeof FinanceAccountsRoute
   '/finance/budgets': typeof FinanceBudgetsRoute
   '/finance/categories': typeof FinanceCategoriesRoute
@@ -143,9 +180,14 @@ export interface FileRoutesByFullPath {
   '/finance/subscriptions': typeof FinanceSubscriptionsRoute
   '/finance/transactions': typeof FinanceTransactionsRoute
   '/habits/$habitId': typeof HabitsHabitIdRoute
+  '/habits/calendar': typeof HabitsCalendarRoute
   '/habits/history': typeof HabitsHistoryRoute
+  '/habits/review': typeof HabitsReviewRoute
+  '/habits/rewards': typeof HabitsRewardsRoute
   '/habits/today': typeof HabitsTodayRoute
   '/journal/calendar': typeof JournalCalendarRoute
+  '/journal/insights': typeof JournalInsightsRoute
+  '/journal/search': typeof JournalSearchRoute
   '/finance/': typeof FinanceIndexRoute
   '/habits/': typeof HabitsIndexRoute
   '/journal/': typeof JournalIndexRoute
@@ -156,6 +198,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/log': typeof LogRoute
+  '/progress': typeof ProgressRoute
   '/finance/accounts': typeof FinanceAccountsRoute
   '/finance/budgets': typeof FinanceBudgetsRoute
   '/finance/categories': typeof FinanceCategoriesRoute
@@ -165,9 +208,14 @@ export interface FileRoutesByTo {
   '/finance/subscriptions': typeof FinanceSubscriptionsRoute
   '/finance/transactions': typeof FinanceTransactionsRoute
   '/habits/$habitId': typeof HabitsHabitIdRoute
+  '/habits/calendar': typeof HabitsCalendarRoute
   '/habits/history': typeof HabitsHistoryRoute
+  '/habits/review': typeof HabitsReviewRoute
+  '/habits/rewards': typeof HabitsRewardsRoute
   '/habits/today': typeof HabitsTodayRoute
   '/journal/calendar': typeof JournalCalendarRoute
+  '/journal/insights': typeof JournalInsightsRoute
+  '/journal/search': typeof JournalSearchRoute
   '/finance': typeof FinanceIndexRoute
   '/habits': typeof HabitsIndexRoute
   '/journal': typeof JournalIndexRoute
@@ -179,6 +227,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/log': typeof LogRoute
+  '/progress': typeof ProgressRoute
   '/finance/accounts': typeof FinanceAccountsRoute
   '/finance/budgets': typeof FinanceBudgetsRoute
   '/finance/categories': typeof FinanceCategoriesRoute
@@ -188,9 +237,14 @@ export interface FileRoutesById {
   '/finance/subscriptions': typeof FinanceSubscriptionsRoute
   '/finance/transactions': typeof FinanceTransactionsRoute
   '/habits/$habitId': typeof HabitsHabitIdRoute
+  '/habits/calendar': typeof HabitsCalendarRoute
   '/habits/history': typeof HabitsHistoryRoute
+  '/habits/review': typeof HabitsReviewRoute
+  '/habits/rewards': typeof HabitsRewardsRoute
   '/habits/today': typeof HabitsTodayRoute
   '/journal/calendar': typeof JournalCalendarRoute
+  '/journal/insights': typeof JournalInsightsRoute
+  '/journal/search': typeof JournalSearchRoute
   '/finance/': typeof FinanceIndexRoute
   '/habits/': typeof HabitsIndexRoute
   '/journal/': typeof JournalIndexRoute
@@ -203,6 +257,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/log'
+    | '/progress'
     | '/finance/accounts'
     | '/finance/budgets'
     | '/finance/categories'
@@ -212,9 +267,14 @@ export interface FileRouteTypes {
     | '/finance/subscriptions'
     | '/finance/transactions'
     | '/habits/$habitId'
+    | '/habits/calendar'
     | '/habits/history'
+    | '/habits/review'
+    | '/habits/rewards'
     | '/habits/today'
     | '/journal/calendar'
+    | '/journal/insights'
+    | '/journal/search'
     | '/finance/'
     | '/habits/'
     | '/journal/'
@@ -225,6 +285,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/log'
+    | '/progress'
     | '/finance/accounts'
     | '/finance/budgets'
     | '/finance/categories'
@@ -234,9 +295,14 @@ export interface FileRouteTypes {
     | '/finance/subscriptions'
     | '/finance/transactions'
     | '/habits/$habitId'
+    | '/habits/calendar'
     | '/habits/history'
+    | '/habits/review'
+    | '/habits/rewards'
     | '/habits/today'
     | '/journal/calendar'
+    | '/journal/insights'
+    | '/journal/search'
     | '/finance'
     | '/habits'
     | '/journal'
@@ -247,6 +313,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/log'
+    | '/progress'
     | '/finance/accounts'
     | '/finance/budgets'
     | '/finance/categories'
@@ -256,9 +323,14 @@ export interface FileRouteTypes {
     | '/finance/subscriptions'
     | '/finance/transactions'
     | '/habits/$habitId'
+    | '/habits/calendar'
     | '/habits/history'
+    | '/habits/review'
+    | '/habits/rewards'
     | '/habits/today'
     | '/journal/calendar'
+    | '/journal/insights'
+    | '/journal/search'
     | '/finance/'
     | '/habits/'
     | '/journal/'
@@ -270,6 +342,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LogRoute: typeof LogRoute
+  ProgressRoute: typeof ProgressRoute
   FinanceAccountsRoute: typeof FinanceAccountsRoute
   FinanceBudgetsRoute: typeof FinanceBudgetsRoute
   FinanceCategoriesRoute: typeof FinanceCategoriesRoute
@@ -279,9 +352,14 @@ export interface RootRouteChildren {
   FinanceSubscriptionsRoute: typeof FinanceSubscriptionsRoute
   FinanceTransactionsRoute: typeof FinanceTransactionsRoute
   HabitsHabitIdRoute: typeof HabitsHabitIdRoute
+  HabitsCalendarRoute: typeof HabitsCalendarRoute
   HabitsHistoryRoute: typeof HabitsHistoryRoute
+  HabitsReviewRoute: typeof HabitsReviewRoute
+  HabitsRewardsRoute: typeof HabitsRewardsRoute
   HabitsTodayRoute: typeof HabitsTodayRoute
   JournalCalendarRoute: typeof JournalCalendarRoute
+  JournalInsightsRoute: typeof JournalInsightsRoute
+  JournalSearchRoute: typeof JournalSearchRoute
   FinanceIndexRoute: typeof FinanceIndexRoute
   HabitsIndexRoute: typeof HabitsIndexRoute
   JournalIndexRoute: typeof JournalIndexRoute
@@ -304,6 +382,13 @@ declare module '@tanstack/react-router' {
       path: '/log'
       fullPath: '/log'
       preLoaderRoute: typeof LogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/progress': {
+      id: '/progress'
+      path: '/progress'
+      fullPath: '/progress'
+      preLoaderRoute: typeof ProgressRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/finance/': {
@@ -383,11 +468,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HabitsHabitIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/habits/calendar': {
+      id: '/habits/calendar'
+      path: '/habits/calendar'
+      fullPath: '/habits/calendar'
+      preLoaderRoute: typeof HabitsCalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/habits/history': {
       id: '/habits/history'
       path: '/habits/history'
       fullPath: '/habits/history'
       preLoaderRoute: typeof HabitsHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/habits/review': {
+      id: '/habits/review'
+      path: '/habits/review'
+      fullPath: '/habits/review'
+      preLoaderRoute: typeof HabitsReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/habits/rewards': {
+      id: '/habits/rewards'
+      path: '/habits/rewards'
+      fullPath: '/habits/rewards'
+      preLoaderRoute: typeof HabitsRewardsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/habits/today': {
@@ -409,6 +515,20 @@ declare module '@tanstack/react-router' {
       path: '/journal/calendar'
       fullPath: '/journal/calendar'
       preLoaderRoute: typeof JournalCalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/journal/insights': {
+      id: '/journal/insights'
+      path: '/journal/insights'
+      fullPath: '/journal/insights'
+      preLoaderRoute: typeof JournalInsightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/journal/search': {
+      id: '/journal/search'
+      path: '/journal/search'
+      fullPath: '/journal/search'
+      preLoaderRoute: typeof JournalSearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tasks/': {
@@ -438,6 +558,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LogRoute: LogRoute,
+  ProgressRoute: ProgressRoute,
   FinanceAccountsRoute: FinanceAccountsRoute,
   FinanceBudgetsRoute: FinanceBudgetsRoute,
   FinanceCategoriesRoute: FinanceCategoriesRoute,
@@ -447,9 +568,14 @@ const rootRouteChildren: RootRouteChildren = {
   FinanceSubscriptionsRoute: FinanceSubscriptionsRoute,
   FinanceTransactionsRoute: FinanceTransactionsRoute,
   HabitsHabitIdRoute: HabitsHabitIdRoute,
+  HabitsCalendarRoute: HabitsCalendarRoute,
   HabitsHistoryRoute: HabitsHistoryRoute,
+  HabitsReviewRoute: HabitsReviewRoute,
+  HabitsRewardsRoute: HabitsRewardsRoute,
   HabitsTodayRoute: HabitsTodayRoute,
   JournalCalendarRoute: JournalCalendarRoute,
+  JournalInsightsRoute: JournalInsightsRoute,
+  JournalSearchRoute: JournalSearchRoute,
   FinanceIndexRoute: FinanceIndexRoute,
   HabitsIndexRoute: HabitsIndexRoute,
   JournalIndexRoute: JournalIndexRoute,

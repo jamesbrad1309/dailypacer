@@ -11,10 +11,30 @@ export interface HabitEntry {
   note: string | null;
 }
 
+/** How a habit went on a day; see the BFF's HabitDayStatus. */
+export type HabitDayStatus =
+  | "DONE"
+  | "PARTIAL"
+  | "SLIPPED"
+  | "MISSED"
+  | "DUE"
+  | "FROZEN"
+  | "PAUSED"
+  | "OFF"
+  | "NONE";
+
 export interface HeatmapDay {
   date: string;
   completed: boolean;
   value: number | null;
+  status: HabitDayStatus;
+}
+
+export type HabitPolarity = "BUILD" | "AVOID";
+
+export interface HabitCustomField {
+  label: string;
+  value: string;
 }
 
 export interface Habit {
@@ -29,6 +49,11 @@ export interface Habit {
   /** "HH:mm" (24h), or null for "anytime today" — see components/DayCalendar.tsx. */
   startTime: string | null;
   schedule: HabitSchedule;
+  /** AVOID ("no sugar"): a due day counts as done unless a slip is logged. */
+  polarity: HabitPolarity;
+  /** A time-boxed habit's last day; it archives itself after. */
+  endDate: string | null;
+  customFields: HabitCustomField[];
   paused: boolean;
   currentStreak: number;
   longestStreak: number;
@@ -63,7 +88,13 @@ export interface HabitDetailData {
   habit: Habit & { createdAt: string };
 }
 
-export type HabitRecordStatus = "DONE" | "PARTIAL" | "NOT_DONE" | "MISSED" | "MISSED_WEEK";
+export type HabitRecordStatus =
+  | "DONE"
+  | "PARTIAL"
+  | "NOT_DONE"
+  | "MISSED"
+  | "MISSED_WEEK"
+  | "SLIPPED";
 export type HabitRecordFilter = "ALL" | "DONE" | "NOT_DONE" | "MISSED";
 
 /** One row of a habit's records: a stored entry, a missed day, or a missed week. */
@@ -142,6 +173,14 @@ export interface JournalTrigger {
   kind: JournalEntryKind;
   text: string;
   time: string | null;
+  tags: string[];
+  tone: JournalTone | null;
+}
+
+export interface JournalFeeling {
+  date: string;
+  emotion: string;
+  intensity: number | null;
 }
 
 export interface JournalEntry {
@@ -706,4 +745,157 @@ export interface TodayTasksData {
 
 export interface ListBoardData {
   listBoard: { list: TodoList; tasks: Task[]; doneTotal: number };
+}
+
+// ─── Habit calendar, review, achievements, points, routines ──────────────────
+
+export interface HabitDayCell {
+  date: string;
+  status: HabitDayStatus;
+  value: number | null;
+}
+
+export interface HabitCalendarData {
+  habitCalendar: { habitId: string; days: HabitDayCell[] }[];
+}
+
+export interface ReviewTotals {
+  done: number;
+  due: number;
+  rate: number | null;
+}
+
+export interface WeeklyReview {
+  weekStart: string;
+  weekEnd: string;
+  complete: boolean;
+  totals: ReviewTotals;
+  previous: ReviewTotals;
+  habits: {
+    id: string;
+    name: string;
+    done: number;
+    due: number;
+    rate: number | null;
+    missed: string[];
+    frozen: number;
+  }[];
+  wins: string[];
+  atRisk: { id: string; name: string; currentStreak: number }[];
+  bestDay: { date: string; done: number } | null;
+}
+
+export type AchievementKey =
+  | "FIRST_CHECK_IN"
+  | "CHECK_INS_100"
+  | "CHECK_INS_500"
+  | "STREAK_7"
+  | "STREAK_30"
+  | "STREAK_100"
+  | "PERFECT_WEEK"
+  | "CHALLENGE_WON"
+  | "LEVEL_5";
+
+export interface Achievement {
+  key: AchievementKey;
+  progress: number;
+  target: number;
+  unlocked: boolean;
+  achievedOn: string | null;
+}
+
+export interface HabitCorrelation {
+  habitId: string;
+  otherId: string;
+  kind: "RATE" | "VALUE";
+  withValue: number;
+  withoutValue: number;
+  daysWith: number;
+  daysWithout: number;
+}
+
+export interface PointsSpend {
+  id: string;
+  points: number;
+  kind: "reward" | "freeze";
+  label: string;
+  createdAt: string;
+}
+
+export interface PointsWallet {
+  earned: number;
+  spent: number;
+  balance: number;
+  freezeCost: number;
+  spends: PointsSpend[];
+}
+
+export interface Reward {
+  id: string;
+  name: string;
+  emoji: string | null;
+  cost: number;
+  timesRedeemed: number;
+}
+
+export type ChallengeStatus = "UPCOMING" | "ACTIVE" | "WON" | "LOST";
+
+export interface HabitChallenge {
+  id: string;
+  habitId: string;
+  habitName: string;
+  startDate: string;
+  endDate: string;
+  target: number;
+  multiplier: number;
+  done: number;
+  status: ChallengeStatus;
+  bonusPoints: number;
+}
+
+export interface Routine {
+  id: string;
+  name: string;
+  icon: string | null;
+  startTime: string | null;
+  position: number;
+  /** In order. */
+  habitIds: string[];
+}
+
+// ─── Progress ────────────────────────────────────────────────────────────────
+
+export interface ProgressWeek {
+  weekStart: string;
+  done: number;
+  due: number;
+  rate: number | null;
+}
+
+export interface HabitProgressData {
+  habitProgress: {
+    weeks: ProgressWeek[];
+    habits: {
+      id: string;
+      name: string;
+      done: number;
+      due: number;
+      rate: number | null;
+      perWeek: number[];
+      perWeekDue: number[];
+    }[];
+    days: { date: string; done: number; due: number }[];
+  };
+}
+
+export interface TaskProgressWeek {
+  weekStart: string;
+  completed: number;
+  onTime: number;
+  late: number;
+  noDueDate: number;
+}
+
+export interface TaskProgressData {
+  taskProgress: { weeks: TaskProgressWeek[]; overdueNow: number };
 }

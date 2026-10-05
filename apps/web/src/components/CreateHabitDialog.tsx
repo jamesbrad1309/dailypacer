@@ -2,6 +2,7 @@ import { useMutation } from "@apollo/client/react";
 import { Plus } from "lucide-react";
 import { type FormEvent, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { HabitExtraFields } from "#components/HabitExtraFields";
 import { ScheduleEditor } from "#components/ScheduleEditor";
 import { Button } from "#components/ui/button";
 import {
@@ -20,6 +21,7 @@ import {
   BLANK_HABIT_DRAFT,
   type HabitDraft,
   type HabitDraftAction,
+  cleanCustomFields,
   habitDraftReducer,
 } from "#lib/habit-draft";
 import { HABIT_TEMPLATES, type HabitTemplate } from "#lib/habit-templates";
@@ -49,6 +51,9 @@ export function CreateHabitDialog() {
         startTime: template.startTime ?? "",
         schedule: template.schedule,
         tags: formatTags(template.tags),
+        polarity: "BUILD",
+        endDate: "",
+        customFields: [],
       },
     });
   }
@@ -74,6 +79,9 @@ export function CreateHabitDialog() {
           targetValue: targetValue.trim() === "" ? undefined : Number(targetValue),
           startTime: startTime === "" ? undefined : startTime,
           schedule,
+          polarity: draft.polarity,
+          endDate: draft.endDate || undefined,
+          customFields: cleanCustomFields(draft.customFields),
         },
       },
     });
@@ -179,6 +187,15 @@ export function CreateHabitDialog() {
           </div>
 
           <ScheduleEditor value={schedule} onChange={(value) => set("schedule", value)} />
+
+          <HabitExtraFields
+            polarity={draft.polarity}
+            onPolarity={(value) => set("polarity", value)}
+            endDate={draft.endDate}
+            onEndDate={(value) => set("endDate", value)}
+            customFields={draft.customFields}
+            onCustomFields={(value) => set("customFields", value)}
+          />
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>

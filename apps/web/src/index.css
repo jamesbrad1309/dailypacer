@@ -21,10 +21,18 @@
   --ring: oklch(0.708 0 0);
   --radius: 0.625rem;
   /* Charts (validated with the dataviz skill's palette checker against
-     --card in each mode): categorical slots in fixed order, and a neutral
-     reference mark. */
+     --card in each mode): eight categorical slots in this fixed order (a
+     ninth series folds into "Other", never a new hue), and a neutral
+     reference mark. Slots 3–5 are under 3:1 on the light card, so charts
+     using them always have a legend and a table view. */
   --viz-series-1: #2a78d6;
   --viz-series-2: #eb6834;
+  --viz-series-3: #1baf7a;
+  --viz-series-4: #eda100;
+  --viz-series-5: #e87ba4;
+  --viz-series-6: #008300;
+  --viz-series-7: #4a3aa7;
+  --viz-series-8: #e34948;
   --viz-reference: #52514e;
   /* Status: a fixed scale (the same in both themes), reserved for state and
      always shown with an icon and a label, never colour alone. */
@@ -52,6 +60,12 @@
   --ring: oklch(0.556 0 0);
   --viz-series-1: #3987e5;
   --viz-series-2: #d95926;
+  --viz-series-3: #199e70;
+  --viz-series-4: #c98500;
+  --viz-series-5: #d55181;
+  --viz-series-6: #008300;
+  --viz-series-7: #9085e9;
+  --viz-series-8: #e66767;
   --viz-reference: #c3c2b7;
 }
 
@@ -59,6 +73,12 @@
   --color-background: var(--background);
   --color-viz-series-1: var(--viz-series-1);
   --color-viz-series-2: var(--viz-series-2);
+  --color-viz-series-3: var(--viz-series-3);
+  --color-viz-series-4: var(--viz-series-4);
+  --color-viz-series-5: var(--viz-series-5);
+  --color-viz-series-6: var(--viz-series-6);
+  --color-viz-series-7: var(--viz-series-7);
+  --color-viz-series-8: var(--viz-series-8);
   --color-viz-reference: var(--viz-reference);
   --color-status-good: var(--status-good);
   --color-status-warning: var(--status-warning);

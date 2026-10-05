@@ -7,6 +7,7 @@ import { Card, CardContent } from "#components/ui/card";
 import { Progress } from "#components/ui/progress";
 import { DASHBOARD_STATS_QUERY, HABITS_QUERY } from "#graphql/habits";
 import type { DashboardStatsData, HabitsData } from "#graphql/types";
+import { isDoneToday } from "#lib/habit-today";
 import { isDueOn } from "#lib/schedule";
 
 function Tile({
@@ -46,7 +47,7 @@ export function StatTiles() {
 
   const today = new Date();
   const due = (habitsData?.habits ?? []).filter((h) => !h.paused && isDueOn(h.schedule, today));
-  const done = due.filter((h) => h.todayEntry?.completed).length;
+  const done = due.filter(isDoneToday).length;
   const donePct = due.length > 0 ? Math.round((done / due.length) * 100) : 0;
 
   return (
