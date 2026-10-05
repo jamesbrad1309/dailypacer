@@ -151,7 +151,27 @@ input UpdateTodoColumnInput {
   position: Float
 }
 
+type TaskProgressWeek {
+  """Monday."""
+  weekStart: String!
+  completed: Int!
+  """With a due date, done on or before it."""
+  onTime: Int!
+  """With a due date, done after it."""
+  late: Int!
+  noDueDate: Int!
+}
+
+type TaskProgress {
+  """Oldest first; the last week is the current one, so far."""
+  weeks: [TaskProgressWeek!]!
+  """Open tasks past their due date now."""
+  overdueNow: Int!
+}
+
 extend type Query {
+  """Tasks completed per week over the last `weeks` weeks (1–52)."""
+  taskProgress(weeks: Int = 12, today: String!): TaskProgress!
   todoLists: [TodoList!]!
   """A suggested free prefix for a list name."""
   suggestListPrefix(name: String!): String!

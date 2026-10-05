@@ -27,6 +27,8 @@ export default {
       if (args.excludeDependenciesOf) params.set("exclude", args.excludeDependenciesOf);
       return ctx.api.get(`/tasks/search?${params}`);
     },
+    taskProgress: (_: unknown, args: { weeks: number; today: string }, ctx: GraphQLContext) =>
+      ctx.api.get(`/tasks/progress?weeks=${args.weeks}&today=${enc(args.today)}`),
     taskByKey: (_: unknown, args: { key: string }, ctx: GraphQLContext) =>
       ctx.api.get(`/tasks/by-key/${enc(args.key)}`),
   },

@@ -3,6 +3,13 @@ import type { GraphQLContext } from "#graphql/context";
 
 const habitPath = (id: string) => `/habits/${encodeURIComponent(id)}`;
 
+type HabitInput = Record<string, unknown> & { polarity?: string | null };
+
+/** The GraphQL enum (BUILD/AVOID) as the API's "build"/"avoid". */
+function toApiHabitInput({ polarity, ...input }: HabitInput) {
+  return polarity ? { ...input, polarity: polarity.toLowerCase() } : input;
+}
+
 /**
  * Pure mapping from GraphQL operations to REST calls. Validation, streaks and
  * points are the API's job. This layer shapes and batches. Stats fields share
@@ -36,10 +43,10 @@ export default {
       ),
   },
   Mutation: {
-    createHabit: (_: unknown, args: { input: unknown }, ctx: GraphQLContext) =>
-      ctx.api.post<ApiHabit>("/habits", args.input),
-    updateHabit: (_: unknown, args: { id: string; input: unknown }, ctx: GraphQLContext) =>
-      ctx.api.patch<ApiHabit>(habitPath(args.id), args.input),
+    createHabit: (_: unknown, args: { input: HabitInput }, ctx: GraphQLContext) =>
+      ctx.api.post<ApiHabit>("/habits", toApiHabitInput(args.input)),
+    updateHabit: (_: unknown, args: { id: string; input: HabitInput }, ctx: GraphQLContext) =>
+      ctx.api.patch<ApiHabit>(habitPath(args.id), toApiHabitInput(args.input)),
     archiveHabit: (_: unknown, args: { id: string }, ctx: GraphQLContext) =>
       ctx.api.post<ApiHabit>(`${habitPath(args.id)}/archive`),
     unarchiveHabit: (_: unknown, args: { id: string }, ctx: GraphQLContext) =>
@@ -50,6 +57,8 @@ export default {
       ctx.api.post<ApiHabit>(`${habitPath(args.id)}/resume`, { date: args.date ?? undefined }),
   },
   Habit: {
+    polarity: (habit: ApiHabit) => habit.polarity.toUpperCase(),
+    customFields: (habit: ApiHabit) => habit.metadata?.fields ?? [],
     todayEntry: (habit: ApiHabit, _: unknown, ctx: GraphQLContext) =>
       ctx.loaders.todayEntry.load(habit.id),
     paused: (habit: ApiHabit) => habit.pausedAt != null,

@@ -16,7 +16,10 @@ export interface ApiHabit {
   targetValue: number | null;
   startTime: string | null;
   schedule: unknown;
-  metadata: Record<string, unknown>;
+  metadata: Record<string, unknown> & { fields?: { label: string; value: string }[] };
+  /** "build" | "avoid" */
+  polarity: string;
+  endDate: string | null;
   archivedAt: string | null;
   pausedAt: string | null;
   createdAt: string;

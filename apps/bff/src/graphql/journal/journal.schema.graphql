@@ -42,6 +42,22 @@ type JournalTrigger {
   kind: JournalEntryKind!
   text: String!
   time: String
+  tags: [String!]!
+  tone: JournalTone
+}
+
+type JournalSearchResult {
+  """Newest first."""
+  items: [JournalEntry!]!
+  """Matches across all pages."""
+  total: Int!
+}
+
+"""One feeling, for mood over long ranges."""
+type JournalFeeling {
+  date: String!
+  emotion: String!
+  intensity: Int
 }
 
 """Per-day totals for the journal's week strip."""
@@ -102,6 +118,20 @@ extend type Query {
   journalDays(from: String!, to: String!): [JournalDay!]!
   """YYYY-MM-DD of the earliest journal entry; null before anything is written."""
   journalFirstDate: String
+  """Across every day: text or emotion, a #tag, a kind, a date range; all optional."""
+  journalSearch(
+    query: String = ""
+    tag: String
+    kind: JournalEntryKind
+    from: String
+    to: String
+    limit: Int = 25
+    offset: Int = 0
+  ): JournalSearchResult!
+  """Whole entries with their triggers, a year at most: for patterns."""
+  journalRange(from: String!, to: String!): [JournalEntry!]!
+  """Feelings only, up to 400 days: for the mood streak and mood overlays."""
+  journalFeelings(from: String!, to: String!): [JournalFeeling!]!
 }
 
 extend type Mutation {

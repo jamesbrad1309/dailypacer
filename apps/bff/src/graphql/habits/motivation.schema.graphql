@@ -1,0 +1,263 @@
+# Calendar, weekly review, achievements, correlations, points, rewards,
+# streak freezes, challenges and routines. Rows carry habit ids; the web app
+# joins them with the habits it already has.
+
+type HabitDayCell {
+  """YYYY-MM-DD"""
+  date: String!
+  status: HabitDayStatus!
+  value: Float
+}
+
+type HabitCalendarRow {
+  habitId: ID!
+  days: [HabitDayCell!]!
+}
+
+type ReviewTotals {
+  done: Int!
+  due: Int!
+  rate: Float
+}
+
+type ReviewHabit {
+  id: ID!
+  name: String!
+  done: Int!
+  due: Int!
+  rate: Float
+  """Due days missed or slipped."""
+  missed: [String!]!
+  frozen: Int!
+}
+
+type StreakAtRisk {
+  id: ID!
+  name: String!
+  currentStreak: Int!
+}
+
+type ReviewBestDay {
+  date: String!
+  done: Int!
+}
+
+type WeeklyReview {
+  weekStart: String!
+  weekEnd: String!
+  """False while the week is still going."""
+  complete: Boolean!
+  totals: ReviewTotals!
+  """The week before."""
+  previous: ReviewTotals!
+  habits: [ReviewHabit!]!
+  """Ids of habits done every time they were due."""
+  wins: [ID!]!
+  """Streaks of 3+ due today and not done yet (the current week only)."""
+  atRisk: [StreakAtRisk!]!
+  bestDay: ReviewBestDay
+}
+
+enum AchievementKey {
+  FIRST_CHECK_IN
+  CHECK_INS_100
+  CHECK_INS_500
+  STREAK_7
+  STREAK_30
+  STREAK_100
+  PERFECT_WEEK
+  CHALLENGE_WON
+  LEVEL_5
+}
+
+"""A badge, worked out from history every time."""
+type Achievement {
+  key: AchievementKey!
+  progress: Int!
+  target: Int!
+  unlocked: Boolean!
+  """YYYY-MM-DD it was reached, where that can be worked out."""
+  achievedOn: String
+}
+
+enum CorrelationKind {
+  """How often the other habit was done."""
+  RATE
+  """The other habit's average value."""
+  VALUE
+}
+
+"""On days `habitId` was done, `otherId` went differently: a pattern, not a cause."""
+type HabitCorrelation {
+  habitId: ID!
+  otherId: ID!
+  kind: CorrelationKind!
+  """With the first habit done: a rate (0–1) or an average value."""
+  withValue: Float!
+  withoutValue: Float!
+  daysWith: Int!
+  daysWithout: Int!
+}
+
+type PointsSpend {
+  id: ID!
+  points: Int!
+  """reward | freeze"""
+  kind: String!
+  label: String!
+  createdAt: String!
+}
+
+"""Points earned from every check-in ever, minus what's been spent. Spending never lowers the level."""
+type PointsWallet {
+  earned: Int!
+  spent: Int!
+  balance: Int!
+  """What a streak freeze costs."""
+  freezeCost: Int!
+  """The latest spends, newest first."""
+  spends: [PointsSpend!]!
+}
+
+type Reward {
+  id: ID!
+  name: String!
+  emoji: String
+  cost: Int!
+  timesRedeemed: Int!
+}
+
+input RewardInput {
+  name: String!
+  emoji: String
+  cost: Int!
+}
+
+enum ChallengeStatus {
+  UPCOMING
+  ACTIVE
+  WON
+  LOST
+}
+
+type HabitChallenge {
+  id: ID!
+  habitId: ID!
+  habitName: String!
+  startDate: String!
+  endDate: String!
+  """Check-ins needed in the range."""
+  target: Int!
+  multiplier: Float!
+  done: Int!
+  status: ChallengeStatus!
+  """Extra points for meeting it (0 until it's met)."""
+  bonusPoints: Int!
+}
+
+input ChallengeInput {
+  startDate: String!
+  endDate: String!
+  target: Int!
+  multiplier: Float = 2
+}
+
+"""Habits checked off together, in order."""
+type Routine {
+  id: ID!
+  name: String!
+  icon: String
+  """HH:mm where the day view shows it; null = anytime."""
+  startTime: String
+  position: Float!
+  """In order."""
+  habitIds: [ID!]!
+}
+
+input RoutineInput {
+  name: String!
+  icon: String
+  startTime: String
+  """In order; a habit in another routine moves here."""
+  habitIds: [ID!]!
+}
+
+input UpdateRoutineInput {
+  name: String
+  icon: String
+  startTime: String
+  habitIds: [ID!]
+  position: Float
+}
+
+type ProgressWeek {
+  """Monday."""
+  weekStart: String!
+  done: Int!
+  due: Int!
+  rate: Float
+}
+
+type HabitProgressRow {
+  id: ID!
+  name: String!
+  done: Int!
+  due: Int!
+  rate: Float
+  """Check-ins in each week, oldest first."""
+  perWeek: [Int!]!
+  """What was due in each week, in the same order."""
+  perWeekDue: [Int!]!
+}
+
+type ProgressDay {
+  date: String!
+  done: Int!
+  due: Int!
+}
+
+"""How habits went week by week; the last week is the current one, so far."""
+type HabitProgress {
+  weeks: [ProgressWeek!]!
+  habits: [HabitProgressRow!]!
+  """Each day with something due (for comparing with mood)."""
+  days: [ProgressDay!]!
+}
+
+extend type Query {
+  """The last `weeks` Monday–Sunday weeks (1–52), this one included."""
+  habitProgress(weeks: Int = 12, today: String!): HabitProgress!
+  """Each active habit's days from `from` to `to` (at most 62 days)."""
+  habitCalendar(from: String!, to: String!, today: String!): [HabitCalendarRow!]!
+  """`weekStart` is a Monday."""
+  weeklyReview(weekStart: String!, today: String!): WeeklyReview!
+  achievements(today: String!): [Achievement!]!
+  """Habits that go together over the last 90 days, strongest first."""
+  habitCorrelations(today: String!): [HabitCorrelation!]!
+  pointsWallet(today: String!): PointsWallet!
+  rewards: [Reward!]!
+  """Going on, coming up, or ended in the last two weeks."""
+  challenges(today: String!): [HabitChallenge!]!
+  routines: [Routine!]!
+}
+
+extend type Mutation {
+  createReward(input: RewardInput!): Reward!
+  updateReward(id: ID!, input: RewardInput!): Reward!
+  """Removes it from the shop. Returns its id."""
+  deleteReward(id: ID!): ID!
+  """Spends its cost; refused without enough points."""
+  redeemReward(id: ID!, today: String!): PointsSpend!
+  """Refunds a spend (and unfreezes a frozen day). Returns its id."""
+  undoPointsSpend(id: ID!): ID!
+  """Buys back a missed day from the last 7 for points, so the streak survives."""
+  freezeHabitDay(habitId: ID!, date: String!, today: String!): Boolean!
+  unfreezeHabitDay(habitId: ID!, date: String!): Boolean!
+  createChallenge(habitId: ID!, input: ChallengeInput!, today: String!): HabitChallenge!
+  """Returns its id."""
+  deleteChallenge(id: ID!): ID!
+  createRoutine(input: RoutineInput!): Routine!
+  updateRoutine(id: ID!, input: UpdateRoutineInput!): Routine!
+  """Its habits stay, outside any routine. Returns its id."""
+  deleteRoutine(id: ID!): ID!
+}

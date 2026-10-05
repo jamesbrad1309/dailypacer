@@ -1,5 +1,6 @@
 import type { ApiJournalDaySummary, ApiJournalEntry } from "#clients/api-types";
 import type { GraphQLContext } from "#graphql/context";
+import { queryString } from "#graphql/finance/query-string";
 
 // The API already embeds the trigger and sends dates as "YYYY-MM-DD", so
 // these pass straight through with no field resolvers.
@@ -13,6 +14,34 @@ export default {
       ),
     journalFirstDate: async (_: unknown, __: unknown, ctx: GraphQLContext) =>
       (await ctx.api.get<{ date: string | null }>("/journal-entries/first-date")).date,
+    journalSearch: (
+      _: unknown,
+      args: {
+        query?: string;
+        tag?: string | null;
+        kind?: string | null;
+        from?: string | null;
+        to?: string | null;
+        limit?: number;
+        offset?: number;
+      },
+      ctx: GraphQLContext,
+    ) =>
+      ctx.api.get<{ items: ApiJournalEntry[]; total: number }>(
+        `/journal-entries/search${queryString({
+          q: args.query || null,
+          tag: args.tag,
+          kind: args.kind,
+          from: args.from,
+          to: args.to,
+          limit: args.limit,
+          offset: args.offset,
+        })}`,
+      ),
+    journalRange: (_: unknown, args: { from: string; to: string }, ctx: GraphQLContext) =>
+      ctx.api.get<ApiJournalEntry[]>(`/journal-entries/range${queryString(args)}`),
+    journalFeelings: (_: unknown, args: { from: string; to: string }, ctx: GraphQLContext) =>
+      ctx.api.get<unknown[]>(`/journal-entries/feelings${queryString(args)}`),
   },
   Mutation: {
     createJournalEntry: (_: unknown, args: { input: unknown }, ctx: GraphQLContext) =>

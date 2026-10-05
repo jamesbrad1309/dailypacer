@@ -12,6 +12,12 @@ type Habit {
   startTime: String
   schedule: JSON!
   metadata: JSON!
+  """BUILD: do it. AVOID ("no sugar"): a due day counts as done unless a slip is logged."""
+  polarity: HabitPolarity!
+  """A time-boxed habit's last day (YYYY-MM-DD); it archives itself after."""
+  endDate: String
+  """The user's own fields, in order."""
+  customFields: [HabitCustomField!]!
   archivedAt: String
   pausedAt: String
   paused: Boolean!
@@ -38,6 +44,43 @@ type HeatmapDay {
   date: String!
   completed: Boolean!
   value: Float
+  status: HabitDayStatus!
+}
+
+enum HabitPolarity {
+  BUILD
+  AVOID
+}
+
+type HabitCustomField {
+  label: String!
+  value: String!
+}
+
+input HabitCustomFieldInput {
+  label: String!
+  value: String!
+}
+
+"""How a habit went on a day."""
+enum HabitDayStatus {
+  """Checked off (an avoid habit: no slip)."""
+  DONE
+  """A value short of the target."""
+  PARTIAL
+  """An avoid habit's slip."""
+  SLIPPED
+  """A past due day not done."""
+  MISSED
+  """Due today or later, not done yet."""
+  DUE
+  """A missed day bought back with points."""
+  FROZEN
+  PAUSED
+  """Not due by the schedule (or a day of a "times a week" habit not done)."""
+  OFF
+  """Before tracking began, or after a time-boxed habit ended."""
+  NONE
 }
 
 input CreateHabitInput {
@@ -51,6 +94,9 @@ input CreateHabitInput {
   startTime: String
   schedule: JSON!
   metadata: JSON
+  polarity: HabitPolarity
+  endDate: String
+  customFields: [HabitCustomFieldInput!]
 }
 
 input UpdateHabitInput {
@@ -63,6 +109,11 @@ input UpdateHabitInput {
   targetValue: Float
   startTime: String
   schedule: JSON
+  polarity: HabitPolarity
+  """null: open-ended again."""
+  endDate: String
+  """Replaces the list."""
+  customFields: [HabitCustomFieldInput!]
 }
 
 enum HabitRecordStatus {
@@ -74,6 +125,8 @@ enum HabitRecordStatus {
   MISSED
   """A finished week under target, for "times a week" habits."""
   MISSED_WEEK
+  """An avoid habit's slip."""
+  SLIPPED
 }
 
 enum HabitRecordFilter {
