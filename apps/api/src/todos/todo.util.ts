@@ -111,3 +111,44 @@ export function completedAtFor(
   if (to !== "DONE") return null;
   return from === "DONE" ? current : now;
 }
+
+export interface TaskWeek {
+  /** Monday. */
+  weekStart: string;
+  /** Completed that week, in all. */
+  completed: number;
+  /** With a due date, done on or before it. */
+  onTime: number;
+  /** With a due date, done after it. */
+  late: number;
+  /** Without a due date. */
+  noDueDate: number;
+}
+
+/**
+ * Completed tasks counted per Monday–Sunday week (`starts`, oldest first),
+ * split by whether they met their due date. `day` is when each was
+ * completed, as YYYY-MM-DD.
+ */
+export function tasksByWeek(
+  tasks: readonly { day: string; dueOn: string | null }[],
+  starts: readonly string[],
+): TaskWeek[] {
+  const weeks = starts.map((weekStart) => ({
+    weekStart,
+    completed: 0,
+    onTime: 0,
+    late: 0,
+    noDueDate: 0,
+  }));
+  for (const task of tasks) {
+    const index = starts.findLastIndex((start) => start <= task.day);
+    if (index === -1) continue;
+    const week = weeks[index];
+    week.completed++;
+    if (!task.dueOn) week.noDueDate++;
+    else if (task.day <= task.dueOn) week.onTime++;
+    else week.late++;
+  }
+  return weeks;
+}

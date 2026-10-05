@@ -2,16 +2,29 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import type { JournalEntry, Prisma } from "@prisma/client";
 import { PrismaService } from "#common/database/prisma.service";
 import { scopedLogger } from "#common/logger/logger";
-import type { CreateJournalEntriesInput, JournalEntryInput } from "#journal/dto/journal-entry.dto";
+import type {
+  CreateJournalEntriesInput,
+  JournalEntryInput,
+  SearchJournalInput,
+} from "#journal/dto/journal-entry.dto";
 
 const log = scopedLogger("JournalService");
 
 /** Widest range `/journal-entries/days` serves — a month view plus padding. */
 const MAX_SUMMARY_DAYS = 62;
+/** Widest range of whole entries (`/range`): a year, for patterns. */
+const MAX_RANGE_DAYS = 366;
+/** Widest range of feelings alone (`/feelings`): enough for a long mood streak. */
+const MAX_FEELING_DAYS = 400;
 
 const withTrigger = {
-  trigger: { select: { id: true, kind: true, text: true, time: true } },
+  trigger: { select: { id: true, kind: true, text: true, time: true, tags: true, tone: true } },
 } satisfies Prisma.JournalEntryInclude;
+
+function assertSpan(from: string, to: string, max: number): void {
+  const days = (new Date(to).getTime() - new Date(from).getTime()) / 86_400_000;
+  if (days < 0 || days > max) throw new BadRequestException(`from..to must span 0–${max} days`);
+}
 
 export type JournalEntryWithTrigger = Prisma.JournalEntryGetPayload<{
   include: typeof withTrigger;
@@ -53,6 +66,74 @@ export class JournalService {
       orderBy: { date: "asc" },
     });
     return first ? first.date.toISOString().slice(0, 10) : null;
+  }
+
+  /**
+   * Entries matching a search, newest first: `q` anywhere in the text or
+   * the emotion (case-insensitive), a #tag, a kind, a date range. Returns a
+   * page and the total.
+   */
+  async search(input: SearchJournalInput) {
+    const where: Prisma.JournalEntryWhereInput = {
+      ...(input.q
+        ? {
+            OR: [
+              { text: { contains: input.q, mode: "insensitive" } },
+              { emotion: { contains: input.q, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+      ...(input.tag ? { tags: { has: input.tag } } : {}),
+      ...(input.kind ? { kind: input.kind } : {}),
+      ...(input.from || input.to
+        ? {
+            date: {
+              ...(input.from ? { gte: new Date(input.from) } : {}),
+              ...(input.to ? { lte: new Date(input.to) } : {}),
+            },
+          }
+        : {}),
+    };
+    const [items, total] = await Promise.all([
+      this.prisma.journalEntry.findMany({
+        where,
+        include: withTrigger,
+        orderBy: [
+          { date: "desc" },
+          { time: { sort: "desc", nulls: "last" } },
+          { createdAt: "desc" },
+        ],
+        skip: input.offset,
+        take: input.limit,
+      }),
+      this.prisma.journalEntry.count({ where }),
+    ]);
+    return { items, total };
+  }
+
+  /** Every entry from `from` to `to` (a year at most), with its trigger: for patterns. */
+  range(from: string, to: string): Promise<JournalEntryWithTrigger[]> {
+    assertSpan(from, to, MAX_RANGE_DAYS);
+    return this.prisma.journalEntry.findMany({
+      where: { date: { gte: new Date(from), lte: new Date(to) } },
+      include: withTrigger,
+      orderBy: [{ date: "asc" }, { time: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }],
+    });
+  }
+
+  /** Just the feelings from `from` to `to`, for the mood streak and mood overlays. */
+  async feelings(from: string, to: string) {
+    assertSpan(from, to, MAX_FEELING_DAYS);
+    const rows = await this.prisma.journalEntry.findMany({
+      where: { kind: "FEELING", date: { gte: new Date(from), lte: new Date(to) } },
+      select: { date: true, emotion: true, intensity: true },
+      orderBy: [{ date: "asc" }, { createdAt: "asc" }],
+    });
+    return rows.flatMap((r) =>
+      r.emotion
+        ? [{ date: r.date.toISOString().slice(0, 10), emotion: r.emotion, intensity: r.intensity }]
+        : [],
+    );
   }
 
   async summarize(from: string, to: string): Promise<JournalDaySummary[]> {

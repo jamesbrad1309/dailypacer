@@ -7,9 +7,18 @@
  * 10 points per successful check-in, +5 per day of current streak (a small,
  * uncapped incentive to keep a streak alive rather than let it lapse).
  */
-export function computePoints(totalCompletions: number, currentStreak: number): number {
-  return totalCompletions * 10 + currentStreak * 5;
+export const POINTS_PER_CHECK_IN = 10;
+
+/** `bonus` is what won challenges add (challenge.util.ts). */
+export function computePoints(totalCompletions: number, currentStreak: number, bonus = 0): number {
+  return totalCompletions * POINTS_PER_CHECK_IN + currentStreak * 5 + bonus;
 }
+
+/** What a streak freeze costs: five check-ins' worth. */
+export const FREEZE_COST = 50;
+
+/** How many days back a missed day can still be frozen. */
+export const FREEZE_WINDOW_DAYS = 7;
 
 /**
  * Level N requires a triangular-number curve of points — level 1: 0, level

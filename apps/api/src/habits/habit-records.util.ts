@@ -2,7 +2,7 @@ import { type Day, addDays, startOfWeek, toLocalDate } from "#habits/day.util";
 import { type PauseRange, isPausedOn } from "#habits/pause.util";
 import { type HabitSchedule, isDueOn } from "#habits/schedule.util";
 
-export type RecordStatus = "DONE" | "PARTIAL" | "NOT_DONE" | "MISSED" | "MISSED_WEEK";
+export type RecordStatus = "DONE" | "PARTIAL" | "NOT_DONE" | "MISSED" | "MISSED_WEEK" | "SLIPPED";
 export type RecordFilter = "ALL" | "DONE" | "NOT_DONE" | "MISSED";
 
 /** How far back misses are worked out, so an old habit doesn't produce years of rows. */
@@ -15,8 +15,12 @@ export interface Miss {
   week?: { start: Day; end: Day; done: number; target: number };
 }
 
-export function statusOf(entry: { completed: boolean; value: number | null }): RecordStatus {
+export function statusOf(
+  entry: { completed: boolean; value: number | null },
+  polarity = "build",
+): RecordStatus {
   if (entry.completed) return "DONE";
+  if (polarity === "avoid") return (entry.value ?? 0) > 0 ? "SLIPPED" : "DONE";
   if (entry.value != null && entry.value > 0) return "PARTIAL";
   return "NOT_DONE";
 }

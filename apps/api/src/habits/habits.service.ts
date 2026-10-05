@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import type { Habit, Prisma } from "@prisma/client";
 import { PrismaService } from "#common/database/prisma.service";
 import { scopedLogger } from "#common/logger/logger";
-import { type Day, toDay } from "#habits/day.util";
+import { type Day, addDays, toDay } from "#habits/day.util";
 import type { CreateHabitInput } from "#habits/dto/create-habit.dto";
 import type { UpdateHabitInput } from "#habits/dto/update-habit.dto";
 import type { PauseRange } from "#habits/pause.util";
@@ -14,7 +14,8 @@ const log = scopedLogger("HabitsService");
 export class HabitsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll(): Promise<Habit[]> {
+  async findAll(): Promise<Habit[]> {
+    await this.archiveEnded();
     return this.prisma.habit.findMany({
       where: { archivedAt: null },
       orderBy: { createdAt: "asc" },
@@ -29,6 +30,7 @@ export class HabitsService {
   }
 
   async findDueToday(): Promise<Habit[]> {
+    await this.archiveEnded();
     const all = await this.prisma.habit.findMany({
       where: { archivedAt: null, pausedAt: null },
       orderBy: { createdAt: "asc" },
@@ -51,10 +53,16 @@ export class HabitsService {
   }
 
   async create(input: CreateHabitInput): Promise<Habit> {
+    const { customFields, endDate, ...rest } = input;
+    const metadata = {
+      ...input.metadata,
+      ...(customFields ? { fields: customFields } : {}),
+    };
     const habit = await this.prisma.habit.create({
       data: {
-        ...input,
-        metadata: (input.metadata ?? {}) as Prisma.InputJsonValue,
+        ...rest,
+        endDate: endDate ? new Date(endDate) : null,
+        metadata: metadata as Prisma.InputJsonValue,
       },
     });
     // `name` is a reserved pino field (it renames the logger itself in
@@ -64,11 +72,19 @@ export class HabitsService {
   }
 
   async update(id: string, input: UpdateHabitInput): Promise<Habit> {
+    const { customFields, endDate, ...rest } = input;
+    let metadata: Prisma.InputJsonValue | undefined;
+    if (customFields) {
+      const current = await this.findOneOrFail(id);
+      metadata = { ...(current.metadata as object), fields: customFields } as Prisma.InputJsonValue;
+    }
     const habit = await this.prisma.habit.update({
       where: { id },
       data: {
-        ...input,
+        ...rest,
         schedule: input.schedule as Prisma.InputJsonValue | undefined,
+        endDate: endDate === undefined ? undefined : endDate ? new Date(endDate) : null,
+        metadata,
       },
     });
     log.info({ habitId: habit.id }, "habit updated");
@@ -124,8 +140,37 @@ export class HabitsService {
     return habit;
   }
 
-  /** Each habit's pause stretches, as days, for streaks and misses. */
+  /**
+   * Each habit's days that aren't due, as ranges, for streaks, misses and
+   * insights: its pause stretches, each frozen day (bought back with
+   * points), and everything after a time-boxed habit's last day.
+   */
   async pausesFor(habitIds: readonly string[]): Promise<Map<string, PauseRange[]>> {
+    const [pauses, freezes, ended] = await Promise.all([
+      this.realPausesFor(habitIds),
+      this.freezesFor(habitIds),
+      habitIds.length
+        ? this.prisma.habit.findMany({
+            where: { id: { in: [...habitIds] }, endDate: { not: null } },
+            select: { id: true, endDate: true },
+          })
+        : [],
+    ]);
+    const byHabit = new Map<string, PauseRange[]>();
+    const add = (habitId: string, range: PauseRange) =>
+      byHabit.set(habitId, [...(byHabit.get(habitId) ?? []), range]);
+    for (const [habitId, ranges] of pauses) for (const range of ranges) add(habitId, range);
+    for (const [habitId, days] of freezes) {
+      for (const day of days) add(habitId, { start: day, end: addDays(day, 1) });
+    }
+    for (const habit of ended) {
+      if (habit.endDate) add(habit.id, { start: addDays(toDay(habit.endDate), 1), end: null });
+    }
+    return byHabit;
+  }
+
+  /** Each habit's real pause stretches (not freezes), as days. */
+  async realPausesFor(habitIds: readonly string[]): Promise<Map<string, PauseRange[]>> {
     const rows = habitIds.length
       ? await this.prisma.habitPause.findMany({ where: { habitId: { in: [...habitIds] } } })
       : [];
@@ -135,5 +180,31 @@ export class HabitsService {
       byHabit.set(row.habitId, [...(byHabit.get(row.habitId) ?? []), range]);
     }
     return byHabit;
+  }
+
+  /** Each habit's frozen days. */
+  async freezesFor(habitIds: readonly string[]): Promise<Map<string, Set<Day>>> {
+    const rows = habitIds.length
+      ? await this.prisma.streakFreeze.findMany({ where: { habitId: { in: [...habitIds] } } })
+      : [];
+    const byHabit = new Map<string, Set<Day>>();
+    for (const row of rows) {
+      const days = byHabit.get(row.habitId) ?? new Set<Day>();
+      days.add(toDay(row.date));
+      byHabit.set(row.habitId, days);
+    }
+    return byHabit;
+  }
+
+  /**
+   * Time-boxed habits archive themselves once their last day has passed
+   * (on the server's day; a day late at worst). Their history stays.
+   */
+  async archiveEnded(today: Day = toDay(new Date())): Promise<void> {
+    const { count } = await this.prisma.habit.updateMany({
+      where: { archivedAt: null, endDate: { lt: new Date(today) } },
+      data: { archivedAt: new Date() },
+    });
+    if (count > 0) log.info({ count }, "time-boxed habits archived");
   }
 }

@@ -22,16 +22,118 @@ model Habit {
   /// day, for the day-calendar view. Null means "anytime today".
   startTime   String?
   schedule    Json
+  /// { fields: [{ label, value }] }: the user's own custom fields, in order.
   metadata    Json      @default("{}")
+  /// "build" (do it) or "avoid" ("no sugar"): an avoid habit's due day
+  /// counts as done unless an entry records a slip (habits/polarity.util.ts).
+  polarity    String    @default("build")
+  /// The last day of a time-boxed habit ("30-day push-up challenge"); it's
+  /// archived automatically once this day has passed.
+  endDate     DateTime? @db.Date
   archivedAt  DateTime?
   pausedAt    DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  entries HabitEntry[]
-  pauses  HabitPause[]
+  entries    HabitEntry[]
+  pauses     HabitPause[]
+  freezes    StreakFreeze[]
+  challenges HabitChallenge[]
+  routine    RoutineHabit?
 
   @@map("habits")
+}
+
+/// A missed day bought back with points: it counts as not due, like a
+/// paused day, so the streak survives it.
+model StreakFreeze {
+  id        String   @id @default(uuid())
+  habitId   String
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+  createdAt DateTime @default(now())
+
+  spend PointsSpend?
+
+  @@unique([habitId, date])
+  @@map("streak_freezes")
+}
+
+/// A temporary target on one habit: `target` check-ins between two days.
+/// Met, its check-ins in the range earn `multiplier`× points.
+model HabitChallenge {
+  id         String   @id @default(uuid())
+  habitId    String
+  habit      Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  startDate  DateTime @db.Date
+  endDate    DateTime @db.Date
+  target     Int
+  multiplier Float    @default(2)
+  createdAt  DateTime @default(now())
+
+  @@index([habitId])
+  @@map("habit_challenges")
+}
+
+/// Habits checked off together, in order: "Morning routine".
+model Routine {
+  id        String   @id @default(uuid())
+  name      String
+  icon      String?
+  /// "HH:mm": where the day view puts the routine as one block; null = anytime.
+  startTime String?
+  position  Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  habits RoutineHabit[]
+
+  @@map("routines")
+}
+
+/// A habit's place in a routine. A habit is in at most one routine.
+model RoutineHabit {
+  routineId String
+  routine   Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  habitId   String  @unique
+  habit     Habit   @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  position  Int
+
+  @@id([routineId, habitId])
+  @@map("routine_habits")
+}
+
+/// Something the user treats themselves to with points: "Takeaway night, 500".
+model Reward {
+  id         String    @id @default(uuid())
+  name       String
+  emoji      String?
+  cost       Int
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  spends PointsSpend[]
+
+  @@map("rewards")
+}
+
+/// The points ledger: every spend (a reward redeemed, a streak frozen).
+/// Points earned are derived from check-ins; the balance is earned − spent.
+model PointsSpend {
+  id        String        @id @default(uuid())
+  points    Int
+  /// "reward" | "freeze"
+  kind      String
+  rewardId  String?
+  reward    Reward?       @relation(fields: [rewardId], references: [id], onDelete: SetNull)
+  /// Deleting the freeze (undo) deletes this spend, refunding it.
+  freezeId  String?       @unique
+  freeze    StreakFreeze? @relation(fields: [freezeId], references: [id], onDelete: Cascade)
+  /// What it was for, kept if the reward is deleted.
+  label     String
+  createdAt DateTime      @default(now())
+
+  @@map("points_spends")
 }
 
 /// A stretch a habit was paused, in the user's local days. Paused days aren't

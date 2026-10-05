@@ -75,6 +75,11 @@ export type UpdateColumnInput = z.infer<typeof updateColumnSchema>;
 export const deleteColumnQuerySchema = z.object({ moveTo: z.string().uuid().optional() });
 
 export const todayQuerySchema = z.object({ today: day });
+/** `?weeks=12&today=`: 1 to 52 weeks (the page asks for twice its period, to compare). */
+export const progressQuerySchema = z.object({
+  weeks: z.coerce.number().int().min(1).max(52).default(12),
+  today: day,
+});
 export const listTasksQuerySchema = z.object({
   /** Done tasks shown on a board: the most recently completed ones. */
   doneLimit: z.coerce.number().int().min(0).max(200).default(50),

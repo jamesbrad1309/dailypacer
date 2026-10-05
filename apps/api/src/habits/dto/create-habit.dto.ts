@@ -17,6 +17,14 @@ export const habitTagsSchema = z
   .max(20)
   .transform((tags) => [...new Set(tags)]);
 
+/** The user's own fields on a habit, in order: [{ label: "Coach", value: "Sam" }]. */
+export const customFieldsSchema = z
+  .array(z.object({ label: z.string().trim().min(1).max(50), value: z.string().trim().max(500) }))
+  .max(20);
+
+export const polaritySchema = z.enum(["build", "avoid"]);
+export const endDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "endDate must be YYYY-MM-DD");
+
 export const createHabitSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().trim().max(500).optional(),
@@ -28,6 +36,11 @@ export const createHabitSchema = z.object({
   startTime: startTimeSchema.optional(),
   schedule: scheduleSchema,
   metadata: z.record(z.string(), z.unknown()).optional(),
+  /** "avoid": a due day counts as done unless a slip is logged. */
+  polarity: polaritySchema.optional(),
+  /** A time-boxed habit's last day; it archives itself after. */
+  endDate: endDateSchema.optional(),
+  customFields: customFieldsSchema.optional(),
 });
 
 export type CreateHabitInput = z.infer<typeof createHabitSchema>;

@@ -13,8 +13,11 @@ import { ZodValidationPipe } from "#common/http/zod-validation.pipe";
 import {
   type CreateJournalEntriesInput,
   type JournalEntryInput,
+  type SearchJournalInput,
   createJournalEntriesSchema,
   journalEntrySchema,
+  rangeSchema,
+  searchJournalSchema,
 } from "#journal/dto/journal-entry.dto";
 import {
   type JournalDaySummary,
@@ -51,6 +54,25 @@ export class JournalController {
   @Get("days")
   summarize(@Query("from") from?: string, @Query("to") to?: string): Promise<JournalDaySummary[]> {
     return this.journalService.summarize(assertIsoDate("from", from), assertIsoDate("to", to));
+  }
+
+  /** `GET /journal-entries/search?q&tag&kind&from&to&limit&offset`: across every day. */
+  @Get("search")
+  async search(@Query(new ZodValidationPipe(searchJournalSchema)) input: SearchJournalInput) {
+    const { items, total } = await this.journalService.search(input);
+    return { items: items.map(toEntryDto), total };
+  }
+
+  /** `GET /journal-entries/range?from&to`: whole entries for up to a year, for patterns. */
+  @Get("range")
+  async range(@Query(new ZodValidationPipe(rangeSchema)) q: { from: string; to: string }) {
+    return (await this.journalService.range(q.from, q.to)).map(toEntryDto);
+  }
+
+  /** `GET /journal-entries/feelings?from&to`: feelings only, up to 400 days. */
+  @Get("feelings")
+  feelings(@Query(new ZodValidationPipe(rangeSchema)) q: { from: string; to: string }) {
+    return this.journalService.feelings(q.from, q.to);
   }
 
   /**

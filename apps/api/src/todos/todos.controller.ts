@@ -15,6 +15,7 @@ import {
   createTaskSchema,
   deleteColumnQuerySchema,
   listTasksQuerySchema,
+  progressQuerySchema,
   searchTasksQuerySchema,
   todayQuerySchema,
   updateColumnSchema,
@@ -94,6 +95,12 @@ export class TodosController {
     @Query(new ZodValidationPipe(deleteColumnQuerySchema)) query: { moveTo?: string },
   ) {
     return this.todos.deleteColumn(id, query.moveTo);
+  }
+
+  /** `GET /tasks/progress?weeks=12&today=`: tasks completed per week, on time or late. */
+  @Get("tasks/progress")
+  progress(@Query(new ZodValidationPipe(progressQuerySchema)) q: { weeks: number; today: string }) {
+    return this.todos.progress(q.weeks, q.today);
   }
 
   /** `GET /tasks/today?today=2026-10-02` → { today, earlier, dueSoon } */

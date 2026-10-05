@@ -53,3 +53,26 @@ export const createJournalEntriesSchema = z
   .max(50);
 
 export type CreateJournalEntriesInput = z.infer<typeof createJournalEntriesSchema>;
+
+/**
+ * `GET /journal-entries/search`: text anywhere in an entry (or its emotion),
+ * a #tag, a kind and a date range, all optional; newest first, paged.
+ */
+export const searchJournalSchema = z.object({
+  q: z.string().trim().max(100).default(""),
+  tag: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .transform((t) => t.replace(/^#/, ""))
+    .optional(),
+  kind: z.enum(["ACTION", "FEELING", "EVENT"]).optional(),
+  from: isoDate.optional(),
+  to: isoDate.optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(25),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+export type SearchJournalInput = z.infer<typeof searchJournalSchema>;
+
+/** `?from&to`: a date range. */
+export const rangeSchema = z.object({ from: isoDate, to: isoDate });

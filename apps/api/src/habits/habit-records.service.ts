@@ -18,6 +18,7 @@ import {
   trackedSince,
 } from "#habits/habit-records.util";
 import { HabitsService } from "#habits/habits.service";
+import { avoidEntries } from "#habits/polarity.util";
 import type { HabitSchedule } from "#habits/schedule.util";
 
 export interface HabitRecord {
@@ -47,10 +48,12 @@ interface Query {
   today: Day;
 }
 
-const toRecord = (entry: HabitEntry): HabitRecord => {
-  const date = toDay(entry.date);
-  return { date, status: statusOf(entry), entry: { ...entry, date }, week: null };
-};
+const toRecord =
+  (polarity: string) =>
+  (entry: HabitEntry): HabitRecord => {
+    const date = toDay(entry.date);
+    return { date, status: statusOf(entry, polarity), entry: { ...entry, date }, week: null };
+  };
 
 const fromMiss = (miss: Miss): HabitRecord => ({
   date: miss.date,
@@ -98,14 +101,18 @@ export class HabitRecordsService {
       where: { habitId, date: { gte: new Date(windowStart > since ? windowStart : since) } },
       select: { date: true, completed: true },
     });
-    const misses = computeMisses({
-      schedule,
-      since,
-      today,
-      logged: new Set(windowEntries.map((entry) => toDay(entry.date))),
-      completed: new Set(windowEntries.filter((e) => e.completed).map((e) => toDay(e.date))),
-      pauses: pauses.get(habitId) ?? [],
-    });
+    // An avoid habit's slips are entries; a day without one isn't a miss.
+    const misses =
+      habit.polarity === "avoid"
+        ? []
+        : computeMisses({
+            schedule,
+            since,
+            today,
+            logged: new Set(windowEntries.map((entry) => toDay(entry.date))),
+            completed: new Set(windowEntries.filter((e) => e.completed).map((e) => toDay(e.date))),
+            pauses: pauses.get(habitId) ?? [],
+          });
 
     const offset = (page - 1) * pageSize;
     const counts = { all: done + notDone + misses.length, done, notDone, missed: misses.length };
@@ -121,11 +128,15 @@ export class HabitRecordsService {
     let total: number;
     switch (filter) {
       case "DONE":
-        items = (await entryPage({ completed: true }, offset, pageSize)).map(toRecord);
+        items = (await entryPage({ completed: true }, offset, pageSize)).map(
+          toRecord(habit.polarity),
+        );
         total = done;
         break;
       case "NOT_DONE":
-        items = (await entryPage({ completed: false }, offset, pageSize)).map(toRecord);
+        items = (await entryPage({ completed: false }, offset, pageSize)).map(
+          toRecord(habit.polarity),
+        );
         total = notDone;
         break;
       case "MISSED":
@@ -135,7 +146,7 @@ export class HabitRecordsService {
       default: {
         // The newest offset+pageSize rows overall are among the newest
         // offset+pageSize entries plus the misses, so that's all it reads.
-        const entries = (await entryPage({}, 0, offset + pageSize)).map(toRecord);
+        const entries = (await entryPage({}, 0, offset + pageSize)).map(toRecord(habit.polarity));
         items = [...entries, ...misses.map(fromMiss)]
           .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
           .slice(offset, offset + pageSize);
@@ -173,12 +184,27 @@ export class HabitRecordsService {
       }),
       this.habitsService.pausesFor([habitId]),
     ]);
-    return habitInsights({
-      schedule: habit.schedule as HabitSchedule,
-      since: trackedSince(toDay(habit.createdAt), earliest ? toDay(earliest.date) : null),
-      today,
-      completed: new Set(entries.map((entry) => toDay(entry.date))),
-      pauses: pauses.get(habitId) ?? [],
-    });
+    const schedule = habit.schedule as HabitSchedule;
+    const since = trackedSince(toDay(habit.createdAt), earliest ? toDay(earliest.date) : null);
+    const ranges = pauses.get(habitId) ?? [];
+    let completed = new Set(entries.map((entry) => toDay(entry.date)));
+    if (habit.polarity === "avoid") {
+      // Clean days are an avoid habit's check-ins; slips are its entries.
+      const slips = await this.prisma.habitEntry.findMany({
+        where: { habitId, date: { gte: new Date(windowStart) } },
+        select: { date: true, completed: true, value: true },
+      });
+      completed = new Set(
+        avoidEntries(slips, {
+          schedule,
+          since: windowStart > since ? windowStart : since,
+          today,
+          pauses: ranges,
+        })
+          .filter((e) => e.completed)
+          .map((e) => toDay(e.date)),
+      );
+    }
+    return habitInsights({ schedule, since, today, completed, pauses: ranges });
   }
 }

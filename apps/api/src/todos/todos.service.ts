@@ -25,8 +25,17 @@ import {
   formatKey,
   parseKey,
   suggestPrefix,
+  tasksByWeek,
   wouldCreateCycle,
 } from "#todos/todo.util";
+
+/** Monday of the week containing `day` ("YYYY-MM-DD"). */
+function startOfWeekDay(day: string): string {
+  const date = new Date(day);
+  return addDays(day, -((date.getUTCDay() + 6) % 7))
+    .toISOString()
+    .slice(0, 10);
+}
 
 const log = scopedLogger("TodosService");
 
@@ -510,6 +519,41 @@ export class TodosService {
     const task = await this.prisma.task.findUnique({ where: { id }, include: TASK_INCLUDE });
     if (!task) throw new NotFoundException(`Task ${id} not found`);
     return toTaskDto(task);
+  }
+
+  // ─── Progress ───────────────────────────────────────────────────────────
+
+  /**
+   * Tasks completed per week over the last `weeks` Monday–Sunday weeks
+   * (this one included), split by due dates met or missed, plus how many
+   * open tasks are overdue now.
+   */
+  async progress(weeks: number, today: string) {
+    const monday = startOfWeekDay(today);
+    const starts = Array.from({ length: weeks }, (_, i) =>
+      addDays(monday, -7 * (weeks - 1 - i))
+        .toISOString()
+        .slice(0, 10),
+    );
+    const [done, overdue] = await Promise.all([
+      this.prisma.task.findMany({
+        where: { status: "DONE", completedAt: { gte: new Date(starts[0]) } },
+        select: { completedAt: true, dueOn: true },
+      }),
+      this.prisma.task.count({
+        where: { status: { not: "DONE" }, dueOn: { lt: new Date(today) } },
+      }),
+    ]);
+    return {
+      weeks: tasksByWeek(
+        done.map((t) => ({
+          day: (t.completedAt as Date).toISOString().slice(0, 10),
+          dueOn: t.dueOn ? t.dueOn.toISOString().slice(0, 10) : null,
+        })),
+        starts,
+      ),
+      overdueNow: overdue,
+    };
   }
 
   // ─── Helpers ────────────────────────────────────────────────────────────

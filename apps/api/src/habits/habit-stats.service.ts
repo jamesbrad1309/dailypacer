@@ -1,15 +1,15 @@
 import { Injectable } from "@nestjs/common";
-import type { Habit, HabitEntry } from "@prisma/client";
-import { HabitEntriesService } from "#habit-entries/habit-entries.service";
+import { challengeBonus } from "#habits/challenge.util";
+import { type DayStatus, dayStatus } from "#habits/day-status.util";
+import { addDays, toDay } from "#habits/day.util";
 import {
   computeLevel,
   computePoints,
   levelTitle,
   pointsRequiredForLevel,
 } from "#habits/gamification.util";
+import { type HabitHistory, HabitHistoryService } from "#habits/habit-history.service";
 import { HabitsService } from "#habits/habits.service";
-import type { PauseRange } from "#habits/pause.util";
-import type { HabitSchedule } from "#habits/schedule.util";
 import {
   computeCurrentStreak,
   computeLongestStreak,
@@ -28,6 +28,8 @@ export interface HeatmapDay {
   date: string;
   completed: boolean;
   value: number | null;
+  /** How the day went (done, missed, frozen, slipped…): see day-status.util. */
+  status: DayStatus;
 }
 
 export interface HabitStats {
@@ -35,6 +37,7 @@ export interface HabitStats {
   currentStreak: number;
   longestStreak: number;
   totalCompletions: number;
+  /** Includes bonus points from won challenges. */
   points: number;
   level: number;
   levelTitle: string;
@@ -42,47 +45,31 @@ export interface HabitStats {
   heatmap: HeatmapDay[];
 }
 
-function dateKey(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
-
 /**
  * Derived per-habit and dashboard stats. These used to be computed inside
  * GraphQL field resolvers; they live here now so the domain rules stay in
  * the API and the BFF only shapes and batches data (see
- * docs/backend/graphql-bff.md).
+ * docs/backend/graphql-bff.md). Avoid habits count their clean days as
+ * check-ins (habit-history.service.ts), and won challenges add points.
  */
 @Injectable()
 export class HabitStatsService {
   constructor(
     private readonly habitsService: HabitsService,
-    private readonly habitEntriesService: HabitEntriesService,
+    private readonly history: HabitHistoryService,
   ) {}
 
-  /** Stats for many habits with one entries query — the BFF batches field requests into this. */
+  /** Stats for many habits with one load — the BFF batches field requests into this. */
   async statsFor(habitIds: readonly string[]): Promise<HabitStats[]> {
     const habits = await this.habitsService.findManyByIds(habitIds);
-    const since = new Date();
-    since.setDate(since.getDate() - STATS_WINDOW_DAYS);
-    const entries = await this.habitEntriesService.findForHabitsSince(habitIds, since);
-
-    const entriesByHabit = new Map<string, HabitEntry[]>();
-    for (const entry of entries) {
-      const list = entriesByHabit.get(entry.habitId);
-      if (list) list.push(entry);
-      else entriesByHabit.set(entry.habitId, [entry]);
-    }
-
-    const pauses = await this.habitsService.pausesFor(habitIds);
     const today = new Date();
-    return habits.map((habit) =>
-      this.computeStats(
-        habit,
-        entriesByHabit.get(habit.id) ?? [],
-        pauses.get(habit.id) ?? [],
-        today,
-      ),
+    const todayDay = toDay(today);
+    const histories = await this.history.load(
+      habits,
+      addDays(todayDay, -STATS_WINDOW_DAYS),
+      todayDay,
     );
+    return histories.map((h) => this.computeStats(h, today));
   }
 
   async dashboardStats() {
@@ -105,49 +92,41 @@ export class HabitStatsService {
     };
   }
 
-  private computeStats(
-    habit: Habit,
-    entries: HabitEntry[],
-    pauses: PauseRange[],
-    today: Date,
-  ): HabitStats {
-    const schedule = habit.schedule as HabitSchedule;
-    const currentStreak = computeCurrentStreak(
-      schedule,
-      entries,
-      habit.targetValue,
+  private computeStats(h: HabitHistory, today: Date): HabitStats {
+    const todayDay = toDay(today);
+    const args = [
+      h.schedule,
+      h.effective,
+      h.targetValue,
       today,
       STATS_WINDOW_DAYS,
-      pauses,
+      h.notDue,
+    ] as const;
+    const currentStreak = computeCurrentStreak(...args);
+    const longestStreak = computeLongestStreak(...args);
+    const totalCompletions = computeTotalCompletions(h.effective, h.targetValue);
+    const points = computePoints(
+      totalCompletions,
+      currentStreak,
+      challengeBonus(h.challenges, h.successDays, todayDay),
     );
-    const longestStreak = computeLongestStreak(
-      schedule,
-      entries,
-      habit.targetValue,
-      today,
-      STATS_WINDOW_DAYS,
-      pauses,
-    );
-    const totalCompletions = computeTotalCompletions(entries, habit.targetValue);
-    const points = computePoints(totalCompletions, currentStreak);
     const level = computeLevel(points);
+    const avoid = h.habit.polarity === "avoid";
 
-    const byDate = new Map(entries.map((entry) => [dateKey(entry.date), entry]));
     const heatmap: HeatmapDay[] = [];
     for (let offset = STATS_WINDOW_DAYS - 1; offset >= 0; offset--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - offset);
-      const key = dateKey(date);
-      const entry = byDate.get(key);
+      const key = addDays(todayDay, -offset);
+      const entry = h.days.entries.get(key);
       heatmap.push({
         date: key,
-        completed: entry?.completed ?? false,
+        completed: avoid ? h.successDays.has(key) : (entry?.completed ?? false),
         value: entry?.value ?? null,
+        status: dayStatus(h.days, key, todayDay),
       });
     }
 
     return {
-      habitId: habit.id,
+      habitId: h.habit.id,
       currentStreak,
       longestStreak,
       totalCompletions,

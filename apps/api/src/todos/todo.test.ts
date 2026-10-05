@@ -7,6 +7,7 @@ import {
   parseKey,
   positionBetween,
   suggestPrefix,
+  tasksByWeek,
   wouldCreateCycle,
 } from "#todos/todo.util";
 
@@ -87,5 +88,23 @@ describe("completedAtFor", () => {
 describe("addDays", () => {
   it("crosses month ends in UTC", () => {
     expect(addDays("2026-10-30", 3).toISOString().slice(0, 10)).toBe("2026-11-02");
+  });
+});
+
+describe("tasksByWeek", () => {
+  it("counts completions per week, split by their due dates", () => {
+    const weeks = tasksByWeek(
+      [
+        { day: "2026-09-29", dueOn: "2026-09-30" },
+        { day: "2026-10-01", dueOn: "2026-09-30" },
+        { day: "2026-10-06", dueOn: null },
+        { day: "2026-09-01", dueOn: null },
+      ],
+      ["2026-09-28", "2026-10-05"],
+    );
+    expect(weeks).toEqual([
+      { weekStart: "2026-09-28", completed: 2, onTime: 1, late: 1, noDueDate: 0 },
+      { weekStart: "2026-10-05", completed: 1, onTime: 0, late: 0, noDueDate: 1 },
+    ]);
   });
 });
