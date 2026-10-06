@@ -14,6 +14,18 @@ export const habits = {
     activeHabits: "Active habits",
     paused: "+{{count}} paused",
   },
+  saveToGoal: {
+    putAside: "Put aside",
+    savedToday: "{{amount}} today",
+    open: "Put money aside for {{name}}",
+    title: "Put aside for {{goal}}",
+    linkedHint: "Recorded as a transfer into {{account}}, which this goal follows.",
+    unlinkedHint: "Added to the goal. Reaching the daily amount ticks the habit.",
+    amount: "Amount",
+    from: "From",
+    save: "Save",
+    noSource: "Add another account in the same currency to transfer from.",
+  },
   noSpend: {
     categories: "What counts as spending",
     allSpending:

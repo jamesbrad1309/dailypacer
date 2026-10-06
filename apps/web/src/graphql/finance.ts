@@ -717,6 +717,8 @@ const GOAL_FIELDS = gql`
     requiredPerMonthMinor
     onTrack
     expectedMinor
+    dailyHabitMinor
+    habitId
     account {
       id
       name

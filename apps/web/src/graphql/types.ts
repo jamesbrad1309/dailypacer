@@ -40,8 +40,9 @@ export interface HabitCustomField {
 /**
  * NO_SPEND: an avoid habit, slipped on any day money went out.
  * LOGGED_TODAY: done once anything is logged by hand that day.
+ * SAVINGS_GOAL: a goal's daily habit; the day's value is what was put aside.
  */
-export type HabitFinanceSource = "NO_SPEND" | "LOGGED_TODAY";
+export type HabitFinanceSource = "NO_SPEND" | "LOGGED_TODAY" | "SAVINGS_GOAL";
 
 export interface Habit {
   id: string;
@@ -64,6 +65,8 @@ export interface Habit {
   financeSource: HabitFinanceSource | null;
   /** NO_SPEND only: just spending in these categories breaks the day. Empty: all spending. */
   financeCategoryIds: string[];
+  /** SAVINGS_GOAL only: the goal it saves for. */
+  savingsGoalId: string | null;
   paused: boolean;
   currentStreak: number;
   longestStreak: number;
@@ -398,6 +401,9 @@ export interface SavingsGoal {
   expectedMinor: number | null;
   /** Linked: its balance is what's saved. */
   account: Pick<Account, "id" | "name" | "currency"> | null;
+  /** The daily "save this much" habit's amount, or null without one. */
+  dailyHabitMinor: number | null;
+  habitId: string | null;
 }
 
 export interface SavingsGoalsData {

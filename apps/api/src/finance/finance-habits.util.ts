@@ -1,6 +1,6 @@
 /**
  * Habits whose entries come from transactions instead of being ticked by
- * hand (docs/finance/habits-integration.md §1 and §5). The habit says which
+ * hand (docs/finance/habits-integration.md §1, §2 and §5). The habit says which
  * in `metadata.source`; the rules for one day live here, pure, so they're
  * easy to test.
  */
@@ -10,7 +10,10 @@ export const NO_SPEND = "finance.noSpend";
 /** "Log today's spending": a build habit, done once anything is logged that day. */
 export const LOGGED_TODAY = "finance.loggedToday";
 
-export const FINANCE_HABIT_SOURCES = [NO_SPEND, LOGGED_TODAY] as const;
+/** A savings goal's daily "save X" habit: the day's check-in is what was put aside. */
+export const SAVINGS_GOAL = "finance.savingsGoal";
+
+export const FINANCE_HABIT_SOURCES = [NO_SPEND, LOGGED_TODAY, SAVINGS_GOAL] as const;
 export type FinanceHabitSource = (typeof FINANCE_HABIT_SOURCES)[number];
 
 export interface FinanceHabitLink {
@@ -85,4 +88,34 @@ export function derivedEntry(
     };
   }
   return { kind: "done", completed: reconciled || transactions.some(isLoggedByHand) };
+}
+
+/**
+ * A savings habit's day: `value` is what was put aside in major units
+ * (£10, so it reads against the habit's target), never negative. Done once
+ * it reaches the target, or anything at all without one.
+ */
+export function savedEntry(
+  savedMinor: number,
+  digits: number,
+  target: number | null,
+): { value: number; completed: boolean } {
+  const value = Math.max(0, savedMinor) / 10 ** digits;
+  return { value, completed: target ? value >= target : value > 0 };
+}
+
+/**
+ * What a goal got on one day: for a goal following an account, the net
+ * of everything into and out of it (a transfer in, less any withdrawal);
+ * for an unlinked one, its contributions.
+ */
+export function savedOnDay(
+  goal: { accountId: string | null },
+  transactions: readonly { accountId: string; amountMinor: number }[],
+  contributions: readonly { amountMinor: number }[],
+): number {
+  const rows = goal.accountId
+    ? transactions.filter((t) => t.accountId === goal.accountId)
+    : contributions;
+  return rows.reduce((sum, r) => sum + r.amountMinor, 0);
 }

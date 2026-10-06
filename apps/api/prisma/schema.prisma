@@ -35,11 +35,13 @@ model Habit {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  entries    HabitEntry[]
-  pauses     HabitPause[]
-  freezes    StreakFreeze[]
-  challenges HabitChallenge[]
-  routine    RoutineHabit?
+  entries     HabitEntry[]
+  pauses      HabitPause[]
+  freezes     StreakFreeze[]
+  challenges  HabitChallenge[]
+  routine     RoutineHabit?
+  /// Set for a goal's daily "save X" habit (finance/finance-habits.util.ts).
+  savingsGoal SavingsGoal?
 
   @@map("habits")
 }
@@ -229,49 +231,49 @@ enum AccountType {
 /// Anywhere money lives or is owed. One table for every type, with nullable
 /// type-specific columns; finance/dto/account.dto.ts decides which apply.
 model Account {
-  id                  String      @id @default(uuid())
-  name                String
-  type                AccountType
-  currency            String      @default("GBP") // ISO 4217
+  id          String      @id @default(uuid())
+  name        String
+  type        AccountType
+  currency    String      @default("GBP") // ISO 4217
   /// Bank or lender name, or the person for an IOU.
-  institution         String?
+  institution String?
   /// Display only, never a full card number.
-  last4               String?
-  icon                String?
-  color               String?
-  sortOrder           Int         @default(0)
+  last4       String?
+  icon        String?
+  color       String?
+  sortOrder   Int         @default(0)
   /// At most one (unarchived) account is the default; quick log uses it when
   /// none is chosen. A partial unique index enforces it (see the migration).
-  isDefault           Boolean     @default(false)
+  isDefault   Boolean     @default(false)
 
   /// Balance on the day tracking started. Owed amounts are stored negative.
-  openingBalanceMinor Int         @default(0)
-  openingBalanceDate  DateTime    @db.Date
+  openingBalanceMinor Int       @default(0)
+  openingBalanceDate  DateTime  @db.Date
   lastReconciledAt    DateTime?
 
   // Credit card
-  creditLimitMinor    Int?
+  creditLimitMinor Int?
   /// 1–31, clamped to the month's length.
-  statementDay        Int?
-  paymentDueDay       Int?
-  minPaymentMinor     Int?
+  statementDay     Int?
+  paymentDueDay    Int?
+  minPaymentMinor  Int?
 
   // Credit card + loan
   /// APR in basis points: 1999 = 19.99%.
-  aprBps              Int?
+  aprBps Int?
 
   // Loan
   monthlyPaymentMinor Int?
-  loanStartDate       DateTime?   @db.Date
+  loanStartDate       DateTime? @db.Date
   termMonths          Int?
 
   // IOU
-  dueDate             DateTime?   @db.Date
+  dueDate DateTime? @db.Date
 
-  archivedAt          DateTime?
-  metadata            Json        @default("{}")
-  createdAt           DateTime    @default(now())
-  updatedAt           DateTime    @updatedAt
+  archivedAt DateTime?
+  metadata   Json      @default("{}")
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   transactions  Transaction[]
   presets       QuickPreset[]
@@ -322,29 +324,29 @@ enum TransactionStatus {
 }
 
 model Transaction {
-  id          String    @id @default(uuid())
+  id          String            @id @default(uuid())
   accountId   String
-  account     Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  account     Account           @relation(fields: [accountId], references: [id], onDelete: Cascade)
   categoryId  String?
-  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  date        DateTime  @db.Date
+  category    Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  date        DateTime          @db.Date
   /// Negative = money out of the account.
   amountMinor Int
   payee       String?
   note        String?
-  tags        String[]  @default([])
+  tags        String[]          @default([])
   /// Both legs of a transfer share this id; excluded from income/expense reports.
   transferId  String?
   /// Hash of (account, date, amount, payee) for CSV-import dedupe.
   importHash  String?
   /// Client-generated id from quick log; makes retries and double taps idempotent.
-  clientId    String?   @unique
+  clientId    String?           @unique
   /// "quick" | "form" | "import" | "recurring" | "adjustment" | "transfer"
-  source      String    @default("form")
+  source      String            @default("form")
   status      TransactionStatus @default(CLEARED)
-  metadata    Json      @default("{}")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  metadata    Json              @default("{}")
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 
   /// Set when this transaction is a confirmed subscription charge.
   subscriptionCharge SubscriptionCharge?
@@ -382,18 +384,18 @@ model TransactionSplit {
 /// A one-tap quick-log button: "☕ Flat white £3.40". Without an amount it
 /// opens the keypad with the category already chosen.
 model QuickPreset {
-  id          String    @id @default(uuid())
+  id          String   @id @default(uuid())
   label       String
   emoji       String?
   amountMinor Int?
   categoryId  String
-  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   /// Null → the default account.
   accountId   String?
-  account     Account?  @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  account     Account? @relation(fields: [accountId], references: [id], onDelete: SetNull)
   payee       String?
-  sortOrder   Int       @default(0)
-  createdAt   DateTime  @default(now())
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
 
   @@map("quick_presets")
 }
@@ -501,47 +503,47 @@ enum BillingInterval {
 }
 
 model Subscription {
-  id            String          @id @default(uuid())
-  name          String
+  id                String          @id @default(uuid())
+  name              String
   /// Built-in catalog key ("netflix", finance/subscription-catalog.ts); null for a custom service.
-  serviceKey    String?
+  serviceKey        String?
   /// The website its logo comes from: "netflix.com".
-  domain        String?
+  domain            String?
   /// Money in (a salary) rather than a charge: confirmed amounts are positive
   /// and it's left out of the cost totals.
-  isIncome      Boolean         @default(false)
+  isIncome          Boolean         @default(false)
   /// Log each charge by itself on its date, as a PENDING transaction, instead
   /// of asking first. The user then confirms it once it has gone through.
-  autoLog       Boolean         @default(false)
+  autoLog           Boolean         @default(false)
   /// The last day auto-logging has run up to, so it never logs a date twice
   /// (and an auto-logged transaction the user deleted stays deleted).
-  autoLoggedThrough DateTime?   @db.Date
+  autoLoggedThrough DateTime?       @db.Date
   /// Where charges are taken from; amounts are in this account's currency.
-  accountId     String
-  account       Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  categoryId    String?
-  category      Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  accountId         String
+  account           Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  categoryId        String?
+  category          Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   /// Every `intervalCount` weeks, months or years.
-  interval      BillingInterval @default(MONTH)
-  intervalCount Int             @default(1)
+  interval          BillingInterval @default(MONTH)
+  intervalCount     Int             @default(1)
   /// A charge date every later one counts from (after any free trial). The
   /// 31st in a short month falls on its last day.
-  firstChargeOn DateTime        @db.Date
+  firstChargeOn     DateTime        @db.Date
   /// Display only: "trial ends in 3 days, then £9.99/mo".
-  trialEndsOn   DateTime?       @db.Date
+  trialEndsOn       DateTime?       @db.Date
   /// Charges due before this day are never asked about: the day it was
   /// added, resumed or reactivated. Keeps an old subscription from asking
   /// about years of past charges.
-  askFrom       DateTime        @db.Date
+  askFrom           DateTime        @db.Date
   /// Paused: no charges are due until it's resumed.
-  pausedAt      DateTime?
+  pausedAt          DateTime?
   /// Cancelled: no charges on or after this day. Can be in the future
   /// ("cancelled, runs until 15 Oct").
-  endsOn        DateTime?       @db.Date
-  note          String?
-  metadata      Json            @default("{}")
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  endsOn            DateTime?       @db.Date
+  note              String?
+  metadata          Json            @default("{}")
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 
   prices  SubscriptionPrice[]
   charges SubscriptionCharge[]
@@ -608,19 +610,19 @@ enum TaskStatus {
 
 /// A list of tasks with a short key prefix: "Grocery list" / GRO → GRO-1, GRO-2…
 model TodoList {
-  id         String    @id @default(uuid())
+  id         String   @id @default(uuid())
   name       String
   /// 2–6 uppercase letters/digits, unique. Renaming it re-keys every task at
   /// once: keys are shown as "<prefix>-<number>", never stored.
-  prefix     String    @unique
+  prefix     String   @unique
   /// The number the next task added to (or moved into) this list gets. Only
   /// ever goes up, so a number is never reused, even after a delete.
-  nextNumber Int       @default(1)
+  nextNumber Int      @default(1)
   /// The Inbox can't be deleted: tasks added without a list go there.
-  isInbox    Boolean   @default(false)
-  position   Float     @default(0)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  isInbox    Boolean  @default(false)
+  position   Float    @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   tasks   Task[]
   columns TodoColumn[]
@@ -708,28 +710,49 @@ model TaskDependency {
 /// Progress, "on track" and the monthly amount needed are derived on read
 /// (finance/savings-goal.util.ts).
 model SavingsGoal {
-  id               String    @id @default(uuid())
-  name             String
-  emoji            String?
+  id              String    @id @default(uuid())
+  name            String
+  emoji           String?
   /// Positive, in `currency`.
-  targetMinor      Int
+  targetMinor     Int
   /// ISO 4217: the linked account's currency, else the main one when created.
-  currency         String
-  deadline         DateTime? @db.Date
-  accountId        String?
-  account          Account?  @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  currency        String
+  deadline        DateTime? @db.Date
+  accountId       String?
+  account         Account?  @relation(fields: [accountId], references: [id], onDelete: SetNull)
   /// Unlinked goals only: what's been put aside so far.
-  savedMinor       Int       @default(0)
+  savedMinor      Int       @default(0)
   /// "On track" compares progress since this day with the time gone since it.
-  startDate        DateTime  @db.Date
+  startDate       DateTime  @db.Date
   /// What was saved on `startDate` (a linked account may not start at zero).
-  startSavedMinor  Int       @default(0)
-  sortOrder        Int       @default(0)
-  archivedAt       DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  startSavedMinor Int       @default(0)
+  sortOrder       Int       @default(0)
+  archivedAt      DateTime?
+  /// A daily "save X" habit: each day's check-in is what was put aside that
+  /// day (finance/finance-habits.util.ts). Its `targetValue` is the daily
+  /// amount in major units ("10" for £10).
+  habitId         String?   @unique
+  habit           Habit?    @relation(fields: [habitId], references: [id], onDelete: SetNull)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  contributions SavingsContribution[]
 
   @@map("savings_goals")
+}
+
+/// Money put into (or taken out of) an unlinked goal on a day: `savedMinor`
+/// is the running total, these say when, for the goal's daily habit.
+model SavingsContribution {
+  id          String      @id @default(uuid())
+  goalId      String
+  goal        SavingsGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  date        DateTime    @db.Date
+  amountMinor Int
+  createdAt   DateTime    @default(now())
+
+  @@index([goalId, date])
+  @@map("savings_contributions")
 }
 
 // ─── Payee rules ─────────────────────────────────────────────────────────────

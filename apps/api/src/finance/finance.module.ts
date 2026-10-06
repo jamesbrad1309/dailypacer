@@ -29,6 +29,7 @@ import { SubscriptionsService } from "#finance/subscriptions.service";
 import { TransactionsController } from "#finance/transactions.controller";
 import { TransactionsService } from "#finance/transactions.service";
 import { HabitEntriesModule } from "#habit-entries/habit-entries.module";
+import { HabitsModule } from "#habits/habits.module";
 
 /**
  * One module for all of finance: accounts, transactions, budgets and
@@ -36,11 +37,12 @@ import { HabitEntriesModule } from "#habit-entries/habit-entries.module";
  * and reconciling (phase 1), transactions and quick log (phase 2), and spend
  * by category from the `monthly_totals` aggregate (phase 2b), budgets (phase 3),
  * and subscriptions with confirm-each-charge and cached logos. It also
- * keeps finance-linked habits ticked (FinanceHabitsService), so it imports
- * habit entries; habits never import finance.
+ * keeps finance-linked habits ticked (FinanceHabitsService) and creates a
+ * savings goal's daily habit, so it imports habits and habit entries;
+ * habits never import finance.
  */
 @Module({
-  imports: [HabitEntriesModule],
+  imports: [HabitEntriesModule, HabitsModule],
   controllers: [
     AccountsController,
     CategoriesController,

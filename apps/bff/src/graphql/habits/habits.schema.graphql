@@ -22,6 +22,8 @@ type Habit {
   financeSource: HabitFinanceSource
   """NO_SPEND only: just spending in these categories breaks the day. Empty: all spending."""
   financeCategoryIds: [ID!]!
+  """SAVINGS_GOAL only: the goal it saves for."""
+  savingsGoalId: ID
   archivedAt: String
   pausedAt: String
   paused: Boolean!
@@ -62,6 +64,8 @@ enum HabitFinanceSource {
   NO_SPEND
   """Done once anything is logged by hand that day, or an account is reconciled."""
   LOGGED_TODAY
+  """A savings goal's daily habit: each day's value is what was put aside. Made from the goal, not here."""
+  SAVINGS_GOAL
 }
 
 type HabitCustomField {

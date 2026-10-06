@@ -15,6 +15,18 @@ export const habits: typeof en = {
     activeHabits: "Thói quen đang theo",
     paused: "+{{count}} tạm dừng",
   },
+  saveToGoal: {
+    putAside: "Để dành",
+    savedToday: "{{amount}} hôm nay",
+    open: "Để dành tiền cho {{name}}",
+    title: "Để dành cho {{goal}}",
+    linkedHint: "Ghi lại thành một khoản chuyển vào {{account}}, tài khoản mục tiêu này theo dõi.",
+    unlinkedHint: "Cộng vào mục tiêu. Đủ số tiền mỗi ngày là thói quen được đánh dấu.",
+    amount: "Số tiền",
+    from: "Từ",
+    save: "Lưu",
+    noSource: "Hãy thêm một tài khoản khác cùng loại tiền để chuyển từ đó.",
+  },
   noSpend: {
     categories: "Tính là chi tiêu",
     allSpending:

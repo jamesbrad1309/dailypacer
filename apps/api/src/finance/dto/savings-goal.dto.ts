@@ -10,6 +10,8 @@ export const createSavingsGoalSchema = z.object({
   accountId: z.string().uuid().nullable().optional(),
   /** Unlinked only: what's already put aside. */
   savedMinor: minor.min(0).optional(),
+  /** Starts a daily "save this much" habit for the goal. */
+  dailyHabitMinor: minor.positive().optional(),
   /** The client's local day: progress is measured from it. */
   today: isoDate,
 });
@@ -23,6 +25,8 @@ export const updateSavingsGoalSchema = z.object({
   deadline: isoDate.nullable().optional(),
   accountId: z.string().uuid().nullable().optional(),
   archived: z.boolean().optional(),
+  /** Starts or changes the daily "save this much" habit; null stops it (archived, history kept). */
+  dailyHabitMinor: minor.positive().nullable().optional(),
   today: isoDate,
 });
 export type UpdateSavingsGoalInput = z.infer<typeof updateSavingsGoalSchema>;

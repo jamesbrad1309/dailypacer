@@ -366,6 +366,8 @@ export class TransactionsService {
       { transferId, fromAccountId: from.id, toAccountId: to.id, amountMinor: input.amountMinor },
       "transfer created",
     );
+    // Moving money into a goal's account is saving (a savings goal's daily habit).
+    await this.financeHabits.syncDays([input.date]);
     return legs;
   }
 

@@ -116,9 +116,13 @@ function Palette() {
   };
 
   const habits = habitsData?.habits ?? [];
-  // A no-spend habit is ticked from transactions, so there's nothing to do with it here.
+  // No-spend and savings habits are ticked by money moving, so there's nothing to do with them here.
   const dueToday = habits.filter(
-    (h) => !h.paused && h.financeSource !== "NO_SPEND" && isDueOn(h.schedule, new Date()),
+    (h) =>
+      !h.paused &&
+      h.financeSource !== "NO_SPEND" &&
+      h.financeSource !== "SAVINGS_GOAL" &&
+      isDueOn(h.schedule, new Date()),
   );
   const otherLanguage = (Object.keys(LANGUAGES) as Language[]).find(
     (l) => l !== currentLanguage(),

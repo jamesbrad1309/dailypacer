@@ -1,21 +1,33 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import type { Habit, HabitEntry } from "@prisma/client";
+import type { Habit, HabitEntry, SavingsGoal } from "@prisma/client";
 import { PrismaService } from "#common/database/prisma.service";
 import { scopedLogger } from "#common/logger/logger";
 import { fromIsoDate, toIsoDate } from "#finance/calendar.util";
+import { currencyDigits } from "#finance/currency-math.util";
 import {
   type DayTransaction,
   FINANCE_HABIT_SOURCES,
   type FinanceHabitLink,
   LOGGED_TODAY,
+  SAVINGS_GOAL,
   derivedEntry,
   financeLinkOf,
+  savedEntry,
+  savedOnDay,
 } from "#finance/finance-habits.util";
 import { HabitEntriesService } from "#habit-entries/habit-entries.service";
 
 const log = scopedLogger("FinanceHabitsService");
 
-type LinkedHabit = Habit & { link: FinanceHabitLink };
+/** A savings habit always comes with its goal; a habit whose goal is gone is left alone. */
+type LinkedHabit = Habit & { link: FinanceHabitLink; goal?: SavingsGoal };
+
+/** One day's rows for every linked habit. */
+interface DayRows {
+  transactions: (DayTransaction & { accountId: string })[];
+  /** Per goal id. */
+  contributions: Map<string, { amountMinor: number }[]>;
+}
 
 /** A day as a transaction or entry date, or "YYYY-MM-DD". */
 type DayLike = Date | string;
@@ -79,22 +91,40 @@ export class FinanceHabitsService {
    * import, a bug fix, or when the habit is first created.
    */
   async recompute(habitId: string): Promise<{ days: number }> {
-    const habit = await this.prisma.habit.findUnique({ where: { id: habitId } });
+    const habit = await this.prisma.habit.findUnique({
+      where: { id: habitId },
+      include: { savingsGoal: true },
+    });
     if (!habit) throw new NotFoundException(`Habit ${habitId} not found`);
     const link = financeLinkOf(habit.metadata);
     if (!link) throw new BadRequestException(`${habit.name} isn't linked to finance`);
+    const { savingsGoal: goal, ...plain } = habit;
+    if (link.source === SAVINGS_GOAL && !goal) {
+      throw new BadRequestException(`${habit.name} isn't linked to a savings goal`);
+    }
 
     const since = fromIsoDate(firstDay(habit));
-    const [transactionDays, entryDays] = await Promise.all([
+    const [transactionDays, entryDays, contributionDays] = await Promise.all([
       this.prisma.transaction.findMany({
         where: { date: { gte: since } },
         select: { date: true },
         distinct: ["date"],
       }),
       this.prisma.habitEntry.findMany({ where: { habitId }, select: { date: true } }),
+      goal
+        ? this.prisma.savingsContribution.findMany({
+            where: { goalId: goal.id, date: { gte: since } },
+            select: { date: true },
+            distinct: ["date"],
+          })
+        : [],
     ]);
-    const days = [...new Set([...transactionDays, ...entryDays].map((d) => isoDay(d.date)))];
-    if (days.length > 0) await this.sync([{ ...habit, link }], days);
+    const days = [
+      ...new Set(
+        [...transactionDays, ...entryDays, ...contributionDays].map((d) => isoDay(d.date)),
+      ),
+    ];
+    if (days.length > 0) await this.sync([{ ...plain, link, goal: goal ?? undefined }], days);
     log.info({ habitId, days: days.length }, "finance-linked habit recomputed");
     return { days: days.length };
   }
@@ -107,21 +137,25 @@ export class FinanceHabitsService {
           metadata: { path: ["source"], equals: source },
         })),
       },
+      include: { savingsGoal: true },
     });
-    return habits.flatMap((habit) => {
+    return habits.flatMap(({ savingsGoal: goal, ...habit }) => {
       const link = financeLinkOf(habit.metadata);
-      return link ? [{ ...habit, link }] : [];
+      if (!link || (link.source === SAVINGS_GOAL && !goal)) return [];
+      return [{ ...habit, link, goal: goal ?? undefined }];
     });
   }
 
   /** Writes each habit's entry for each day, skipping ones that are already right. */
   private async sync(habits: LinkedHabit[], days: string[], reconciledOn?: string) {
     const dates = days.map(fromIsoDate);
-    const [transactions, stored] = await Promise.all([
+    const goalIds = habits.flatMap((h) => (h.goal ? [h.goal.id] : []));
+    const [transactions, stored, contributions] = await Promise.all([
       this.prisma.transaction.findMany({
         where: { date: { in: dates } },
         select: {
           date: true,
+          accountId: true,
           amountMinor: true,
           source: true,
           transferId: true,
@@ -132,17 +166,26 @@ export class FinanceHabitsService {
       this.prisma.habitEntry.findMany({
         where: { habitId: { in: habits.map((h) => h.id) }, date: { in: dates } },
       }),
+      goalIds.length > 0
+        ? this.prisma.savingsContribution.findMany({
+            where: { goalId: { in: goalIds }, date: { in: dates } },
+          })
+        : [],
     ]);
-    const byDay = new Map<string, DayTransaction[]>();
-    for (const t of transactions) {
-      const day = isoDay(t.date);
-      byDay.set(day, [...(byDay.get(day) ?? []), t]);
+    const byDay = new Map<string, DayRows>(
+      days.map((day) => [day, { transactions: [], contributions: new Map() }]),
+    );
+    for (const t of transactions) byDay.get(isoDay(t.date))?.transactions.push(t);
+    for (const c of contributions) {
+      const rows = byDay.get(isoDay(c.date))?.contributions;
+      rows?.set(c.goalId, [...(rows.get(c.goalId) ?? []), c]);
     }
     const entryFor = new Map(stored.map((e) => [`${e.habitId}:${isoDay(e.date)}`, e]));
 
     for (const habit of habits) {
       for (const day of days) {
-        await this.write(habit, day, byDay.get(day) ?? [], entryFor.get(`${habit.id}:${day}`), {
+        const rows = byDay.get(day) ?? { transactions: [], contributions: new Map() };
+        await this.write(habit, day, rows, entryFor.get(`${habit.id}:${day}`), {
           reconciled: day === reconciledOn,
         });
       }
@@ -152,11 +195,29 @@ export class FinanceHabitsService {
   private async write(
     habit: LinkedHabit,
     date: string,
-    transactions: DayTransaction[],
+    { transactions, contributions }: DayRows,
     existing: HabitEntry | undefined,
     { reconciled }: { reconciled: boolean },
   ) {
     if (date < firstDay(habit)) return;
+    if (habit.goal) {
+      const savedMinor = savedOnDay(
+        habit.goal,
+        transactions,
+        contributions.get(habit.goal.id) ?? [],
+      );
+      const want = savedEntry(savedMinor, currencyDigits(habit.goal.currency), habit.targetValue);
+      const same =
+        (existing?.value ?? 0) === want.value && (existing?.completed ?? false) === want.completed;
+      if (same) return;
+      await this.entries.upsert({
+        habitId: habit.id,
+        date,
+        ...want,
+        metadata: { source: habit.link.source },
+      });
+      return;
+    }
     const wasReconciled = (existing?.metadata as { reconciled?: unknown })?.reconciled === true;
     const want = derivedEntry(habit.link, transactions, reconciled || wasReconciled);
     const metadata = { source: habit.link.source, ...(reconciled && { reconciled: true }) };

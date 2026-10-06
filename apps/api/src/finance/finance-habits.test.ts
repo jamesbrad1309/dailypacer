@@ -6,6 +6,8 @@ import {
   derivedEntry,
   financeLinkOf,
   isSpending,
+  savedEntry,
+  savedOnDay,
 } from "#finance/finance-habits.util";
 
 const tx = (overrides: Partial<DayTransaction> = {}): DayTransaction => ({
@@ -75,5 +77,27 @@ describe("derivedEntry", () => {
       derivedEntry(loggedToday, [tx({ source: "import" }), tx({ source: "recurring" })], false),
     ).toEqual({ kind: "done", completed: false });
     expect(derivedEntry(loggedToday, [], true)).toEqual({ kind: "done", completed: true });
+  });
+});
+
+describe("savings habits", () => {
+  it("savedOnDay: a linked goal nets its account's day; an unlinked one its contributions", () => {
+    const day = [
+      { accountId: "savings", amountMinor: 1000 },
+      { accountId: "savings", amountMinor: -300 },
+      { accountId: "current", amountMinor: -1000 },
+    ];
+    expect(savedOnDay({ accountId: "savings" }, day, [])).toBe(700);
+    expect(savedOnDay({ accountId: null }, day, [{ amountMinor: 500 }, { amountMinor: 250 }])).toBe(
+      750,
+    );
+  });
+
+  it("savedEntry: major units against the target, never negative", () => {
+    expect(savedEntry(1000, 2, 10)).toEqual({ value: 10, completed: true });
+    expect(savedEntry(450, 2, 10)).toEqual({ value: 4.5, completed: false });
+    expect(savedEntry(-500, 2, 10)).toEqual({ value: 0, completed: false });
+    expect(savedEntry(50000, 0, 100000)).toEqual({ value: 50000, completed: false });
+    expect(savedEntry(1, 2, null)).toEqual({ value: 0.01, completed: true });
   });
 });

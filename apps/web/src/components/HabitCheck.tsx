@@ -1,6 +1,7 @@
 import { useMutation } from "@apollo/client/react";
 import { Check, ReceiptText } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { SaveToGoalDialog } from "#components/SaveToGoalDialog";
 import { Badge } from "#components/ui/badge";
 import { Button } from "#components/ui/button";
 import { Checkbox } from "#components/ui/checkbox";
@@ -71,6 +72,7 @@ function ManualHabitCheck({ habit, id }: { habit: Habit; id?: string }) {
 }
 
 /**
+ * Savings goal: put money aside (SaveToGoalDialog); what's saved ticks it.
  * No-spend: today's status, read-only, since spending is what changes it.
  * Log today's spending: opens quick log in catch-up mode; logging anything
  * ticks it (docs/finance/habits-integration.md §5).
@@ -78,6 +80,8 @@ function ManualHabitCheck({ habit, id }: { habit: Habit; id?: string }) {
 function FinanceHabitCheck({ habit, id }: { habit: Habit; id?: string }) {
   const { t } = useTranslation();
   const done = isDoneToday(habit);
+
+  if (habit.financeSource === "SAVINGS_GOAL") return <SaveToGoalDialog habit={habit} id={id} />;
 
   if (habit.financeSource === "NO_SPEND") {
     return (

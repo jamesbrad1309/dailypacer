@@ -1,3 +1,4 @@
+import { GraphQLError } from "graphql";
 import type { ApiHabit, ApiHabitRecordsPage } from "#clients/api-types";
 import type { GraphQLContext } from "#graphql/context";
 
@@ -14,6 +15,7 @@ type HabitInput = Record<string, unknown> & {
 const FINANCE_SOURCES = {
   NO_SPEND: "finance.noSpend",
   LOGGED_TODAY: "finance.loggedToday",
+  SAVINGS_GOAL: "finance.savingsGoal",
 } as const;
 
 const financeSourceOf = (habit: ApiHabit) =>
@@ -27,6 +29,11 @@ const financeSourceOf = (habit: ApiHabit) =>
  * its days are clean unless money went out.
  */
 function toApiHabitInput({ polarity, financeSource, financeCategoryIds, ...input }: HabitInput) {
+  if (financeSource === "SAVINGS_GOAL") {
+    throw new GraphQLError("A savings habit is started from its goal (dailyHabitMinor)", {
+      extensions: { code: "BAD_USER_INPUT" },
+    });
+  }
   if (financeSource) {
     input.metadata = {
       ...input.metadata,
@@ -119,6 +126,8 @@ export default {
     polarity: (habit: ApiHabit) => habit.polarity.toUpperCase(),
     customFields: (habit: ApiHabit) => habit.metadata?.fields ?? [],
     financeSource: financeSourceOf,
+    savingsGoalId: (habit: ApiHabit) =>
+      typeof habit.metadata?.goalId === "string" ? habit.metadata.goalId : null,
     financeCategoryIds: (habit: ApiHabit) =>
       Array.isArray(habit.metadata?.categoryIds) ? habit.metadata.categoryIds : [],
     todayEntry: (habit: ApiHabit, _: unknown, ctx: GraphQLContext) =>

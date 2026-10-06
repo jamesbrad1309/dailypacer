@@ -192,7 +192,7 @@ export function HabitCard({ habit, onTagClick }: Props) {
       </CardHeader>
 
       <CardContent className="flex flex-col gap-3">
-        {habit.unit && !avoid ? (
+        {habit.unit && !avoid && !habit.financeSource ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Input
               type="number"

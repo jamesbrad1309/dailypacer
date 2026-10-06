@@ -19,6 +19,7 @@ const HABIT_FIELDS = gql`
     }
     financeSource
     financeCategoryIds
+    savingsGoalId
     paused
     currentStreak
     longestStreak

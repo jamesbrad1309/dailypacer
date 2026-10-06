@@ -503,6 +503,10 @@ export const finance: typeof en = {
       nameRequired: "Hãy đặt tên cho mục tiêu.",
       enterTarget: "Nhập số tiền mục tiêu, vd. 1500",
       enterSaved: "Nhập số đã để dành, vd. 200, hoặc để trống.",
+      daily: "Để dành một khoản cố định mỗi ngày",
+      dailyHint:
+        "Thêm một thói quen hằng ngày có chuỗi ngày: để dành đủ khoản này trong ngày là xong. Để trống nếu không cần.",
+      enterDaily: "Nhập số tiền mỗi ngày, vd. 10, hoặc để trống.",
     },
   },
   categoriesPage: {
