@@ -73,6 +73,8 @@ export function JournalView({ date, onDateChange }: Props) {
   // Latest-closure ref so the keydown listener is registered once.
   const shortcuts = useRef<(e: KeyboardEvent) => void>(() => {});
   function onShortcut(e: KeyboardEvent) {
+    // Handled already: an app-wide shortcut ("g h", whose `h` is also ours).
+    if (e.defaultPrevented) return;
     if (e.metaKey || e.ctrlKey || e.altKey || isTypingTarget(e.target)) return;
     const kind = KINDS.find((config) => config.shortcut === e.key);
     if (kind) {

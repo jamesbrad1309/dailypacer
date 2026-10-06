@@ -44,6 +44,8 @@ export interface NavItem {
   exact?: boolean;
   /** A live count next to the label: "toReview" is finance's uncategorised inbox. */
   badge?: "toReview";
+  /** The key after `g` that goes here ("g h"); see lib/shortcuts.ts. */
+  go?: string;
 }
 
 export interface NavGroup {
@@ -55,42 +57,48 @@ export interface NavGroup {
 export const NAV_GROUPS: NavGroup[] = [
   {
     label: "overview",
-    items: [{ label: "progress", icon: TrendingUp, to: "/progress" }],
+    items: [{ label: "progress", icon: TrendingUp, to: "/progress", go: "p" }],
   },
   {
     label: "habits",
     items: [
-      { label: "dashboard", icon: LayoutDashboard, to: "/habits", exact: true },
-      { label: "today", icon: CalendarClock, to: "/habits/today" },
+      { label: "dashboard", icon: LayoutDashboard, to: "/habits", exact: true, go: "h" },
+      { label: "today", icon: CalendarClock, to: "/habits/today", go: "d" },
       { label: "history", icon: Grid3x3, to: "/habits/history" },
-      { label: "habitCalendar", icon: CalendarRange, to: "/habits/calendar" },
-      { label: "habitReview", icon: ClipboardCheck, to: "/habits/review" },
-      { label: "habitRewards", icon: Award, to: "/habits/rewards" },
+      { label: "habitCalendar", icon: CalendarRange, to: "/habits/calendar", go: "c" },
+      { label: "habitReview", icon: ClipboardCheck, to: "/habits/review", go: "r" },
+      { label: "habitRewards", icon: Award, to: "/habits/rewards", go: "w" },
     ],
   },
   {
     label: "todos",
     items: [
-      { label: "tasksToday", icon: ListTodo, to: "/tasks", exact: true },
-      { label: "tasksLists", icon: KanbanSquare, to: "/tasks/lists" },
+      { label: "tasksToday", icon: ListTodo, to: "/tasks", exact: true, go: "t" },
+      { label: "tasksLists", icon: KanbanSquare, to: "/tasks/lists", go: "l" },
     ],
   },
   {
     label: "mind",
     items: [
-      { label: "journal", icon: NotebookPen, to: "/journal", exact: true },
+      { label: "journal", icon: NotebookPen, to: "/journal", exact: true, go: "j" },
       { label: "journalCalendar", icon: CalendarDays, to: "/journal/calendar" },
-      { label: "journalInsights", icon: Lightbulb, to: "/journal/insights" },
+      { label: "journalInsights", icon: Lightbulb, to: "/journal/insights", go: "m" },
     ],
   },
   {
     label: "money",
     items: [
-      { label: "accounts", icon: Landmark, to: "/finance/accounts" },
-      { label: "transactions", icon: Receipt, to: "/finance/transactions", badge: "toReview" },
-      { label: "spending", icon: ChartBar, to: "/finance/spending" },
-      { label: "budgets", icon: PiggyBank, to: "/finance/budgets" },
-      { label: "goals", icon: Target, to: "/finance/goals" },
+      { label: "accounts", icon: Landmark, to: "/finance/accounts", go: "a" },
+      {
+        label: "transactions",
+        icon: Receipt,
+        to: "/finance/transactions",
+        badge: "toReview",
+        go: "x",
+      },
+      { label: "spending", icon: ChartBar, to: "/finance/spending", go: "s" },
+      { label: "budgets", icon: PiggyBank, to: "/finance/budgets", go: "b" },
+      { label: "goals", icon: Target, to: "/finance/goals", go: "o" },
       { label: "subscriptions", icon: Repeat, to: "/finance/subscriptions" },
       { label: "categories", icon: Tags, to: "/finance/categories" },
       { label: "currencies", icon: Coins, to: "/finance/currencies" },

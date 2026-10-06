@@ -1,18 +1,23 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useMatches } from "@tanstack/react-router";
-import { Menu, Moon, PanelLeftClose, PanelLeftOpen, Sun } from "lucide-react";
+import { Command, Menu, Moon, PanelLeftClose, PanelLeftOpen, Sun } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { QuickLogButton } from "#components/finance/quick-log/QuickLogButton";
 import { QuickLogSheet } from "#components/finance/quick-log/QuickLogSheet";
 import { Celebration } from "#components/layout/Celebration";
+import { CommandPalette } from "#components/layout/CommandPalette";
+import { GlobalShortcuts } from "#components/layout/GlobalShortcuts";
+import { ShortcutsHelp } from "#components/layout/ShortcutsHelp";
 import { Sidebar } from "#components/layout/Sidebar";
 import { Toaster } from "#components/layout/Toaster";
 import { Button } from "#components/ui/button";
 import { useStoredState } from "#hooks/useStoredState";
 import { useTheme } from "#hooks/useTheme";
 import { LANGUAGES, type Language, currentLanguage, setLanguage } from "#i18n/i18n";
+import { setOverlay } from "#lib/command-palette";
 import { formatLongDate } from "#lib/dates";
+import { displayKeys, shortcutById } from "#lib/shortcuts";
 import { cn } from "#lib/utils";
 
 interface Props {
@@ -99,6 +104,7 @@ export function AppShell({ actions, children }: Props) {
 
           <div className="ml-auto flex items-center gap-2">
             {actions}
+            <PaletteButton />
             <span className="hidden text-sm text-muted-foreground xl:inline">{today}</span>
             <LanguageSwitch />
             <Button
@@ -128,6 +134,9 @@ export function AppShell({ actions, children }: Props) {
       <QuickLogSheet />
       <Toaster />
       <Celebration />
+      <CommandPalette />
+      <ShortcutsHelp />
+      <GlobalShortcuts />
     </div>
   );
 }
@@ -149,6 +158,37 @@ function usePageMeta(): { title: string; subtitle?: string } {
   }, [page, title, appName]);
 
   return { title, subtitle: page ? t(`shell.pages.${page}.subtitle`) : undefined };
+}
+
+/**
+ * Opens the command palette for mouse and touch users, and shows its
+ * shortcut so keyboard users learn it.
+ */
+function PaletteButton() {
+  const { t } = useTranslation();
+  const keys = displayKeys(shortcutById("openPalette")?.keys[0] ?? "");
+  return (
+    <button
+      type="button"
+      onClick={() => setOverlay("palette")}
+      aria-label={t("commands.open")}
+      aria-keyshortcuts="Meta+Shift+P Control+Shift+P F1"
+      className="flex h-8 items-center gap-2 rounded-md border px-2 text-xs text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <Command className="size-3.5" aria-hidden />
+      <span className="hidden md:inline">{t("commands.openShort")}</span>
+      <span className="hidden items-center gap-0.5 sm:flex" aria-hidden>
+        {keys.map((key) => (
+          <kbd
+            key={key}
+            className="min-w-4 rounded border bg-muted px-1 text-center font-sans text-[10px] leading-4"
+          >
+            {key}
+          </kbd>
+        ))}
+      </span>
+    </button>
+  );
 }
 
 /** EN | VI: switches the whole app, and is remembered. */

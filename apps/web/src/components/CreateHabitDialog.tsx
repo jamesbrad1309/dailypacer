@@ -1,6 +1,6 @@
 import { useMutation } from "@apollo/client/react";
 import { Plus } from "lucide-react";
-import { type FormEvent, useReducer, useState } from "react";
+import { type FormEvent, useEffect, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { HabitExtraFields } from "#components/HabitExtraFields";
 import { ScheduleEditor } from "#components/ScheduleEditor";
@@ -17,6 +17,7 @@ import { Input } from "#components/ui/input";
 import { Label } from "#components/ui/label";
 import { Textarea } from "#components/ui/textarea";
 import { CREATE_HABIT_MUTATION, DASHBOARD_STATS_QUERY, HABITS_QUERY } from "#graphql/habits";
+import { onAction } from "#lib/command-palette";
 import {
   BLANK_HABIT_DRAFT,
   type HabitDraft,
@@ -30,6 +31,8 @@ import { formatTags, parseTags } from "#lib/tags";
 export function CreateHabitDialog() {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  // "New habit" from the command palette lands here and opens the form.
+  useEffect(() => onAction("newHabit", () => setOpen(true)), []);
   const [draft, dispatch] = useReducer(habitDraftReducer, BLANK_HABIT_DRAFT);
   const set = <K extends keyof HabitDraft>(field: K, value: HabitDraft[K]) =>
     dispatch({ type: "set", field, value } as HabitDraftAction);
