@@ -18,6 +18,8 @@ type Habit {
   endDate: String
   """The user's own fields, in order."""
   customFields: [HabitCustomField!]!
+  """Set when the habit is ticked from transactions instead of by hand."""
+  financeSource: HabitFinanceSource
   archivedAt: String
   pausedAt: String
   paused: Boolean!
@@ -50,6 +52,14 @@ type HeatmapDay {
 enum HabitPolarity {
   BUILD
   AVOID
+}
+
+"""A habit whose entries come from finance (docs/finance/habits-integration.md)."""
+enum HabitFinanceSource {
+  """An avoid habit, slipped on any day money went out (not transfers)."""
+  NO_SPEND
+  """Done once anything is logged by hand that day, or an account is reconciled."""
+  LOGGED_TODAY
 }
 
 type HabitCustomField {
@@ -97,6 +107,10 @@ input CreateHabitInput {
   polarity: HabitPolarity
   endDate: String
   customFields: [HabitCustomFieldInput!]
+  """Ticks the habit from transactions; NO_SPEND makes it an avoid habit."""
+  financeSource: HabitFinanceSource
+  """NO_SPEND only: just spending in these categories breaks the day."""
+  financeCategoryIds: [ID!]
 }
 
 input UpdateHabitInput {
@@ -230,4 +244,6 @@ extend type Mutation {
   pauseHabit(id: ID!, date: String): Habit!
   """`date`: the user's local day the habit is due again from."""
   resumeHabit(id: ID!, date: String): Habit!
+  """Rebuilds a finance-linked habit's entries from the transactions."""
+  recomputeDerivedHabitEntries(habitId: ID!): Habit!
 }

@@ -1,4 +1,10 @@
-import type { Habit, HabitCustomField, HabitPolarity, HabitSchedule } from "#graphql/types";
+import type {
+  Habit,
+  HabitCustomField,
+  HabitFinanceSource,
+  HabitPolarity,
+  HabitSchedule,
+} from "#graphql/types";
 import { formatTags } from "#lib/tags";
 
 /** A habit's fields as the create and edit forms hold them: text, as typed. */
@@ -16,6 +22,8 @@ export interface HabitDraft {
   /** "YYYY-MM-DD" or "" for open-ended. */
   endDate: string;
   customFields: DraftField[];
+  /** Set by a finance template; only sent on create. */
+  financeSource: HabitFinanceSource | null;
 }
 
 /** A custom field row as edited, with a stable key so rows keep focus when one is removed. */
@@ -51,6 +59,7 @@ export const BLANK_HABIT_DRAFT: HabitDraft = {
   polarity: "BUILD",
   endDate: "",
   customFields: [],
+  financeSource: null,
 };
 
 /** The edit form's starting point: the habit as it is now. */
@@ -66,6 +75,7 @@ export function habitDraftFrom(habit: Habit): HabitDraft {
     polarity: habit.polarity,
     endDate: habit.endDate ?? "",
     customFields: habit.customFields.map(({ label, value }) => draftField(label, value)),
+    financeSource: habit.financeSource,
   };
 }
 

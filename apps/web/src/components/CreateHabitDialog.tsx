@@ -54,9 +54,10 @@ export function CreateHabitDialog() {
         startTime: template.startTime ?? "",
         schedule: template.schedule,
         tags: formatTags(template.tags),
-        polarity: "BUILD",
+        polarity: template.financeSource === "NO_SPEND" ? "AVOID" : "BUILD",
         endDate: "",
         customFields: [],
+        financeSource: template.financeSource ?? null,
       },
     });
   }
@@ -85,6 +86,7 @@ export function CreateHabitDialog() {
           polarity: draft.polarity,
           endDate: draft.endDate || undefined,
           customFields: cleanCustomFields(draft.customFields),
+          financeSource: draft.financeSource ?? undefined,
         },
       },
     });
@@ -124,6 +126,19 @@ export function CreateHabitDialog() {
               ))}
             </div>
           </fieldset>
+
+          {draft.financeSource && (
+            <p className="flex flex-wrap items-center gap-x-2 rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
+              {t("habits.templates.financeLinked")}
+              <button
+                type="button"
+                onClick={() => set("financeSource", null)}
+                className="underline underline-offset-2 hover:text-foreground"
+              >
+                {t("habits.templates.unlink")}
+              </button>
+            </p>
+          )}
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="create-name">{t("habits.edit.name")}</Label>
@@ -193,7 +208,7 @@ export function CreateHabitDialog() {
 
           <HabitExtraFields
             polarity={draft.polarity}
-            onPolarity={(value) => set("polarity", value)}
+            onPolarity={draft.financeSource ? undefined : (value) => set("polarity", value)}
             endDate={draft.endDate}
             onEndDate={(value) => set("endDate", value)}
             customFields={draft.customFields}

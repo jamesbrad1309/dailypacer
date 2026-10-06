@@ -240,8 +240,12 @@ function DayButton({ habit, cell, today }: { habit: Habit; cell: HabitDayCell; t
     date: formatShortDate(cell.date),
     status: t(`habits.calendar.status.${cell.status}`),
   });
+  // A finance-linked habit's days come from transactions, so they aren't ticked here.
   const editable =
-    cell.date <= today && EDITABLE.has(cell.status) && (cell.status !== "OFF" || !avoid);
+    !habit.financeSource &&
+    cell.date <= today &&
+    EDITABLE.has(cell.status) &&
+    (cell.status !== "OFF" || !avoid);
   if (!editable) {
     return (
       <span role="img" aria-label={label} title={label} className="flex justify-center">

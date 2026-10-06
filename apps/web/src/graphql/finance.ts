@@ -81,6 +81,11 @@ export const TRANSACTIONS_REFETCH = [
   "SubscriptionCharges",
   "PendingSubscriptionCharges",
   "SubscriptionSummary",
+  // Finance-linked habits (no-spend day, log today's spending) are ticked from transactions.
+  "Habits",
+  "HabitDetail",
+  "DashboardStats",
+  "HabitCalendar",
 ];
 
 export const CREATE_ACCOUNT_MUTATION = gql`

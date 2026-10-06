@@ -17,6 +17,7 @@ const HABIT_FIELDS = gql`
       label
       value
     }
+    financeSource
     paused
     currentStreak
     longestStreak

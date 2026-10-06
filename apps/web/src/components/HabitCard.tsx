@@ -4,6 +4,7 @@ import { Archive, Ban, CalendarClock, Clock, Flame, Pause, Play, Star } from "lu
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { EditHabitDialog } from "#components/EditHabitDialog";
+import { HabitCheck } from "#components/HabitCheck";
 import { HeatmapGrid } from "#components/HeatmapGrid";
 import { Badge } from "#components/ui/badge";
 import { Button } from "#components/ui/button";
@@ -144,7 +145,9 @@ export function HabitCard({ habit, onTagClick }: Props) {
               {t("habits.card.streakLabel")}
             </span>
           </div>
-          {avoid ? (
+          {habit.financeSource ? (
+            <HabitCheck habit={habit} />
+          ) : avoid ? (
             <Button
               size="sm"
               variant={slipped ? "destructive" : "outline"}

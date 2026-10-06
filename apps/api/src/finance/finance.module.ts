@@ -10,6 +10,8 @@ import { CsvUploadsService } from "#finance/csv-uploads.service";
 import { CurrenciesController } from "#finance/currencies.controller";
 import { CurrenciesService } from "#finance/currencies.service";
 import { ExchangeRatesService } from "#finance/exchange-rates.service";
+import { FinanceHabitsController } from "#finance/finance-habits.controller";
+import { FinanceHabitsService } from "#finance/finance-habits.service";
 import { ImportService } from "#finance/import.service";
 import { LogosController } from "#finance/logos.controller";
 import { LogosService } from "#finance/logos.service";
@@ -26,15 +28,19 @@ import { SubscriptionsController } from "#finance/subscriptions.controller";
 import { SubscriptionsService } from "#finance/subscriptions.service";
 import { TransactionsController } from "#finance/transactions.controller";
 import { TransactionsService } from "#finance/transactions.service";
+import { HabitEntriesModule } from "#habit-entries/habit-entries.module";
 
 /**
  * One module for all of finance: accounts, transactions, budgets and
  * reports are tightly coupled. Built so far (docs/finance/index.md): accounts
  * and reconciling (phase 1), transactions and quick log (phase 2), and spend
  * by category from the `monthly_totals` aggregate (phase 2b), budgets (phase 3),
- * and subscriptions with confirm-each-charge and cached logos.
+ * and subscriptions with confirm-each-charge and cached logos. It also
+ * keeps finance-linked habits ticked (FinanceHabitsService), so it imports
+ * habit entries; habits never import finance.
  */
 @Module({
+  imports: [HabitEntriesModule],
   controllers: [
     AccountsController,
     CategoriesController,
@@ -48,6 +54,7 @@ import { TransactionsService } from "#finance/transactions.service";
     LogosController,
     PayeeRulesController,
     SavingsGoalsController,
+    FinanceHabitsController,
   ],
   providers: [
     AccountsService,
@@ -65,6 +72,7 @@ import { TransactionsService } from "#finance/transactions.service";
     LogosService,
     PayeeRulesService,
     SavingsGoalsService,
+    FinanceHabitsService,
   ],
 })
 export class FinanceModule {}

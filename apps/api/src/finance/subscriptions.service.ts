@@ -23,6 +23,7 @@ import type {
   CreateSubscriptionInput,
   UpdateSubscriptionInput,
 } from "#finance/dto/subscription.dto";
+import { FinanceHabitsService } from "#finance/finance-habits.service";
 import { catalogService } from "#finance/subscription-catalog";
 import {
   type Schedule,
@@ -172,6 +173,7 @@ export class SubscriptionsService {
     private readonly prisma: PrismaService,
     private readonly transactions: TransactionsService,
     private readonly currencies: CurrenciesService,
+    private readonly financeHabits: FinanceHabitsService,
   ) {}
 
   async list(today: string, includeEnded = false): Promise<SubscriptionView[]> {
@@ -377,13 +379,17 @@ export class SubscriptionsService {
       },
       select: { id: true },
     });
-    let logged = 0;
-    for (const { id } of due) logged += await this.autoLogOne(id, today);
-    if (logged) log.info({ logged, today }, "auto-logged subscription charges");
-    return logged;
+    const days: string[] = [];
+    for (const { id } of due) days.push(...(await this.autoLogOne(id, today)));
+    if (days.length) {
+      log.info({ logged: days.length, today }, "auto-logged subscription charges");
+      await this.financeHabits.syncDays(days);
+    }
+    return days.length;
   }
 
-  private async autoLogOne(id: string, today: string): Promise<number> {
+  /** The due days it logged a charge for. */
+  private async autoLogOne(id: string, today: string): Promise<string[]> {
     return this.prisma.$transaction(async (tx) => {
       // A concurrent catch-up waits here, then finds autoLoggedThrough already moved.
       await tx.$queryRaw`SELECT "id" FROM "subscriptions" WHERE "id" = ${id} FOR UPDATE`;
@@ -392,7 +398,7 @@ export class SubscriptionsService {
         include: { prices: true, account: true, charges: { select: { dueOn: true } } },
       });
       const through = iso(sub?.autoLoggedThrough ?? null);
-      if (!sub?.autoLog || (through && through >= today)) return 0;
+      if (!sub?.autoLog || (through && through >= today)) return [];
 
       // Never before it was added, the last run, or the account's opening day.
       const start = [
@@ -402,7 +408,7 @@ export class SubscriptionsService {
       ].sort()[2];
       const end = lastAskable(sub, today);
       const answered = new Set(sub.charges.map((c) => toIsoDate(c.dueOn)));
-      let logged = 0;
+      const logged: string[] = [];
       if (start <= end && !sub.account.archivedAt) {
         for (const dueOn of chargesBetween(schedule(sub), start, end)) {
           if (answered.has(dueOn)) continue;
@@ -430,7 +436,7 @@ export class SubscriptionsService {
               transactionId: transaction.id,
             },
           });
-          logged++;
+          logged.push(dueOn);
         }
       }
       await tx.subscription.update({

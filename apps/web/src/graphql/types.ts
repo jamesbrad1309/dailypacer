@@ -37,6 +37,12 @@ export interface HabitCustomField {
   value: string;
 }
 
+/**
+ * NO_SPEND: an avoid habit, slipped on any day money went out.
+ * LOGGED_TODAY: done once anything is logged by hand that day.
+ */
+export type HabitFinanceSource = "NO_SPEND" | "LOGGED_TODAY";
+
 export interface Habit {
   id: string;
   name: string;
@@ -54,6 +60,8 @@ export interface Habit {
   /** A time-boxed habit's last day; it archives itself after. */
   endDate: string | null;
   customFields: HabitCustomField[];
+  /** Ticked from transactions instead of by hand; see HabitCheck. */
+  financeSource: HabitFinanceSource | null;
   paused: boolean;
   currentStreak: number;
   longestStreak: number;

@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from "#components/ui/dialog";
 import { Label } from "#components/ui/label";
-import { ACCOUNTS_REFETCH, RECONCILE_ACCOUNT_MUTATION } from "#graphql/finance";
+import { RECONCILE_ACCOUNT_MUTATION, TRANSACTIONS_REFETCH } from "#graphql/finance";
 import type { Account } from "#graphql/types";
 import { ACCOUNT_TYPES, enteredBalance, signedBalance } from "#lib/account-types";
 import { todayIsoDate } from "#lib/dates";
@@ -38,7 +38,8 @@ export function ReconcileDialog({ account, open, onOpenChange }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const [reconcile, { loading }] = useMutation(RECONCILE_ACCOUNT_MUTATION, {
-    refetchQueries: ACCOUNTS_REFETCH,
+    // A reconcile may add an adjustment, and ticks "log today's spending".
+    refetchQueries: TRANSACTIONS_REFETCH,
     awaitRefetchQueries: true,
   });
 

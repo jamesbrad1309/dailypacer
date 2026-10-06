@@ -145,7 +145,7 @@ export function EditHabitDialog({ habit }: { habit: Habit }) {
 
           <HabitExtraFields
             polarity={draft.polarity}
-            onPolarity={(value) => set("polarity", value)}
+            onPolarity={draft.financeSource ? undefined : (value) => set("polarity", value)}
             endDate={draft.endDate}
             onEndDate={(value) => set("endDate", value)}
             customFields={draft.customFields}
