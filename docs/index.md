@@ -47,6 +47,7 @@ Each file below is a short, standalone read.
 - [Frontend stack](frontend/stack.md) — Vite + React + TS baseline
 - [shadcn/ui setup](frontend/shadcn-setup.md) — with native `#` aliases, not `@/*`
 - [App shell](frontend/app-shell.md) — sidebar, app bar, TanStack Router routes, full-width page layouts
+- [Command palette](frontend/command-palette.md) — ⌘⇧P palette (cmdk), app-wide shortcuts (tinykeys), the `?` cheat sheet
 - [Languages](frontend/i18n.md) — English/Vietnamese: dictionaries, locale-aware money and dates, data that has a language
 
 **Backend**

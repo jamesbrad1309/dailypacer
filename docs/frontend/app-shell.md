@@ -5,7 +5,7 @@
 
 ```
 ┌──────────┬──────────────────────────────────────────────┐
-│ Sidebar  │ App bar: ☰/collapse · title · date · theme   │
+│ Sidebar  │ App bar: ☰ · title · ⌘⇧P · date · EN|VI · ☀ │
 │          ├──────────────────────────────────────────────┤
 │ Habits   │                                              │
 │ Mind     │ Page content: fills the full width,          │
@@ -22,8 +22,12 @@
   breakpoint it's a slide-in drawer (Radix Dialog) opened from ☰, which
   closes when a link is followed.
 - **App bar**: the current route's title and subtitle, today's date, the
-  EN | VI language switch ([i18n.md](i18n.md)), and a light/dark toggle. The theme toggles the `.dark` class from `index.css`,
-  starting from the OS setting (`hooks/useTheme.ts`).
+  "Search or run a command… ⌘⇧P" button that opens the
+  [command palette](command-palette.md), the EN | VI language switch
+  ([i18n.md](i18n.md)), and a light/dark toggle. The theme toggles the
+  `.dark` class from `index.css`, starting from the OS setting. It's a
+  shared store (`hooks/useTheme.ts`), so the palette's "Toggle theme" and
+  the app bar's button stay in step.
 - **Content**: `<main>` is the scroll container, so page-level side rails
   can use `position: sticky`. It has extra bottom padding so the floating
   ➕ never covers the last row.
@@ -31,6 +35,9 @@
   (`QuickLogButton`, also `n`), the quick-log sheet (opened from anywhere
   with `openQuickLog()` from `hooks/useQuickLog.ts`) and the `Toaster` for
   `lib/toast.ts`, so an "Undo" toast outlives the sheet that raised it.
+- **Keyboard**: the shell also mounts `GlobalShortcuts` (every app-wide key
+  binding), `CommandPalette` and `ShortcutsHelp` (the `?` cheat sheet). See
+  [command-palette.md](command-palette.md).
 
 ## Routing
 
@@ -141,7 +148,8 @@ at `2xl`, and stack above or below the main column on phones.
 
 ## UI preferences
 
-Sidebar collapse and theme are stored in `localStorage` through
-`hooks/useStoredState.ts`, which falls back to plain state when storage is
+Sidebar collapse is stored in `localStorage` through
+`hooks/useStoredState.ts`, and the theme under `lifeos.theme` by
+`hooks/useTheme.ts`. Both fall back to plain state when storage is
 unavailable (private windows, blocked site data). Only UI preferences go
 there. Data always comes from the API.
