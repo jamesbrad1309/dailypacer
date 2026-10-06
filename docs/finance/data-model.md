@@ -260,8 +260,9 @@ Progress is derived on every read (`goalProgress` in `savings-goal.util.ts`):
 so the last weeks ask for the rest), `onTrack` means saved ≥ a steady pace
 from `startSavedMinor` to the target, and `overdue` is a passed deadline.
 Unlinking an account keeps its balance as the goal's own saved amount.
-The habit link (`habitId`, [habits-integration.md](habits-integration.md)) is
-phase 6 and not built.
+`habitId` is the goal's daily "save X" habit, and `SavingsContribution(goalId,
+date, amountMinor)` dates each "add money" to an unlinked goal so that habit
+can count it ([habits-integration.md §2](habits-integration.md#2-savings-goal-as-a-habit)).
 
 ## Payee rules
 

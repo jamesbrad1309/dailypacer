@@ -27,7 +27,7 @@ improves UX · `2` edge case / power-user · `1` speculative.
 | Routines & structure | 4 | 0 | — |
 | Insights | 4 | 0 | — |
 | Journaling & mood | 13 | 0 | — |
-| Cross-module (habits × finance) | 2 | 3 | Savings-goal contributions count as check-ins (3) |
+| Cross-module (habits × finance) | 3 | 2 | Cost of a habit (2) |
 | **To-do lists** | 13 | 0 | — |
 | **Finance** (separate doc) | 60 | 0 | Habits integration in progress, see [finance/use-cases.md](../finance/use-cases.md) |
 
@@ -87,7 +87,7 @@ improves UX · `2` edge case / power-user · `1` speculative.
 |  | ✅ | **Daily mood as a streakable habit** | 2 | `/journal/insights`: a check-in streak (days in a row with a feeling; today pending until logged), the best run, and a 120-day heatmap tinted by mood (`Query.journalFeelings`) |
 |  | ✅ | **Mood overlay on heatmaps**: tint a habit's heatmap by that day's mood | 1 | "Mood" toggle on a habit's 120-day heatmap: each day tinted by that day's mood, with a dot where the habit was done |
 | **Cross-module (habits × finance)** | ✅ | **"No-spend day" habit auto-checked from transactions** | 3 | "No-spend day" template: an avoid habit whose slips are that day's spending transactions, written by `FinanceHabitsService`. Read-only status on the card and day view; see [habits-integration.md §1](../finance/habits-integration.md#1-no-spend-day-habit-auto-checked) |
-|  | ⬜ | **Savings-goal contributions count as check-ins** ("save £10/day") | 3 | `SavingsGoal.habitId`, see [habits-integration.md §2](../finance/habits-integration.md#2-savings-goal-as-a-habit) |
+|  | ✅ | **Savings-goal contributions count as check-ins** ("save £10/day") | 3 | "Save a set amount each day" on the goal makes a daily habit (`SavingsGoal.habitId`). Money added to the goal, or moved into the account it follows, is that day's value; reaching the amount ticks it. "Put aside" on the habit does either. See [habits-integration.md §2](../finance/habits-integration.md#2-savings-goal-as-a-habit) |
 |  | ✅ | **"Log today's spending" habit**: an evening habit that opens quick log and counts as done once anything is logged that day | 3 | "Log today's spending" template (21:00). Its button opens quick log in catch-up mode; ticked by a quick/form transaction or a reconcile. See [habits-integration.md §5](../finance/habits-integration.md#5-log-todays-spending-habit) |
 |  | ⬜ | **Cost of a habit**: link a habit to a spending category ("coffee", "gym") and show spend next to the streak | 2 | `Habit.linkedSpendMinor(month)`, see [habits-integration.md §3](../finance/habits-integration.md#3-cost-of-a-habit) |
 |  | ⬜ | **Unified "LifeOS level"**: XP from both habits and financial discipline (staying under budget) | 2 | Finance XP added in `gamification.util.ts`, see [habits-integration.md §4](../finance/habits-integration.md#4-unified-lifeos-xp) |

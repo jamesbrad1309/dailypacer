@@ -4,7 +4,7 @@ These features only work because both modules live in one app. They're
 listed as use cases under "Cross-module" in
 [domain/use-cases.md](../domain/use-cases.md).
 
-## How §1 and §5 are built
+## How §1, §2 and §5 are built
 
 Both habits are ordinary habits with `metadata.source` set, so they need no
 migration. The rules for one day are pure functions in
@@ -56,15 +56,38 @@ The heatmap then shows no-spend days for free.
 
 ## 2. Savings goal as a habit
 
-"Save £10 a day towards Japan":
+"Save £10 a day towards Japan". Built:
 
-- A `SavingsGoal` with `habitId` set, and a habit with `unit: "£"` and
-  `targetValue: 10`.
-- Checking the habit off with a value can **optionally create a transfer**
-  from the current account to the goal's savings account. That's opt-in,
-  with a checkbox in the check-in UI.
-- `SavingsGoal.savedMinor` is the balance of the linked account, or the sum
-  of the linked habit's entry values when there's no linked account.
+- The goal dialog's "Save a set amount each day" field
+  (`dailyHabitMinor`) makes an ordinary daily habit:
+  - `unit` is the goal's currency and `targetValue` the amount in major
+    units (`10`).
+  - Its metadata is `{ source: "finance.savingsGoal", goalId }`.
+  - `SavingsGoal.habitId` points at it, and that link is the one the code
+    trusts.
+  - Clearing the field archives the habit, so its streak history stays.
+    Setting it again brings the same habit back.
+  - Deleting the goal archives its habit.
+  - A savings habit can't be made from the habit dialog; GraphQL refuses
+    `financeSource: SAVINGS_GOAL`.
+- **A day's value is what was put aside that day**
+  (`savedOnDay` / `savedEntry`); the habit is done once that reaches the
+  target.
+  - For a goal that follows an account, it's the net of that account's
+    transactions that day: transfers in, less anything taken out.
+  - For an unlinked goal, it's that day's `SavingsContribution` rows. Each
+    "add money" (`contribute`) records one with its day; `savedMinor`
+    stays the running total.
+- **Put aside, from the habit**: `HabitCheck` shows "£4.00 today" or "Put
+  aside". It opens `SaveToGoalDialog`, prefilled with the daily amount.
+  - An unlinked goal gets a contribution.
+  - A linked goal gets a transfer from an account in the same currency,
+    the default account first.
+  - Either way, the finance write ticks the habit. Nothing is ticked by
+    hand.
+- Transfers sync their day too (`createTransfer`), since money into a
+  goal's account is saving. Linking a goal to another account recomputes
+  its habit.
 
 ## 3. Cost of a habit
 
