@@ -5,7 +5,9 @@ import {
   NO_SPEND,
   derivedEntry,
   financeLinkOf,
+  habitSpend,
   isSpending,
+  linkedCategoryIds,
   savedEntry,
   savedOnDay,
 } from "#finance/finance-habits.util";
@@ -99,5 +101,25 @@ describe("savings habits", () => {
     expect(savedEntry(-500, 2, 10)).toEqual({ value: 0, completed: false });
     expect(savedEntry(50000, 0, 100000)).toEqual({ value: 50000, completed: false });
     expect(savedEntry(1, 2, null)).toEqual({ value: 0.01, completed: true });
+  });
+});
+
+describe("habit cost", () => {
+  it("linkedCategoryIds reads strings only", () => {
+    expect(linkedCategoryIds({ categoryIds: ["a", 1, "b"] })).toEqual(["a", "b"]);
+    expect(linkedCategoryIds({})).toEqual([]);
+    expect(linkedCategoryIds(null)).toEqual([]);
+  });
+
+  it("habitSpend sums linked categories, a parent bringing its subcategories", () => {
+    const rows = [
+      { category: { id: "coffee", parentId: "food" }, spentMinor: 340, previousSpentMinor: 4800 },
+      { category: { id: "food", parentId: null }, spentMinor: 1000, previousSpentMinor: 0 },
+      { category: { id: "gym", parentId: null }, spentMinor: 3500, previousSpentMinor: 3500 },
+      { category: null, spentMinor: 999, previousSpentMinor: 999 },
+    ];
+    expect(habitSpend(["coffee"], rows)).toEqual({ thisMonthMinor: 340, lastMonthMinor: 4800 });
+    expect(habitSpend(["food"], rows)).toEqual({ thisMonthMinor: 1340, lastMonthMinor: 4800 });
+    expect(habitSpend(["nope"], rows)).toEqual({ thisMonthMinor: 0, lastMonthMinor: 0 });
   });
 });

@@ -119,3 +119,39 @@ export function savedOnDay(
     : contributions;
   return rows.reduce((sum, r) => sum + r.amountMinor, 0);
 }
+
+/**
+ * The spending categories a habit is linked to (`metadata.categoryIds`):
+ * what a no-spend habit counts, and what any habit shows as its cost.
+ */
+export function linkedCategoryIds(metadata: unknown): string[] {
+  const ids = (metadata as { categoryIds?: unknown } | null)?.categoryIds;
+  return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === "string") : [];
+}
+
+/** A category row from the spend report, as habitSpend reads it. */
+export interface CategorySpendRow {
+  category: { id: string; parentId: string | null } | null;
+  spentMinor: number;
+  previousSpentMinor: number;
+}
+
+/**
+ * What a habit's linked categories cost this month and last: a linked
+ * parent category brings its subcategories with it.
+ */
+export function habitSpend(
+  categoryIds: readonly string[],
+  rows: readonly CategorySpendRow[],
+): { thisMonthMinor: number; lastMonthMinor: number } {
+  const linked = rows.filter(
+    ({ category }) =>
+      category !== null &&
+      (categoryIds.includes(category.id) ||
+        (category.parentId !== null && categoryIds.includes(category.parentId))),
+  );
+  return {
+    thisMonthMinor: linked.reduce((sum, r) => sum + r.spentMinor, 0),
+    lastMonthMinor: linked.reduce((sum, r) => sum + r.previousSpentMinor, 0),
+  };
+}

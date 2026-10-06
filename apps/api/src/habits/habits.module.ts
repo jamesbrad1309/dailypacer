@@ -23,6 +23,7 @@ import { RoutinesService } from "#habits/routines.service";
     PointsService,
     RoutinesService,
   ],
-  exports: [HabitsService],
+  // HabitStatsService: finance's LifeOS level adds its XP to habit points.
+  exports: [HabitsService, HabitStatsService],
 })
 export class HabitsModule {}

@@ -34,14 +34,12 @@ function toApiHabitInput({ polarity, financeSource, financeCategoryIds, ...input
       extensions: { code: "BAD_USER_INPUT" },
     });
   }
+  // Any habit can link spending categories (its cost); a no-spend habit also counts only them.
+  if (financeCategoryIds?.length) {
+    input.metadata = { ...input.metadata, categoryIds: financeCategoryIds };
+  }
   if (financeSource) {
-    input.metadata = {
-      ...input.metadata,
-      source: FINANCE_SOURCES[financeSource],
-      ...(financeSource === "NO_SPEND" && financeCategoryIds?.length
-        ? { categoryIds: financeCategoryIds }
-        : {}),
-    };
+    input.metadata = { ...input.metadata, source: FINANCE_SOURCES[financeSource] };
     if (financeSource === "NO_SPEND") polarity = "AVOID";
   }
   return polarity ? { ...input, polarity: polarity.toLowerCase() } : input;
@@ -77,6 +75,8 @@ export default {
       });
       return ctx.api.get<ApiHabitRecordsPage>(`${habitPath(args.habitId)}/records?${query}`);
     },
+    habitSpend: (_: unknown, args: { today: string }, ctx: GraphQLContext) =>
+      ctx.api.get<unknown[]>(`/finance/habits/spend?today=${encodeURIComponent(args.today)}`),
     habitInsights: (_: unknown, args: { habitId: string; today: string }, ctx: GraphQLContext) =>
       ctx.api.get<unknown>(
         `${habitPath(args.habitId)}/insights?today=${encodeURIComponent(args.today)}`,

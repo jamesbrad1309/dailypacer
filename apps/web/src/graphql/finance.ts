@@ -86,6 +86,9 @@ export const TRANSACTIONS_REFETCH = [
   "HabitDetail",
   "DashboardStats",
   "HabitCalendar",
+  // A habit's cost, and the LifeOS level's finance XP.
+  "HabitSpend",
+  "LifeLevel",
 ];
 
 export const CREATE_ACCOUNT_MUTATION = gql`

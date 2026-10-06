@@ -20,7 +20,7 @@ type Habit {
   customFields: [HabitCustomField!]!
   """Set when the habit is ticked from transactions instead of by hand."""
   financeSource: HabitFinanceSource
-  """NO_SPEND only: just spending in these categories breaks the day. Empty: all spending."""
+  """Linked spending categories: shown as the habit's cost (habitSpend). For NO_SPEND, only these break the day; empty counts all spending."""
   financeCategoryIds: [ID!]!
   """SAVINGS_GOAL only: the goal it saves for."""
   savingsGoalId: ID
@@ -115,7 +115,7 @@ input CreateHabitInput {
   customFields: [HabitCustomFieldInput!]
   """Ticks the habit from transactions; NO_SPEND makes it an avoid habit."""
   financeSource: HabitFinanceSource
-  """NO_SPEND only: just spending in these categories breaks the day."""
+  """Linked spending categories (the habit's cost); for NO_SPEND, only these break the day."""
   financeCategoryIds: [ID!]
 }
 
@@ -134,7 +134,7 @@ input UpdateHabitInput {
   endDate: String
   """Replaces the list."""
   customFields: [HabitCustomFieldInput!]
-  """NO_SPEND only; [] counts all spending. Re-derives the habit's entries."""
+  """Replaces the linked categories; [] unlinks them (a no-spend habit then counts all spending, and is re-derived)."""
   financeCategoryIds: [ID!]
 }
 
@@ -223,7 +223,17 @@ type HabitInsights {
   lastMonth: CompletionPeriod!
 }
 
+"""What a habit's linked spending categories cost, in the main currency."""
+type HabitSpend {
+  habitId: ID!
+  currency: String!
+  thisMonthMinor: Int!
+  lastMonthMinor: Int!
+}
+
 extend type Query {
+  """Every habit with linked spending categories, for `today`'s month (YYYY-MM-DD) and the one before."""
+  habitSpend(today: String!): [HabitSpend!]!
   habits: [Habit!]!
   archivedHabits: [Habit!]!
   todayHabits: [Habit!]!

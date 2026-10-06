@@ -27,11 +27,19 @@ export const habits: typeof en = {
     save: "Lưu",
     noSource: "Hãy thêm một tài khoản khác cùng loại tiền để chuyển từ đó.",
   },
+  cost: {
+    thisMonth: "{{amount}} tháng này",
+    lastMonth: "{{amount}} tháng trước",
+    perCheckIn: "{{amount}} mỗi lần",
+  },
   noSpend: {
     categories: "Tính là chi tiêu",
     allSpending:
       "Mọi khoản chi đều làm hỏng ngày. Chọn danh mục để chỉ tính những khoản đó, để tiền nhà hay hóa đơn không bị tính.",
     onlyChosen: "Chỉ chi tiêu trong các danh mục này mới làm hỏng ngày.",
+    linked: "Chi tiêu liên kết (không bắt buộc)",
+    linkedHint:
+      "Xem bạn chi bao nhiêu cho các danh mục này cạnh chuỗi ngày, như cà phê hay phòng tập.",
   },
   card: {
     streakLabel: "ngày liên tiếp",

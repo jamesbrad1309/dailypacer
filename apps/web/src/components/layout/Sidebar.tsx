@@ -4,8 +4,8 @@ import { Sparkles, Trophy } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Progress } from "#components/ui/progress";
 import { TO_REVIEW_COUNT_QUERY } from "#graphql/finance";
-import { DASHBOARD_STATS_QUERY } from "#graphql/habits";
-import type { DashboardStatsData } from "#graphql/types";
+import { LIFE_LEVEL_QUERY } from "#graphql/habits";
+import type { LifeLevel } from "#graphql/types";
 import { todayIsoDate } from "#lib/dates";
 import { levelTitle } from "#lib/levels";
 import { COMING_SOON, NAV_GROUPS } from "#lib/navigation";
@@ -141,48 +141,66 @@ function ToReviewBadge({ collapsed }: { collapsed: boolean }) {
   );
 }
 
-/** Overall level and XP, always in view whichever page is open. */
+/**
+ * The LifeOS level (habit points plus finance XP), always in view whichever
+ * page is open, with where the XP came from.
+ */
 function LevelCard({ collapsed }: { collapsed: boolean }) {
   const { t } = useTranslation();
-  const { data } = useQuery<DashboardStatsData>(DASHBOARD_STATS_QUERY);
-  const stats = data?.dashboardStats;
-  if (!stats) return null;
+  const { data } = useQuery<{ lifeLevel: LifeLevel }>(LIFE_LEVEL_QUERY, {
+    variables: { today: todayIsoDate() },
+  });
+  const life = data?.lifeLevel;
+  if (!life) return null;
 
   const pct =
-    stats.pointsForNextLevel > 0
-      ? Math.min(100, Math.round((stats.pointsIntoLevel / stats.pointsForNextLevel) * 100))
+    life.xpForNextLevel > 0
+      ? Math.min(100, Math.round((life.xpIntoLevel / life.xpForNextLevel) * 100))
       : 100;
+  const tooltip = [
+    t("shell.level.tooltip", {
+      level: life.level,
+      title: levelTitle(t, life.level),
+      into: life.xpIntoLevel,
+      needed: life.xpForNextLevel,
+    }),
+    t("shell.level.fromHabits", { xp: life.habitXp }),
+    t("shell.level.fromMoney", {
+      xp: life.financeXp,
+      budgets: life.budgetXp,
+      goals: life.goalXp,
+      logging: life.loggingXp,
+    }),
+  ].join("\n");
 
   if (collapsed) {
     return (
       <div
         className="mx-auto flex size-9 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold"
-        title={t("shell.level.tooltip", {
-          level: stats.level,
-          title: levelTitle(t, stats.level),
-          into: stats.pointsIntoLevel,
-          needed: stats.pointsForNextLevel,
-        })}
+        title={tooltip}
       >
-        {stats.level}
+        {life.level}
       </div>
     );
   }
 
   return (
-    <div className="mx-2 rounded-lg border bg-muted/40 p-3">
+    <div className="mx-2 rounded-lg border bg-muted/40 p-3" title={tooltip}>
       <div className="flex items-center gap-2 text-sm">
         <Trophy className="size-4 text-amber-500" />
-        <span className="font-semibold">{t("shell.level.level", { level: stats.level })}</span>
-        <span className="truncate text-xs text-muted-foreground">{levelTitle(t, stats.level)}</span>
+        <span className="font-semibold">{t("shell.level.level", { level: life.level })}</span>
+        <span className="truncate text-xs text-muted-foreground">{levelTitle(t, life.level)}</span>
       </div>
       <Progress value={pct} className="mt-2 h-1.5" />
       <p className="mt-1.5 text-[11px] text-muted-foreground">
         {t("shell.level.progress", {
-          into: stats.pointsIntoLevel,
-          needed: stats.pointsForNextLevel,
-          next: stats.level + 1,
+          into: life.xpIntoLevel,
+          needed: life.xpForNextLevel,
+          next: life.level + 1,
         })}
+      </p>
+      <p className="text-[11px] text-muted-foreground">
+        {t("shell.level.breakdown", { habits: life.habitXp, money: life.financeXp })}
       </p>
     </div>
   );

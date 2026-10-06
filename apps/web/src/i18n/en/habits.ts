@@ -26,11 +26,19 @@ export const habits = {
     save: "Save",
     noSource: "Add another account in the same currency to transfer from.",
   },
+  cost: {
+    thisMonth: "{{amount}} this month",
+    lastMonth: "{{amount}} last month",
+    perCheckIn: "{{amount}} per check-in",
+  },
   noSpend: {
     categories: "What counts as spending",
     allSpending:
       "Any money out breaks the day. Pick categories to count only those, so rent or bills don't.",
     onlyChosen: "Only spending in these categories breaks the day.",
+    linked: "Linked spending (optional)",
+    linkedHint:
+      "See what you spend in these categories next to the streak, like coffee or the gym.",
   },
   card: {
     streak: "{{count}}d streak",

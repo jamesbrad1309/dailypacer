@@ -156,6 +156,26 @@ export interface DashboardStats {
   activeStreakCount: number;
 }
 
+export interface HabitSpend {
+  habitId: string;
+  /** The main currency. */
+  currency: string;
+  thisMonthMinor: number;
+  lastMonthMinor: number;
+}
+
+export interface LifeLevel {
+  level: number;
+  totalXp: number;
+  xpIntoLevel: number;
+  xpForNextLevel: number;
+  habitXp: number;
+  financeXp: number;
+  budgetXp: number;
+  goalXp: number;
+  loggingXp: number;
+}
+
 export interface DashboardStatsData {
   dashboardStats: DashboardStats;
 }

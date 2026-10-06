@@ -2,8 +2,8 @@ import { useMutation } from "@apollo/client/react";
 import { Plus } from "lucide-react";
 import { type FormEvent, useEffect, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { HabitCategories } from "#components/HabitCategories";
 import { HabitExtraFields } from "#components/HabitExtraFields";
-import { NoSpendCategories } from "#components/NoSpendCategories";
 import { ScheduleEditor } from "#components/ScheduleEditor";
 import { Button } from "#components/ui/button";
 import {
@@ -90,7 +90,7 @@ export function CreateHabitDialog() {
           customFields: cleanCustomFields(draft.customFields),
           financeSource: draft.financeSource ?? undefined,
           financeCategoryIds:
-            draft.financeSource === "NO_SPEND" ? draft.financeCategoryIds : undefined,
+            draft.financeCategoryIds.length > 0 ? draft.financeCategoryIds : undefined,
         },
       },
     });
@@ -219,10 +219,11 @@ export function CreateHabitDialog() {
             onCustomFields={(value) => set("customFields", value)}
           />
 
-          {draft.financeSource === "NO_SPEND" && (
-            <NoSpendCategories
+          {(draft.financeSource === null || draft.financeSource === "NO_SPEND") && (
+            <HabitCategories
               value={draft.financeCategoryIds}
               onChange={(ids) => set("financeCategoryIds", ids)}
+              noSpend={draft.financeSource === "NO_SPEND"}
             />
           )}
 

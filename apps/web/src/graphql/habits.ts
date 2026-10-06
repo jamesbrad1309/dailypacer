@@ -475,8 +475,38 @@ export const DELETE_ROUTINE_MUTATION = gql`
  * achievements), challenges, the calendar and the review. Refetched by
  * name, so only the queries on screen run again.
  */
+/** What each habit's linked spending categories cost (HabitCost). */
+export const HABIT_SPEND_QUERY = gql`
+  query HabitSpend($today: String!) {
+    habitSpend(today: $today) {
+      habitId
+      currency
+      thisMonthMinor
+      lastMonthMinor
+    }
+  }
+`;
+
+/** The LifeOS level: habit points plus finance XP. */
+export const LIFE_LEVEL_QUERY = gql`
+  query LifeLevel($today: String!) {
+    lifeLevel(today: $today) {
+      level
+      totalXp
+      xpIntoLevel
+      xpForNextLevel
+      habitXp
+      financeXp
+      budgetXp
+      goalXp
+      loggingXp
+    }
+  }
+`;
+
 export const HABIT_PROGRESS_REFETCH = [
   "DashboardStats",
+  "LifeLevel",
   "HabitRecords",
   "PointsWallet",
   "Achievements",

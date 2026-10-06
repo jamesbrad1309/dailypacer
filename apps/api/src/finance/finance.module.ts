@@ -10,9 +10,10 @@ import { CsvUploadsService } from "#finance/csv-uploads.service";
 import { CurrenciesController } from "#finance/currencies.controller";
 import { CurrenciesService } from "#finance/currencies.service";
 import { ExchangeRatesService } from "#finance/exchange-rates.service";
-import { FinanceHabitsController } from "#finance/finance-habits.controller";
+import { FinanceHabitsController, LifeLevelController } from "#finance/finance-habits.controller";
 import { FinanceHabitsService } from "#finance/finance-habits.service";
 import { ImportService } from "#finance/import.service";
+import { LifeLevelService } from "#finance/life-level.service";
 import { LogosController } from "#finance/logos.controller";
 import { LogosService } from "#finance/logos.service";
 import { MonthlyTotalsService } from "#finance/monthly-totals.service";
@@ -57,6 +58,7 @@ import { HabitsModule } from "#habits/habits.module";
     PayeeRulesController,
     SavingsGoalsController,
     FinanceHabitsController,
+    LifeLevelController,
   ],
   providers: [
     AccountsService,
@@ -75,6 +77,7 @@ import { HabitsModule } from "#habits/habits.module";
     PayeeRulesService,
     SavingsGoalsService,
     FinanceHabitsService,
+    LifeLevelService,
   ],
 })
 export class FinanceModule {}

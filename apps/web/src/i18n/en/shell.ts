@@ -102,6 +102,10 @@ export const shell = {
     level: "Level {{level}}",
     progress: "{{into}} / {{needed}} XP to level {{next}}",
     tooltip: "Level {{level}} · {{title}} · {{into}}/{{needed}} XP",
+    breakdown: "Habits {{habits}} · Money {{money}} XP",
+    fromHabits: "Habits: {{xp}} XP",
+    fromMoney:
+      "Money: {{xp}} XP ({{budgets}} from budgets, {{goals}} from goals, {{logging}} from logging)",
     titles: [
       "Beginner",
       "Getting Started",

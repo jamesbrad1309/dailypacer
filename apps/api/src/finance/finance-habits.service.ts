@@ -12,9 +12,12 @@ import {
   SAVINGS_GOAL,
   derivedEntry,
   financeLinkOf,
+  habitSpend,
+  linkedCategoryIds,
   savedEntry,
   savedOnDay,
 } from "#finance/finance-habits.util";
+import { ReportsService } from "#finance/reports.service";
 import { HabitEntriesService } from "#habit-entries/habit-entries.service";
 
 const log = scopedLogger("FinanceHabitsService");
@@ -27,6 +30,14 @@ interface DayRows {
   transactions: (DayTransaction & { accountId: string })[];
   /** Per goal id. */
   contributions: Map<string, { amountMinor: number }[]>;
+}
+
+export interface HabitSpendDto {
+  habitId: string;
+  /** The main currency. */
+  currency: string;
+  thisMonthMinor: number;
+  lastMonthMinor: number;
 }
 
 /** A day as a transaction or entry date, or "YYYY-MM-DD". */
@@ -55,7 +66,28 @@ export class FinanceHabitsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly entries: HabitEntriesService,
+    private readonly reports: ReportsService,
   ) {}
+
+  /**
+   * The cost of each habit linked to spending categories ("coffee", "gym"):
+   * this month and last, in the main currency, from one spend report
+   * (docs/finance/habits-integration.md §3).
+   */
+  async spend(today: string): Promise<HabitSpendDto[]> {
+    const habits = await this.prisma.habit.findMany({ where: { archivedAt: null } });
+    const linked = habits.flatMap((habit) => {
+      const ids = linkedCategoryIds(habit.metadata);
+      return ids.length > 0 ? [{ habitId: habit.id, ids }] : [];
+    });
+    if (linked.length === 0) return [];
+    const report = await this.reports.spendByCategory(today.slice(0, 7));
+    return linked.map(({ habitId, ids }) => ({
+      habitId,
+      currency: report.currency,
+      ...habitSpend(ids, report.categories),
+    }));
+  }
 
   /**
    * Called after a transaction write has committed, with every day it

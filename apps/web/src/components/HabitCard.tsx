@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { EditHabitDialog } from "#components/EditHabitDialog";
 import { HabitCheck } from "#components/HabitCheck";
+import { HabitCost } from "#components/HabitCost";
 import { HeatmapGrid } from "#components/HeatmapGrid";
 import { Badge } from "#components/ui/badge";
 import { Button } from "#components/ui/button";
@@ -245,6 +246,7 @@ export function HabitCard({ habit, onTagClick }: Props) {
           {t("habits.card.best", { count: habit.longestStreak })} ·{" "}
           {t("habits.card.checkIns", { count: habit.totalCompletions })}
         </p>
+        <HabitCost habit={habit} />
 
         <div className="flex justify-end gap-1 border-t pt-2">
           <EditHabitDialog habit={habit} />

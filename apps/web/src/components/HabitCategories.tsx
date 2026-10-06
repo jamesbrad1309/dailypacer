@@ -6,16 +6,19 @@ import { useCategoryName } from "#hooks/useCategoryName";
 import { cn } from "#lib/utils";
 
 /**
- * A no-spend habit's categories: only spending in the chosen ones breaks
- * the day, so rent or an auto-logged bill doesn't. None chosen counts all
- * spending.
+ * A habit's linked spending categories. Any habit shows what they cost
+ * next to its streak ("coffee", "gym"). For a no-spend habit they're also
+ * what counts: only spending in them breaks the day, so rent or an
+ * auto-logged bill doesn't; none chosen counts all spending.
  */
-export function NoSpendCategories({
+export function HabitCategories({
   value,
   onChange,
+  noSpend,
 }: {
   value: string[];
   onChange: (ids: string[]) => void;
+  noSpend: boolean;
 }) {
   const { t } = useTranslation();
   const categoryName = useCategoryName();
@@ -26,9 +29,15 @@ export function NoSpendCategories({
 
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="mb-1 text-sm font-medium">{t("habits.noSpend.categories")}</legend>
+      <legend className="mb-1 text-sm font-medium">
+        {noSpend ? t("habits.noSpend.categories") : t("habits.noSpend.linked")}
+      </legend>
       <p className="text-xs text-muted-foreground">
-        {value.length === 0 ? t("habits.noSpend.allSpending") : t("habits.noSpend.onlyChosen")}
+        {!noSpend
+          ? t("habits.noSpend.linkedHint")
+          : value.length === 0
+            ? t("habits.noSpend.allSpending")
+            : t("habits.noSpend.onlyChosen")}
       </p>
       <div className="flex flex-wrap gap-1.5">
         {expenses.map((category) => {
