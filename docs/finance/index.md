@@ -46,7 +46,7 @@ on the existing stack without new infrastructure:
 | 3 ✅  | `Budget` + budget-vs-actual view                             | Spending limits                   |
 | 4 ✅  | Transfers (pay off, settle up) and CSV import with dedupe    | Real bank data in minutes         |
 | 5 ✅  | Subscriptions, auto-log, pending transactions, cash flow, `SavingsGoal`; categories, payee rules, splits, budget alerts, top payees, net worth, CSV export | Bills, goals and the rest of v1 |
-| 6 🟡  | Habits integration: no-spend day, log-today and savings-goal habits built; cost of a habit and shared XP to do | Features that span both modules   |
+| 6 ✅  | Habits integration: no-spend day, log-today and savings-goal habits, cost of a habit, LifeOS level | Features that span both modules   |
 
 ## What's built
 

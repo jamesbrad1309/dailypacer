@@ -17,7 +17,7 @@
 ```
 
 - **Sidebar** (`Sidebar.tsx`): typed `<Link>`s grouped by `lib/navigation.ts`, planned
-  screens greyed out as "Coming soon", and a level/XP card at the bottom.
+  screens greyed out as "Coming soon", and a LifeOS level card at the bottom (habit points plus finance XP, `Query.lifeLevel`).
   On desktop it collapses to a 64 px icon rail (remembered). Below the `lg`
   breakpoint it's a slide-in drawer (Radix Dialog) opened from ☰, which
   closes when a link is followed.

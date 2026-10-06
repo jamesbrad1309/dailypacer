@@ -91,20 +91,22 @@ The heatmap then shows no-spend days for free.
 
 ## 3. Cost of a habit
 
-Link a habit to one or more spending categories
-(`metadata.financeCategoryIds`). Then show, on the `HabitCard`:
+Built. Any habit can link spending categories in its create and edit
+dialogs (`HabitCategories`, stored as `metadata.categoryIds`, the same list
+a no-spend habit counts). `HabitCost` on the `HabitCard` then shows:
 
-- "Coffee (avoid): 12-day streak · spent £3.40 this month vs £48 last month"
-- For positive habits such as "Gym": cost per check-in, meaning the
-  membership fee divided by visits this month. It's a good motivator.
+- "£3.40 this month · £48.00 last month", in the main currency.
+- For a build habit such as "Gym", the cost per check-in: this month's spend
+  divided by its done days this month. It's a good motivator.
 
-This is a read-only `Habit.linkedSpendMinor(month)` field resolved through
-the finance `ReportsService`.
+Linking a parent category brings its subcategories with it. Rather than a
+per-habit field, it's one query for every card: `habitSpend(today)` (GraphQL)
+→ `GET /finance/habits/spend`, which reads one `spendByCategory` report
+(`habitSpend` in `finance-habits.util.ts`). Transaction writes refetch it.
 
 ## 4. Unified LifeOS XP
 
-Extend `gamification.util.ts` with finance sources, keeping the rule that
-XP is derived and never stored:
+Built, keeping the rule that XP is derived and never stored:
 
 | Event                                           | XP   |
 | ----------------------------------------------- | ---- |
@@ -114,9 +116,21 @@ XP is derived and never stored:
 | Savings goal reached                            | 100  |
 | Transactions logged or imported that week (consistency) | 10   |
 
-`dashboardStats` gains a `lifeLevel` computed from habit XP plus finance
-XP. Keep the per-module numbers visible so it's clear where the XP came
-from.
+`lifeLevel(today)` (GraphQL) → `GET /life-level` (`LifeLevelService` in
+finance, rules in `life-xp.util.ts`) adds finance XP to the habits' points
+and puts the total on the same level curve (`gamification.util.ts`).
+
+- **Budgets:** only finished months count, looking back up to 12 months to
+  the first budget. A category counts when its available amount was above
+  0 and it wasn't overspent.
+- **Logging:** weeks are Monday-based, counting `quick`, `form` and
+  `import` transactions.
+- **Where it shows:** the sidebar's level card shows the LifeOS level with
+  "Habits 95 · Money 155 XP", and its tooltip breaks money XP down. The
+  dashboard's Total XP tile stays habits-only, and spendable points
+  (rewards) are unchanged.
+- It lives in finance (which imports `HabitStatsService`), so habits still
+  never import finance.
 
 ## 5. "Log today's spending" habit
 
