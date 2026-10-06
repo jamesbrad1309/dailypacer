@@ -20,7 +20,9 @@ committed:
 - a reconcile, via `markReconciled(date)`
 
 `FinanceModule` imports `HabitEntriesModule`, never the reverse. Sync
-errors are logged and swallowed (see Guardrails).
+errors are logged and swallowed (see Guardrails). Nothing is written for
+days before the habit's creation day (less one, for time zones): an older
+entry would move its tracking start back and hand out clean no-spend days.
 
 In the API: the GraphQL `Habit.financeSource` field (`NO_SPEND` |
 `LOGGED_TODAY`) maps to `metadata.source`, and `CreateHabitInput.financeSource`
@@ -45,8 +47,9 @@ by hand.
   they're deleted or moved, the value goes back to 0.
 - Spending means money out, but not transfers or balance adjustments.
   With `categoryIds`, only spending in those categories counts (a split
-  counts if any part does), so rent doesn't break the streak. There's no
-  category picker in the UI yet; the API and GraphQL input accept the IDs.
+  counts if any part does), so rent doesn't break the streak. Picked in
+  the create and edit dialogs (`NoSpendCategories`, expense categories);
+  changing them in edit re-derives the habit's past days.
 - The card and day view show "Nothing spent" or "Spent today", read-only.
 
 The heatmap then shows no-spend days for free.
