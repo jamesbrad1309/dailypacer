@@ -62,6 +62,8 @@ export interface Habit {
   customFields: HabitCustomField[];
   /** Ticked from transactions instead of by hand; see HabitCheck. */
   financeSource: HabitFinanceSource | null;
+  /** NO_SPEND only: just spending in these categories breaks the day. Empty: all spending. */
+  financeCategoryIds: string[];
   paused: boolean;
   currentStreak: number;
   longestStreak: number;

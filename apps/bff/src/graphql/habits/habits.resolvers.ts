@@ -91,8 +91,21 @@ export default {
       await recompute(ctx, args.habitId);
       return ctx.api.get<ApiHabit>(habitPath(args.habitId));
     },
-    updateHabit: (_: unknown, args: { id: string; input: HabitInput }, ctx: GraphQLContext) =>
-      ctx.api.patch<ApiHabit>(habitPath(args.id), toApiHabitInput(args.input)),
+    /** New no-spend categories change which days were clean, so they're worked out again. */
+    updateHabit: async (
+      _: unknown,
+      args: { id: string; input: HabitInput },
+      ctx: GraphQLContext,
+    ) => {
+      const { financeCategoryIds, ...input } = args.input;
+      const habit = await ctx.api.patch<ApiHabit>(habitPath(args.id), {
+        ...toApiHabitInput(input),
+        ...(financeCategoryIds && { financeCategoryIds }),
+      });
+      if (!financeCategoryIds || !financeSourceOf(habit)) return habit;
+      await recompute(ctx, habit.id);
+      return habit;
+    },
     archiveHabit: (_: unknown, args: { id: string }, ctx: GraphQLContext) =>
       ctx.api.post<ApiHabit>(`${habitPath(args.id)}/archive`),
     unarchiveHabit: (_: unknown, args: { id: string }, ctx: GraphQLContext) =>
@@ -106,6 +119,8 @@ export default {
     polarity: (habit: ApiHabit) => habit.polarity.toUpperCase(),
     customFields: (habit: ApiHabit) => habit.metadata?.fields ?? [],
     financeSource: financeSourceOf,
+    financeCategoryIds: (habit: ApiHabit) =>
+      Array.isArray(habit.metadata?.categoryIds) ? habit.metadata.categoryIds : [],
     todayEntry: (habit: ApiHabit, _: unknown, ctx: GraphQLContext) =>
       ctx.loaders.todayEntry.load(habit.id),
     paused: (habit: ApiHabit) => habit.pausedAt != null,

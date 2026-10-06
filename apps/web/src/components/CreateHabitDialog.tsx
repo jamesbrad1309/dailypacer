@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { type FormEvent, useEffect, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { HabitExtraFields } from "#components/HabitExtraFields";
+import { NoSpendCategories } from "#components/NoSpendCategories";
 import { ScheduleEditor } from "#components/ScheduleEditor";
 import { Button } from "#components/ui/button";
 import {
@@ -58,6 +59,7 @@ export function CreateHabitDialog() {
         endDate: "",
         customFields: [],
         financeSource: template.financeSource ?? null,
+        financeCategoryIds: [],
       },
     });
   }
@@ -87,6 +89,8 @@ export function CreateHabitDialog() {
           endDate: draft.endDate || undefined,
           customFields: cleanCustomFields(draft.customFields),
           financeSource: draft.financeSource ?? undefined,
+          financeCategoryIds:
+            draft.financeSource === "NO_SPEND" ? draft.financeCategoryIds : undefined,
         },
       },
     });
@@ -214,6 +218,13 @@ export function CreateHabitDialog() {
             customFields={draft.customFields}
             onCustomFields={(value) => set("customFields", value)}
           />
+
+          {draft.financeSource === "NO_SPEND" && (
+            <NoSpendCategories
+              value={draft.financeCategoryIds}
+              onChange={(ids) => set("financeCategoryIds", ids)}
+            />
+          )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>

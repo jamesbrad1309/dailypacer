@@ -3,6 +3,7 @@ import { Settings } from "lucide-react";
 import { useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { HabitExtraFields } from "#components/HabitExtraFields";
+import { NoSpendCategories } from "#components/NoSpendCategories";
 import { ScheduleEditor } from "#components/ScheduleEditor";
 import { Button } from "#components/ui/button";
 import {
@@ -64,6 +65,13 @@ export function EditHabitDialog({ habit }: { habit: Habit }) {
           polarity: draft.polarity,
           endDate: draft.endDate || null,
           customFields: cleanCustomFields(draft.customFields),
+          // Only when changed: new categories mean re-deriving the habit's past days.
+          financeCategoryIds:
+            habit.financeSource === "NO_SPEND" &&
+            [...draft.financeCategoryIds].sort().join() !==
+              [...habit.financeCategoryIds].sort().join()
+              ? draft.financeCategoryIds
+              : undefined,
         },
       },
     });
@@ -151,6 +159,13 @@ export function EditHabitDialog({ habit }: { habit: Habit }) {
             customFields={draft.customFields}
             onCustomFields={(value) => set("customFields", value)}
           />
+
+          {draft.financeSource === "NO_SPEND" && (
+            <NoSpendCategories
+              value={draft.financeCategoryIds}
+              onChange={(ids) => set("financeCategoryIds", ids)}
+            />
+          )}
         </div>
 
         <DialogFooter>

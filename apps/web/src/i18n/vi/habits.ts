@@ -15,6 +15,12 @@ export const habits: typeof en = {
     activeHabits: "Thói quen đang theo",
     paused: "+{{count}} tạm dừng",
   },
+  noSpend: {
+    categories: "Tính là chi tiêu",
+    allSpending:
+      "Mọi khoản chi đều làm hỏng ngày. Chọn danh mục để chỉ tính những khoản đó, để tiền nhà hay hóa đơn không bị tính.",
+    onlyChosen: "Chỉ chi tiêu trong các danh mục này mới làm hỏng ngày.",
+  },
   card: {
     streakLabel: "ngày liên tiếp",
     filterByTag: "Xem các thói quen có thẻ #{{tag}}",

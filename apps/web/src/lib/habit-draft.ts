@@ -24,6 +24,8 @@ export interface HabitDraft {
   customFields: DraftField[];
   /** Set by a finance template; only sent on create. */
   financeSource: HabitFinanceSource | null;
+  /** A no-spend habit's categories; empty counts all spending. */
+  financeCategoryIds: string[];
 }
 
 /** A custom field row as edited, with a stable key so rows keep focus when one is removed. */
@@ -60,6 +62,7 @@ export const BLANK_HABIT_DRAFT: HabitDraft = {
   endDate: "",
   customFields: [],
   financeSource: null,
+  financeCategoryIds: [],
 };
 
 /** The edit form's starting point: the habit as it is now. */
@@ -76,6 +79,7 @@ export function habitDraftFrom(habit: Habit): HabitDraft {
     endDate: habit.endDate ?? "",
     customFields: habit.customFields.map(({ label, value }) => draftField(label, value)),
     financeSource: habit.financeSource,
+    financeCategoryIds: habit.financeCategoryIds,
   };
 }
 

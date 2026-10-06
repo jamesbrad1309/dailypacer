@@ -20,6 +20,8 @@ type Habit {
   customFields: [HabitCustomField!]!
   """Set when the habit is ticked from transactions instead of by hand."""
   financeSource: HabitFinanceSource
+  """NO_SPEND only: just spending in these categories breaks the day. Empty: all spending."""
+  financeCategoryIds: [ID!]!
   archivedAt: String
   pausedAt: String
   paused: Boolean!
@@ -128,6 +130,8 @@ input UpdateHabitInput {
   endDate: String
   """Replaces the list."""
   customFields: [HabitCustomFieldInput!]
+  """NO_SPEND only; [] counts all spending. Re-derives the habit's entries."""
+  financeCategoryIds: [ID!]
 }
 
 enum HabitRecordStatus {

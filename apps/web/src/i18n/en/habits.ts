@@ -14,6 +14,12 @@ export const habits = {
     activeHabits: "Active habits",
     paused: "+{{count}} paused",
   },
+  noSpend: {
+    categories: "What counts as spending",
+    allSpending:
+      "Any money out breaks the day. Pick categories to count only those, so rent or bills don't.",
+    onlyChosen: "Only spending in these categories breaks the day.",
+  },
   card: {
     streak: "{{count}}d streak",
     streakLabel: "day streak",
