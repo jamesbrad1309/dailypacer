@@ -6,7 +6,7 @@ What the habit tracker actually needs to do (finance use cases live in
 ([graphql-bff.md](../backend/graphql-bff.md)). **Status**: ✅ built · ⬜ not built
 yet, as of this doc's last edit. Re-verify against the code before trusting
 a ⬜. Rows are grouped by category and sorted by impact within each group.
-The **Cross-module** rows link habits to the planned finance module; see
+The **Cross-module** rows link habits to the finance module; see
 [finance/index.md](../finance/index.md) and
 [finance/habits-integration.md](../finance/habits-integration.md).
 
@@ -27,9 +27,9 @@ improves UX · `2` edge case / power-user · `1` speculative.
 | Routines & structure | 4 | 0 | — |
 | Insights | 4 | 0 | — |
 | Journaling & mood | 13 | 0 | — |
-| Cross-module (habits × finance) | 0 | 5 | "No-spend day" habit auto-checked from transactions (3) |
+| Cross-module (habits × finance) | 2 | 3 | Savings-goal contributions count as check-ins (3) |
 | **To-do lists** | 13 | 0 | — |
-| **Finance** (separate doc) | 60 | 0 | Habits integration next, see [finance/use-cases.md](../finance/use-cases.md) |
+| **Finance** (separate doc) | 60 | 0 | Habits integration in progress, see [finance/use-cases.md](../finance/use-cases.md) |
 
 ## Use cases
 
@@ -67,7 +67,7 @@ improves UX · `2` edge case / power-user · `1` speculative.
 |  | ✅ | **Reward shop**: trade points for self-defined rewards ("takeaway night = 500 pts") | 2 | `Reward` + a `PointsSpend` ledger: points earned from every check-in ever (10 each, plus challenge bonuses) minus spends; spending never lowers the level. Redeem with undo; history on `/habits/rewards` |
 | **Routines & structure** | ✅ | **Habit stacking / routines**: group habits into an ordered "Morning routine" and check them off in sequence | 3 | `Routine` + ordered `RoutineHabit` (a habit is in one routine at most). The day view shows a routine as one block at its time (or under Anytime), its habits in order with the next one marked |
 |  | ✅ | **Negative habits** ("no sugar", "no doomscrolling"): success is the *absence* of an event | 3 | `Habit.polarity` AVOID: a due day is done unless a slip is logged (`polarity.util.ts` derives the check-ins, so streaks, points, heatmaps and insights work unchanged). An "I slipped" toggle replaces the tick; slips show in records and heatmaps |
-|  | ✅ | **Habit templates**: start from a preset such as "Drink water" or "Read" | 2 | Eight presets at the top of the Add habit modal (`lib/habit-templates.ts`), filling name, description, tags, unit, target, start time and schedule in the UI language; nothing about a template is stored |
+|  | ✅ | **Habit templates**: start from a preset such as "Drink water" or "Read" | 2 | Ten presets at the top of the Add habit modal (`lib/habit-templates.ts`), filling name, description, tags, unit, target, start time and schedule in the UI language; nothing about a template is stored except the finance link of "No-spend day" and "Log today's spending" (`metadata.source`) |
 |  | ✅ | **Time-boxed habits / programs**: "30-day push-up challenge" that ends on its own | 2 | `Habit.endDate` (with 7 / 30 / 90-day shortcuts): days after it aren't due, the card counts the days left, and the habit archives itself once it has passed |
 | **Insights** | ✅ | **Best / worst weekday per habit** ("you skip gym on Fridays") | 3 | Habit detail page, "By weekday": completion rate per weekday over the last 12 weeks (`Query.habitInsights`, `habit-insights.util.ts`), counting due, unpaused days since tracking began; best and worst are named only once each weekday has 3+ due days and they differ. "Times a week" habits compare where check-ins fall |
 |  | ✅ | **Completion-rate trend** (this month vs last month) | 3 | Same query: this month so far vs the whole of last month, as done / due days (today counts only once done); "times a week" habits measure against the weekly target. The difference in points shows once this month has 5+ counted days |
@@ -86,9 +86,9 @@ improves UX · `2` edge case / power-user · `1` speculative.
 |  | ✅ | **Search the whole journal** by text or tag across all days | 2 | `/journal/search`: text or emotion, a #tag and a kind across every day, newest first, grouped by day, matches highlighted. `Query.journalSearch` |
 |  | ✅ | **Daily mood as a streakable habit** | 2 | `/journal/insights`: a check-in streak (days in a row with a feeling; today pending until logged), the best run, and a 120-day heatmap tinted by mood (`Query.journalFeelings`) |
 |  | ✅ | **Mood overlay on heatmaps**: tint a habit's heatmap by that day's mood | 1 | "Mood" toggle on a habit's 120-day heatmap: each day tinted by that day's mood, with a dot where the habit was done |
-| **Cross-module (habits × finance)** | ⬜ | **"No-spend day" habit auto-checked from transactions** | 3 | Finance upserts `HabitEntry`, see [habits-integration.md §1](../finance/habits-integration.md#1-no-spend-day-habit-auto-checked) |
+| **Cross-module (habits × finance)** | ✅ | **"No-spend day" habit auto-checked from transactions** | 3 | "No-spend day" template: an avoid habit whose slips are that day's spending transactions, written by `FinanceHabitsService`. Read-only status on the card and day view; see [habits-integration.md §1](../finance/habits-integration.md#1-no-spend-day-habit-auto-checked) |
 |  | ⬜ | **Savings-goal contributions count as check-ins** ("save £10/day") | 3 | `SavingsGoal.habitId`, see [habits-integration.md §2](../finance/habits-integration.md#2-savings-goal-as-a-habit) |
-|  | ⬜ | **"Log today's spending" habit**: an evening habit that opens quick log and counts as done once anything is logged that day | 3 | Auto-checked like no-spend days; see [habits-integration.md §5](../finance/habits-integration.md#5-log-todays-spending-habit) |
+|  | ✅ | **"Log today's spending" habit**: an evening habit that opens quick log and counts as done once anything is logged that day | 3 | "Log today's spending" template (21:00). Its button opens quick log in catch-up mode; ticked by a quick/form transaction or a reconcile. See [habits-integration.md §5](../finance/habits-integration.md#5-log-todays-spending-habit) |
 |  | ⬜ | **Cost of a habit**: link a habit to a spending category ("coffee", "gym") and show spend next to the streak | 2 | `Habit.linkedSpendMinor(month)`, see [habits-integration.md §3](../finance/habits-integration.md#3-cost-of-a-habit) |
 |  | ⬜ | **Unified "LifeOS level"**: XP from both habits and financial discipline (staying under budget) | 2 | Finance XP added in `gamification.util.ts`, see [habits-integration.md §4](../finance/habits-integration.md#4-unified-lifeos-xp) |
 

@@ -4,22 +4,50 @@ These features only work because both modules live in one app. They're
 listed as use cases under "Cross-module" in
 [domain/use-cases.md](../domain/use-cases.md).
 
+## How §1 and §5 are built
+
+Both habits are ordinary habits with `metadata.source` set, so they need no
+migration. The rules for one day are pure functions in
+`apps/api/src/finance/finance-habits.util.ts`.
+`FinanceHabitsService.syncDays(days)` works those days out again for
+every linked habit and writes the result through
+`HabitEntriesService.upsert`. It runs after every transaction write has
+committed:
+
+- `TransactionsService` create, update (the old and new day), split and delete, so quick log and confirmed subscription charges are covered too
+- subscription auto-log catch-up
+- CSV import
+- a reconcile, via `markReconciled(date)`
+
+`FinanceModule` imports `HabitEntriesModule`, never the reverse. Sync
+errors are logged and swallowed (see Guardrails).
+
+In the API: the GraphQL `Habit.financeSource` field (`NO_SPEND` |
+`LOGGED_TODAY`) maps to `metadata.source`, and `CreateHabitInput.financeSource`
+and `financeCategoryIds` set it. `createHabit` runs `POST
+/finance/habits/:id/recompute` straight away, so a new habit's past days
+are already filled in.
+
+In the web app, two templates in the create dialog ("No-spend day" and
+"Log today's spending") set it up. `HabitCheck` swaps the tick for a
+finance control, and the calendar won't tick these habits by hand. Every
+transaction write refetches the habit queries (`TRANSACTIONS_REFETCH`).
+
 ## 1. "No-spend day" habit, auto-checked
 
 A habit whose entries are **derived from transactions** instead of logged
 by hand.
 
-- Mark the habit with `metadata: { source: "finance.noSpend", categoryIds?: [...] }`.
-  The existing `metadata` JSON column needs no migration.
-- A day counts as successful when there are no outflow transactions that
-  day, excluding transfers, optionally limited to "discretionary"
-  categories so rent doesn't break the streak.
-- **Implementation:** when a transaction is created, updated or deleted,
-  `TransactionsService` calls `HabitEntriesService.upsert` for linked
-  habits on that date. Streak, points and heatmap logic then keep working
-  unchanged because they only read `HabitEntry`.
-- Dependency direction: `FinanceModule` imports `HabitEntriesModule`, not
-  the other way round, so the habits module stays unaware of finance.
+- `metadata: { source: "finance.noSpend", categoryIds?: [...] }`.
+- It's an **avoid** habit, so a day with no entry is a clean day and
+  nothing has to be written for quiet days. A day with spending gets a
+  slip entry whose `value` is the number of spending transactions. Once
+  they're deleted or moved, the value goes back to 0.
+- Spending means money out, but not transfers or balance adjustments.
+  With `categoryIds`, only spending in those categories counts (a split
+  counts if any part does), so rent doesn't break the streak. There's no
+  category picker in the UI yet; the API and GraphQL input accept the IDs.
+- The card and day view show "Nothing spent" or "Spent today", read-only.
 
 The heatmap then shows no-spend days for free.
 
@@ -76,7 +104,11 @@ direct fix for "I forget to log":
 - It's auto-checked, the same way as the no-spend habit in §1, once at
   least one `quick` or `form` transaction exists for that date. **Reconcile
   also counts**, because updating balances is a valid way to keep finances
-  accurate.
+  accurate. A reconcile that finds nothing to adjust records no
+  transaction, so the entry stores `metadata.reconciled: true` to remember
+  it.
+- `openQuickLog({ catchUp: true })` starts the sheet in "log several"
+  mode without changing the remembered setting.
 - The streak then rewards the logging routine, and it uses the existing
   streak, points and heatmap code unchanged.
 
@@ -85,5 +117,6 @@ direct fix for "I forget to log":
 - **Never block a finance write on a habits side effect.** If the no-spend
   upsert fails, log it and continue. The transaction is the source of
   truth, and the habit entry can be recomputed.
-- Provide a `recomputeDerivedHabitEntries(habitId)` mutation to rebuild
-  auto-checked entries from transactions after bulk imports or bug fixes.
+- `recomputeDerivedHabitEntries(habitId)` (GraphQL; `POST
+  /finance/habits/:habitId/recompute` in the API) rebuilds a linked habit's
+  entries from transactions after bulk imports or bug fixes.

@@ -17,7 +17,7 @@ Libraries:
 | Group | Items |
 |---|---|
 | Actions | Log an expense · New habit · Write in the journal · Toggle theme · Switch language · Show keyboard shortcuts |
-| Today's habits | Check or uncheck each habit due today. An avoid habit logs or undoes today's slip |
+| Today's habits | Check or uncheck each habit due today. An avoid habit logs or undoes today's slip. "Log today's spending" opens quick log in catch-up mode instead, and a no-spend habit isn't listed (both are ticked from transactions) |
 | Tasks | Once 2+ characters are typed: matching tasks from every list (key, title, status). Opens the task's list |
 | Search | Once 2+ characters are typed: "Search the journal for…" and "Search transactions for…" |
 | Go to · *section* | Every page in the sidebar, with its `g` shortcut |
