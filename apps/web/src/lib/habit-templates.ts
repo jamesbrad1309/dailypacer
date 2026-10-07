@@ -1,4 +1,4 @@
-import type { HabitSchedule } from "#graphql/types";
+import type { HabitFinanceSource, HabitSchedule } from "#graphql/types";
 
 /**
  * Starting points for a new habit. Picking one only fills in the create
@@ -13,6 +13,8 @@ export interface HabitTemplate {
   schedule: HabitSchedule;
   /** Tag keys, lowercase, the same in every language. */
   tags: string[];
+  /** Ticked from transactions instead of by hand (no-spend is an avoid habit). */
+  financeSource?: HabitFinanceSource;
 }
 
 export type TemplateId =
@@ -23,7 +25,9 @@ export type TemplateId =
   | "walk"
   | "journal"
   | "stretch"
-  | "language";
+  | "language"
+  | "noSpend"
+  | "logSpending";
 
 export const HABIT_TEMPLATES: HabitTemplate[] = [
   {
@@ -89,5 +93,23 @@ export const HABIT_TEMPLATES: HabitTemplate[] = [
     startTime: null,
     schedule: { type: "daily" },
     tags: ["learning"],
+  },
+  {
+    id: "noSpend",
+    emoji: "🪙",
+    target: null,
+    startTime: null,
+    schedule: { type: "daily" },
+    tags: ["money"],
+    financeSource: "NO_SPEND",
+  },
+  {
+    id: "logSpending",
+    emoji: "🧾",
+    target: null,
+    startTime: "21:00",
+    schedule: { type: "daily" },
+    tags: ["money"],
+    financeSource: "LOGGED_TODAY",
   },
 ];

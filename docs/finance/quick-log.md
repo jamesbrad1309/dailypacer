@@ -129,5 +129,5 @@ expenses can be entered in a row without closing and reopening the log.
 - "Split with…": log £50 dinner as £25 mine + £25 owed by Sam (IOU).
 - Receipt photo → OCR → amount/payee pre-filled.
 - An evening reminder ("Log today's spending?"), once LifeOS has
-  notifications. It could reuse the habits engine as a "Log expenses"
-  habit, see [habits-integration.md](habits-integration.md).
+  notifications. The "Log today's spending" habit already covers the
+  routine itself, see [habits-integration.md §5](habits-integration.md#5-log-todays-spending-habit).

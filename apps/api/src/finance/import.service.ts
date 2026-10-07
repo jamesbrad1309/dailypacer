@@ -5,6 +5,7 @@ import { scopedLogger } from "#common/logger/logger";
 import { fromIsoDate, toIsoDate } from "#finance/calendar.util";
 import { categoryMetadata } from "#finance/categories.service";
 import type { ImportTransactionsInput } from "#finance/dto/import.dto";
+import { FinanceHabitsService } from "#finance/finance-habits.service";
 import { MonthlyTotalsService } from "#finance/monthly-totals.service";
 import { foldPayee, matchRule } from "#finance/payee-rule.util";
 
@@ -66,6 +67,7 @@ export class ImportService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly totals: MonthlyTotalsService,
+    private readonly financeHabits: FinanceHabitsService,
   ) {}
 
   async importRows(input: ImportTransactionsInput): Promise<ImportResult> {
@@ -184,6 +186,7 @@ export class ImportService {
       },
       "transactions imported",
     );
+    await this.financeHabits.syncDays(created.map((t) => t.date));
     return { ...summary, imported: created.length };
   }
 

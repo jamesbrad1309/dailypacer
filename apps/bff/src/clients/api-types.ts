@@ -223,6 +223,8 @@ export interface ApiSavingsGoal {
   deadline: string | null;
   accountId: string | null;
   accountName: string | null;
+  habitId: string | null;
+  dailyHabitMinor: number | null;
   startDate: string;
   archivedAt: string | null;
   savedMinor: number;

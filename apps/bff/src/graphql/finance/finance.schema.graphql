@@ -653,6 +653,10 @@ type SavingsGoal {
   onTrack: Boolean
   """Where a steady pace would be by today; null without a deadline."""
   expectedMinor: Int
+  """The daily "save this much" habit's amount; null when there's none."""
+  dailyHabitMinor: Int
+  """That habit, while it's running."""
+  habitId: ID
 }
 
 input CreateSavingsGoalInput {
@@ -664,6 +668,8 @@ input CreateSavingsGoalInput {
   accountId: ID
   """Unlinked only: what's already put aside."""
   savedMinor: Int
+  """Starts a daily "save this much" habit: each day's check-in is what was put aside."""
+  dailyHabitMinor: Int
 }
 
 """Only the fields sent change; null clears the deadline or unlinks the account."""
@@ -674,6 +680,8 @@ input UpdateSavingsGoalInput {
   deadline: String
   accountId: ID
   archived: Boolean
+  """Starts or changes the daily habit; null stops it (archived, history kept)."""
+  dailyHabitMinor: Int
 }
 
 extend type Query {

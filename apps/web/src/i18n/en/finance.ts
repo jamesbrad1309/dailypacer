@@ -503,6 +503,10 @@ export const finance = {
       nameRequired: "Give the goal a name.",
       enterTarget: "Enter a target, like 1500",
       enterSaved: "Enter what's already saved, like 200, or leave it empty.",
+      daily: "Save a set amount each day",
+      dailyHint:
+        "Adds a daily habit with a streak: putting this much aside in a day ticks it. Leave it empty for no habit.",
+      enterDaily: "Enter a daily amount, like 10, or leave it empty.",
     },
   },
   categoriesPage: {

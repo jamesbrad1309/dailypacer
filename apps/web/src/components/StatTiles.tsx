@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { StatTilesSkeleton } from "#components/layout/Skeletons";
 import { Card, CardContent } from "#components/ui/card";
 import { Progress } from "#components/ui/progress";
-import { DASHBOARD_STATS_QUERY, HABITS_QUERY } from "#graphql/habits";
+import { DASHBOARD_STATS_QUERY, HABITS_QUERY, HABIT_PAGE_FETCH } from "#graphql/habits";
 import type { DashboardStatsData, HabitsData } from "#graphql/types";
 import { isDoneToday } from "#lib/habit-today";
 import { isDueOn } from "#lib/schedule";
@@ -40,8 +40,8 @@ function Tile({
 /** The headline numbers across the top of the dashboard. */
 export function StatTiles() {
   const { t } = useTranslation();
-  const { data: statsData } = useQuery<DashboardStatsData>(DASHBOARD_STATS_QUERY);
-  const { data: habitsData } = useQuery<HabitsData>(HABITS_QUERY);
+  const { data: statsData } = useQuery<DashboardStatsData>(DASHBOARD_STATS_QUERY, HABIT_PAGE_FETCH);
+  const { data: habitsData } = useQuery<HabitsData>(HABITS_QUERY, HABIT_PAGE_FETCH);
   const stats = statsData?.dashboardStats;
   if (!stats) return <StatTilesSkeleton />;
 

@@ -72,11 +72,15 @@ export class HabitsService {
   }
 
   async update(id: string, input: UpdateHabitInput): Promise<Habit> {
-    const { customFields, endDate, ...rest } = input;
+    const { customFields, financeCategoryIds, endDate, ...rest } = input;
     let metadata: Prisma.InputJsonValue | undefined;
-    if (customFields) {
+    if (customFields || financeCategoryIds) {
       const current = await this.findOneOrFail(id);
-      metadata = { ...(current.metadata as object), fields: customFields } as Prisma.InputJsonValue;
+      metadata = {
+        ...(current.metadata as object),
+        ...(customFields && { fields: customFields }),
+        ...(financeCategoryIds && { categoryIds: financeCategoryIds }),
+      } as Prisma.InputJsonValue;
     }
     const habit = await this.prisma.habit.update({
       where: { id },

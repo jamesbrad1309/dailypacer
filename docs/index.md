@@ -27,7 +27,7 @@ Each file below is a short, standalone read.
 - [Progress page](domain/progress.md) — habits, tasks and mood over 4, 12 or 26 weeks, against the period before
 - [To-do lists](domain/todos.md) — today's plan in your order, lists with key prefixes (`GRO-12`), boards with custom columns, due dates, dependencies across lists
 
-**Finance** (phases 1–5 built; habits integration next)
+**Finance** (phases 1–6 built, including the habits integration)
 - [Finance module overview](finance/index.md) — scope, build order, reading order
 - [Finance use cases](finance/use-cases.md) — accounts, transactions, budgets, recurring bills, goals, reports
 - [Account setup](finance/account-setup.md) — bank accounts, credit cards and limits, loans, IOUs, reconciling

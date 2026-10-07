@@ -119,6 +119,10 @@ export const shell: typeof en = {
     level: "Cấp {{level}}",
     progress: "{{into}} / {{needed}} XP để lên cấp {{next}}",
     tooltip: "Cấp {{level}} · {{title}} · {{into}}/{{needed}} XP",
+    breakdown: "Thói quen {{habits}} · Tiền {{money}} XP",
+    fromHabits: "Thói quen: {{xp}} XP",
+    fromMoney:
+      "Tiền: {{xp}} XP ({{budgets}} từ ngân sách, {{goals}} từ mục tiêu, {{logging}} từ ghi chép)",
     titles: [
       "Người mới bắt đầu",
       "Khởi động",

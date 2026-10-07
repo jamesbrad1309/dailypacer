@@ -11,6 +11,7 @@ import type {
   SetSplitsInput,
   UpdateTransactionInput,
 } from "#finance/dto/transaction.dto";
+import { FinanceHabitsService } from "#finance/finance-habits.service";
 import { MonthlyTotalsService } from "#finance/monthly-totals.service";
 import { splitProblem } from "#finance/split.util";
 
@@ -95,6 +96,7 @@ export class TransactionsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly totals: MonthlyTotalsService,
+    private readonly financeHabits: FinanceHabitsService,
   ) {}
 
   async list(input: ListTransactionsInput): Promise<TransactionPage> {
@@ -165,6 +167,7 @@ export class TransactionsService {
       { transactionId: transaction.id, accountId: input.accountId, amountMinor: input.amountMinor },
       "transaction created",
     );
+    await this.financeHabits.syncDays([transaction.date]);
     return transaction;
   }
 
@@ -227,6 +230,7 @@ export class TransactionsService {
       return after;
     });
     log.info({ transactionId: id, fields: Object.keys(input) }, "transaction updated");
+    await this.financeHabits.syncDays([existing.date, transaction.date]);
     return transaction;
   }
 
@@ -279,6 +283,7 @@ export class TransactionsService {
       return after;
     });
     log.info({ transactionId: id, parts: parts.length }, "transaction split set");
+    await this.financeHabits.syncDays([transaction.date]);
     return transaction;
   }
 
@@ -361,6 +366,8 @@ export class TransactionsService {
       { transferId, fromAccountId: from.id, toAccountId: to.id, amountMinor: input.amountMinor },
       "transfer created",
     );
+    // Moving money into a goal's account is saving (a savings goal's daily habit).
+    await this.financeHabits.syncDays([input.date]);
     return legs;
   }
 
@@ -388,6 +395,7 @@ export class TransactionsService {
       return rows;
     });
     log.info({ transactionId: id, count: doomed.length }, "transaction deleted");
+    await this.financeHabits.syncDays(doomed.map((t) => t.date));
     return { ids: doomed.map((t) => t.id) };
   }
 

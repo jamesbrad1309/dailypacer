@@ -18,6 +18,12 @@ type Habit {
   endDate: String
   """The user's own fields, in order."""
   customFields: [HabitCustomField!]!
+  """Set when the habit is ticked from transactions instead of by hand."""
+  financeSource: HabitFinanceSource
+  """Linked spending categories: shown as the habit's cost (habitSpend). For NO_SPEND, only these break the day; empty counts all spending."""
+  financeCategoryIds: [ID!]!
+  """SAVINGS_GOAL only: the goal it saves for."""
+  savingsGoalId: ID
   archivedAt: String
   pausedAt: String
   paused: Boolean!
@@ -50,6 +56,16 @@ type HeatmapDay {
 enum HabitPolarity {
   BUILD
   AVOID
+}
+
+"""A habit whose entries come from finance (docs/finance/habits-integration.md)."""
+enum HabitFinanceSource {
+  """An avoid habit, slipped on any day money went out (not transfers)."""
+  NO_SPEND
+  """Done once anything is logged by hand that day, or an account is reconciled."""
+  LOGGED_TODAY
+  """A savings goal's daily habit: each day's value is what was put aside. Made from the goal, not here."""
+  SAVINGS_GOAL
 }
 
 type HabitCustomField {
@@ -97,6 +113,10 @@ input CreateHabitInput {
   polarity: HabitPolarity
   endDate: String
   customFields: [HabitCustomFieldInput!]
+  """Ticks the habit from transactions; NO_SPEND makes it an avoid habit."""
+  financeSource: HabitFinanceSource
+  """Linked spending categories (the habit's cost); for NO_SPEND, only these break the day."""
+  financeCategoryIds: [ID!]
 }
 
 input UpdateHabitInput {
@@ -114,6 +134,8 @@ input UpdateHabitInput {
   endDate: String
   """Replaces the list."""
   customFields: [HabitCustomFieldInput!]
+  """Replaces the linked categories; [] unlinks them (a no-spend habit then counts all spending, and is re-derived)."""
+  financeCategoryIds: [ID!]
 }
 
 enum HabitRecordStatus {
@@ -201,7 +223,17 @@ type HabitInsights {
   lastMonth: CompletionPeriod!
 }
 
+"""What a habit's linked spending categories cost, in the main currency."""
+type HabitSpend {
+  habitId: ID!
+  currency: String!
+  thisMonthMinor: Int!
+  lastMonthMinor: Int!
+}
+
 extend type Query {
+  """Every habit with linked spending categories, for `today`'s month (YYYY-MM-DD) and the one before."""
+  habitSpend(today: String!): [HabitSpend!]!
   habits: [Habit!]!
   archivedHabits: [Habit!]!
   todayHabits: [Habit!]!
@@ -230,4 +262,6 @@ extend type Mutation {
   pauseHabit(id: ID!, date: String): Habit!
   """`date`: the user's local day the habit is due again from."""
   resumeHabit(id: ID!, date: String): Habit!
+  """Rebuilds a finance-linked habit's entries from the transactions."""
+  recomputeDerivedHabitEntries(habitId: ID!): Habit!
 }

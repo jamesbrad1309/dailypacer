@@ -43,6 +43,8 @@ interface State {
   accountId: string;
   /** Unlinked new goals: what's already put aside. */
   saved: string;
+  /** The daily habit's amount as typed; "" for no habit. */
+  daily: string;
   error: string | null;
 }
 
@@ -67,6 +69,7 @@ function initialState(goal: SavingsGoal | undefined): State {
     deadline: goal?.deadline ?? "",
     accountId: goal?.account?.id ?? "",
     saved: "",
+    daily: goal?.dailyHabitMinor != null ? toMoneyInput(goal.dailyHabitMinor, goal.currency) : "",
     error: null,
   };
 }
@@ -96,7 +99,11 @@ function GoalForm({ goal, onDone }: { goal?: SavingsGoal; onDone: () => void }) 
   const linked = accounts.find((a) => a.id === state.accountId);
   const currency = linked?.currency ?? goal?.currency ?? main;
 
-  const options = { refetchQueries: ["SavingsGoals"], awaitRefetchQueries: true };
+  // The daily habit shows on the habit pages too.
+  const options = {
+    refetchQueries: ["SavingsGoals", "Habits", "DashboardStats"],
+    awaitRefetchQueries: true,
+  };
   const [createGoal, creating] = useMutation(CREATE_SAVINGS_GOAL_MUTATION, options);
   const [updateGoal, updating] = useMutation(UPDATE_SAVINGS_GOAL_MUTATION, options);
 
@@ -111,6 +118,10 @@ function GoalForm({ goal, onDone }: { goal?: SavingsGoal; onDone: () => void }) 
     if (state.saved.trim() && (savedMinor === null || savedMinor < 0)) {
       return set("error", t("finance.goals.dialog.enterSaved"));
     }
+    const dailyMinor = state.daily.trim() ? parseMoneyInput(state.daily, currency) : null;
+    if (state.daily.trim() && (dailyMinor === null || dailyMinor <= 0)) {
+      return set("error", t("finance.goals.dialog.enterDaily"));
+    }
     const input = {
       name: state.name.trim(),
       emoji: state.emoji.trim() || null,
@@ -120,11 +131,20 @@ function GoalForm({ goal, onDone }: { goal?: SavingsGoal; onDone: () => void }) 
     };
     try {
       if (goal) {
-        await updateGoal({ variables: { id: goal.id, input, today: todayIsoDate() } });
+        // Only when it changed: setting it starts, changes or stops the habit.
+        const daily =
+          dailyMinor !== (goal.dailyHabitMinor ?? null) ? { dailyHabitMinor: dailyMinor } : {};
+        await updateGoal({
+          variables: { id: goal.id, input: { ...input, ...daily }, today: todayIsoDate() },
+        });
       } else {
         await createGoal({
           variables: {
-            input: { ...input, savedMinor: state.accountId ? undefined : (savedMinor ?? 0) },
+            input: {
+              ...input,
+              savedMinor: state.accountId ? undefined : (savedMinor ?? 0),
+              dailyHabitMinor: dailyMinor ?? undefined,
+            },
             today: todayIsoDate(),
           },
         });
@@ -229,6 +249,24 @@ function GoalForm({ goal, onDone }: { goal?: SavingsGoal; onDone: () => void }) 
             />
           </div>
         )}
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="goal-daily">
+            {t("finance.goals.dialog.daily")}{" "}
+            <span className="font-normal text-muted-foreground">({t("common.optional")})</span>
+          </Label>
+          <MoneyInput
+            id="goal-daily"
+            currency={currency}
+            value={state.daily}
+            placeholder="10"
+            aria-describedby="goal-daily-hint"
+            onChange={(e) => set("daily", e.target.value)}
+          />
+          <p id="goal-daily-hint" className="text-xs text-muted-foreground">
+            {t("finance.goals.dialog.dailyHint")}
+          </p>
+        </div>
 
         {state.error && (
           <p role="alert" className="text-sm text-destructive">

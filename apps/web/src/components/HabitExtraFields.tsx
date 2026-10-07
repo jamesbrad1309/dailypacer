@@ -11,7 +11,8 @@ import { cn } from "#lib/utils";
 
 interface Props {
   polarity: HabitPolarity;
-  onPolarity: (polarity: HabitPolarity) => void;
+  /** Omitted: build or avoid is fixed (a finance-linked habit), so it isn't offered. */
+  onPolarity?: (polarity: HabitPolarity) => void;
   /** "YYYY-MM-DD" or "" for open-ended. */
   endDate: string;
   onEndDate: (endDate: string) => void;
@@ -41,31 +42,33 @@ export function HabitExtraFields({
 
   return (
     <>
-      <fieldset className="flex flex-col gap-2">
-        <legend className="mb-2 text-sm font-medium">{t("habits.edit.polarity")}</legend>
-        <div className="grid grid-cols-2 gap-2">
-          {(["BUILD", "AVOID"] as const).map((value) => (
-            <Button
-              key={value}
-              type="button"
-              variant={polarity === value ? "default" : "outline"}
-              aria-pressed={polarity === value}
-              onClick={() => onPolarity(value)}
-              className="h-auto flex-col items-start gap-0.5 py-2 text-left"
-            >
-              <span>{t(`habits.edit.polarityOption.${value}`)}</span>
-              <span
-                className={cn(
-                  "text-xs font-normal",
-                  polarity === value ? "text-primary-foreground/80" : "text-muted-foreground",
-                )}
+      {onPolarity && (
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-2 text-sm font-medium">{t("habits.edit.polarity")}</legend>
+          <div className="grid grid-cols-2 gap-2">
+            {(["BUILD", "AVOID"] as const).map((value) => (
+              <Button
+                key={value}
+                type="button"
+                variant={polarity === value ? "default" : "outline"}
+                aria-pressed={polarity === value}
+                onClick={() => onPolarity(value)}
+                className="h-auto flex-col items-start gap-0.5 py-2 text-left"
               >
-                {t(`habits.edit.polarityHint.${value}`)}
-              </span>
-            </Button>
-          ))}
-        </div>
-      </fieldset>
+                <span>{t(`habits.edit.polarityOption.${value}`)}</span>
+                <span
+                  className={cn(
+                    "text-xs font-normal",
+                    polarity === value ? "text-primary-foreground/80" : "text-muted-foreground",
+                  )}
+                >
+                  {t(`habits.edit.polarityHint.${value}`)}
+                </span>
+              </Button>
+            ))}
+          </div>
+        </fieldset>
+      )}
 
       <div className="flex flex-col gap-2">
         <Label htmlFor={`${id}-end`}>

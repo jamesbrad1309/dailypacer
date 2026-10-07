@@ -29,7 +29,8 @@ import { formatShortDate, todayIsoDate } from "#lib/dates";
 import { formatMoney, parseMoneyInput } from "#lib/money";
 import { cn } from "#lib/utils";
 
-const REFETCH = { refetchQueries: ["SavingsGoals"], awaitRefetchQueries: true };
+// A reached goal adds to the LifeOS level.
+const REFETCH = { refetchQueries: ["SavingsGoals", "LifeLevel"], awaitRefetchQueries: true };
 
 /**
  * Savings goals: progress towards each, whether it's keeping pace with its

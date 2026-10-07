@@ -145,10 +145,11 @@ Finance ([finance/index.md](../finance/index.md)) is a parallel subgraph:
 `TransactionSplit` parts, each with its own category), `Category → Category`
 (one level of nesting), `Budget → Category`, `PayeeRule → Category`,
 `SavingsGoal → Account`, subscriptions and quick log, served by `FinanceModule` REST controllers in `apps/api` and
-`graphql/finance/` in `apps/bff`. Its planned edges into the habits graph are
+`graphql/finance/` in `apps/bff`. Its edges into the habits graph are
 listed in [finance/habits-integration.md](../finance/habits-integration.md)
-and run one way: finance would write `HabitEntry` rows through
-`HabitEntriesService`. None of them is built yet, so it's kept out of the
+and run one way: finance writes `HabitEntry` rows through
+`HabitEntriesService` (`FinanceHabitsService`, for the no-spend day and
+log-today habits), and habits never import finance. It's kept out of the
 diagram above.
 
 Regenerate this diagram (by hand: it's illustrative, not derived from code)

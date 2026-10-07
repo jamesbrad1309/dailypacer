@@ -11,6 +11,7 @@ import {
   NotebookPen,
   Plus,
   Receipt,
+  ReceiptText,
   Search,
   Sparkles,
   Sun,
@@ -115,7 +116,14 @@ function Palette() {
   };
 
   const habits = habitsData?.habits ?? [];
-  const dueToday = habits.filter((h) => !h.paused && isDueOn(h.schedule, new Date()));
+  // No-spend and savings habits are ticked by money moving, so there's nothing to do with them here.
+  const dueToday = habits.filter(
+    (h) =>
+      !h.paused &&
+      h.financeSource !== "NO_SPEND" &&
+      h.financeSource !== "SAVINGS_GOAL" &&
+      isDueOn(h.schedule, new Date()),
+  );
   const otherLanguage = (Object.keys(LANGUAGES) as Language[]).find(
     (l) => l !== currentLanguage(),
   ) as Language;
@@ -204,6 +212,20 @@ function Palette() {
         {dueToday.length > 0 && (
           <CommandGroup heading={t("commands.groups.today")}>
             {dueToday.map((habit) => {
+              if (habit.financeSource === "LOGGED_TODAY") {
+                const label = t("habits.card.logSpendingFor", { name: habit.name });
+                return (
+                  <CommandItem
+                    key={habit.id}
+                    value={`today ${label}`}
+                    keywords={habit.tags}
+                    onSelect={run(() => openQuickLog({ catchUp: true }))}
+                  >
+                    <ReceiptText />
+                    {label}
+                  </CommandItem>
+                );
+              }
               const done = isDoneToday(habit);
               const avoid = habit.polarity === "AVOID";
               const label = avoid

@@ -2,6 +2,7 @@ import { useMutation } from "@apollo/client/react";
 import { Settings } from "lucide-react";
 import { useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { HabitCategories } from "#components/HabitCategories";
 import { HabitExtraFields } from "#components/HabitExtraFields";
 import { ScheduleEditor } from "#components/ScheduleEditor";
 import { Button } from "#components/ui/button";
@@ -64,6 +65,12 @@ export function EditHabitDialog({ habit }: { habit: Habit }) {
           polarity: draft.polarity,
           endDate: draft.endDate || null,
           customFields: cleanCustomFields(draft.customFields),
+          // Only when changed: new categories mean re-deriving the habit's past days.
+          financeCategoryIds:
+            [...draft.financeCategoryIds].sort().join() !==
+            [...habit.financeCategoryIds].sort().join()
+              ? draft.financeCategoryIds
+              : undefined,
         },
       },
     });
@@ -145,12 +152,20 @@ export function EditHabitDialog({ habit }: { habit: Habit }) {
 
           <HabitExtraFields
             polarity={draft.polarity}
-            onPolarity={(value) => set("polarity", value)}
+            onPolarity={draft.financeSource ? undefined : (value) => set("polarity", value)}
             endDate={draft.endDate}
             onEndDate={(value) => set("endDate", value)}
             customFields={draft.customFields}
             onCustomFields={(value) => set("customFields", value)}
           />
+
+          {(draft.financeSource === null || draft.financeSource === "NO_SPEND") && (
+            <HabitCategories
+              value={draft.financeCategoryIds}
+              onChange={(ids) => set("financeCategoryIds", ids)}
+              noSpend={draft.financeSource === "NO_SPEND"}
+            />
+          )}
         </div>
 
         <DialogFooter>

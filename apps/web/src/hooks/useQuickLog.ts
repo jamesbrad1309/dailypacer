@@ -6,6 +6,8 @@ export interface QuickLogPrefill {
   amount?: string;
   /** A category name or alias, matched when the sheet opens. */
   category?: string;
+  /** Start in catch-up mode ("log several"): the evening "log today's spending" habit. */
+  catchUp?: boolean;
 }
 
 interface QuickLogState {

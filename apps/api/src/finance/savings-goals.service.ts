@@ -5,12 +5,16 @@ import { scopedLogger } from "#common/logger/logger";
 import { AccountsService } from "#finance/accounts.service";
 import { fromIsoDate, toIsoDate } from "#finance/calendar.util";
 import { CurrenciesService } from "#finance/currencies.service";
+import { currencyDigits } from "#finance/currency-math.util";
 import type {
   ContributeInput,
   CreateSavingsGoalInput,
   UpdateSavingsGoalInput,
 } from "#finance/dto/savings-goal.dto";
+import { FinanceHabitsService } from "#finance/finance-habits.service";
+import { SAVINGS_GOAL } from "#finance/finance-habits.util";
 import { type GoalProgress, goalProgress } from "#finance/savings-goal.util";
+import { HabitsService } from "#habits/habits.service";
 
 const log = scopedLogger("SavingsGoalsService");
 
@@ -23,7 +27,19 @@ export type SavingsGoalDto = Omit<
     startDate: string;
     /** The linked account's name, for "in Marcus Savings". */
     accountName: string | null;
+    /** The daily habit's amount, in minor units; null when there's none (or it's stopped). */
+    dailyHabitMinor: number | null;
   };
+
+/** What a goal read brings with it. */
+const GOAL_INCLUDE = {
+  account: { select: { name: true } },
+  habit: { select: { targetValue: true, archivedAt: true } },
+} as const;
+type GoalWithLinks = SavingsGoal & {
+  account: { name: string } | null;
+  habit: { targetValue: number | null; archivedAt: Date | null } | null;
+};
 
 /**
  * Savings goals. A linked goal's saved amount is its account's balance (never
@@ -37,26 +53,25 @@ export class SavingsGoalsService {
     private readonly prisma: PrismaService,
     private readonly accounts: AccountsService,
     private readonly currencies: CurrenciesService,
+    private readonly habits: HabitsService,
+    private readonly financeHabits: FinanceHabitsService,
   ) {}
 
   async list(today: string, includeArchived = false): Promise<SavingsGoalDto[]> {
     const goals = await this.prisma.savingsGoal.findMany({
       where: includeArchived ? {} : { archivedAt: null },
       orderBy: [{ archivedAt: { sort: "asc", nulls: "first" } }, { sortOrder: "asc" }],
-      include: { account: { select: { name: true } } },
+      include: GOAL_INCLUDE,
     });
     const saved = await this.savedAmounts(goals, today);
-    return goals.map((goal) => this.toDto(goal, goal.account?.name ?? null, saved, today));
+    return goals.map((goal) => this.toDto(goal, saved, today));
   }
 
   async findOne(id: string, today: string): Promise<SavingsGoalDto> {
-    const goal = await this.prisma.savingsGoal.findUnique({
-      where: { id },
-      include: { account: { select: { name: true } } },
-    });
+    const goal = await this.prisma.savingsGoal.findUnique({ where: { id }, include: GOAL_INCLUDE });
     if (!goal) throw new NotFoundException(`Savings goal ${id} not found`);
     const saved = await this.savedAmounts([goal], today);
-    return this.toDto(goal, goal.account?.name ?? null, saved, today);
+    return this.toDto(goal, saved, today);
   }
 
   async create(input: CreateSavingsGoalInput): Promise<SavingsGoalDto> {
@@ -83,6 +98,7 @@ export class SavingsGoalsService {
       },
     });
     log.info({ goalId: goal.id, linked: Boolean(account) }, "savings goal created");
+    if (input.dailyHabitMinor) await this.setDailyHabit(goal, input.dailyHabitMinor);
     return this.findOne(goal.id, input.today);
   }
 
@@ -111,7 +127,13 @@ export class SavingsGoalsService {
         data.savedMinor = goal.accountId ? await this.balanceOf(goal.accountId, input.today) : 0;
       }
     }
-    await this.prisma.savingsGoal.update({ where: { id }, data });
+    const updated = await this.prisma.savingsGoal.update({ where: { id }, data });
+    if (input.dailyHabitMinor !== undefined) {
+      await this.setDailyHabit(updated, input.dailyHabitMinor);
+    } else if (updated.habitId && data.accountId !== undefined) {
+      // Following another account (or none) changes what each day saved.
+      await this.financeHabits.recompute(updated.habitId);
+    }
     return this.findOne(id, input.today);
   }
 
@@ -126,28 +148,75 @@ export class SavingsGoalsService {
     if (goal.savedMinor + input.amountMinor < 0) {
       throw new BadRequestException("That would take the goal below zero");
     }
-    await this.prisma.savingsGoal.update({
-      where: { id },
-      data: { savedMinor: { increment: input.amountMinor } },
-    });
+    await this.prisma.$transaction([
+      this.prisma.savingsGoal.update({
+        where: { id },
+        data: { savedMinor: { increment: input.amountMinor } },
+      }),
+      // Dated, so the goal's daily habit can count it.
+      this.prisma.savingsContribution.create({
+        data: { goalId: id, date: fromIsoDate(input.today), amountMinor: input.amountMinor },
+      }),
+    ]);
     log.info({ goalId: id, amountMinor: input.amountMinor }, "savings goal contribution");
+    await this.financeHabits.syncDays([input.today]);
     return this.findOne(id, input.today);
   }
 
+  /** Its daily habit is archived with it: with no goal, nothing would tick it. */
   async remove(id: string): Promise<{ id: string }> {
-    await this.goal(id);
+    const goal = await this.goal(id);
     await this.prisma.savingsGoal.delete({ where: { id } });
+    if (goal.habitId) await this.habits.archive(goal.habitId);
     log.info({ goalId: id }, "savings goal deleted");
     return { id };
   }
 
-  private toDto(
-    goal: SavingsGoal,
-    accountName: string | null,
-    saved: Map<string, number>,
-    today: string,
-  ): SavingsGoalDto {
-    const { deadline, startDate, savedMinor: _own, startSavedMinor, ...rest } = goal;
+  /**
+   * Starts, changes or stops the goal's daily "save X" habit: an ordinary
+   * habit whose check-ins finance writes (FinanceHabitsService), with the
+   * daily amount as its target in major units. Stopping archives it, so
+   * its streak history stays, and starting again brings it back.
+   */
+  private async setDailyHabit(goal: SavingsGoal, dailyMinor: number | null): Promise<void> {
+    const habit = goal.habitId ? await this.habits.findOneOrFail(goal.habitId) : null;
+    if (dailyMinor === null) {
+      if (habit && !habit.archivedAt) await this.habits.archive(habit.id);
+      return;
+    }
+    const targetValue = dailyMinor / 10 ** currencyDigits(goal.currency);
+    let habitId = habit?.id;
+    if (habit) {
+      if (habit.archivedAt) await this.habits.unarchive(habit.id);
+      await this.habits.update(habit.id, { targetValue, unit: goal.currency });
+    } else {
+      const created = await this.habits.create({
+        name: goal.name,
+        icon: goal.emoji ?? undefined,
+        unit: goal.currency,
+        targetValue,
+        schedule: { type: "daily" },
+        tags: ["money"],
+        metadata: { source: SAVINGS_GOAL, goalId: goal.id },
+      });
+      habitId = created.id;
+      await this.prisma.savingsGoal.update({ where: { id: goal.id }, data: { habitId } });
+    }
+    if (habitId) await this.financeHabits.recompute(habitId);
+    log.info({ goalId: goal.id, habitId, dailyMinor }, "savings goal daily habit set");
+  }
+
+  private toDto(goal: GoalWithLinks, saved: Map<string, number>, today: string): SavingsGoalDto {
+    const {
+      deadline,
+      startDate,
+      savedMinor: _own,
+      startSavedMinor,
+      account,
+      habit,
+      ...rest
+    } = goal;
+    const habitActive = habit && !habit.archivedAt && habit.targetValue !== null;
     const shape = {
       targetMinor: goal.targetMinor,
       deadline: deadline ? toIsoDate(deadline) : null,
@@ -159,7 +228,10 @@ export class SavingsGoalsService {
       ...goalProgress(shape, saved.get(goal.id) ?? 0, today),
       deadline: shape.deadline,
       startDate: shape.startDate,
-      accountName,
+      accountName: account?.name ?? null,
+      dailyHabitMinor: habitActive
+        ? Math.round((habit.targetValue ?? 0) * 10 ** currencyDigits(goal.currency))
+        : null,
     };
   }
 

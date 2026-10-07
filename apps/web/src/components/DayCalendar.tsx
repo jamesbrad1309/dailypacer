@@ -8,7 +8,7 @@ import { DayCalendarSkeleton } from "#components/layout/Skeletons";
 import { Button } from "#components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#components/ui/card";
 import { Progress } from "#components/ui/progress";
-import { HABITS_QUERY, ROUTINES_QUERY } from "#graphql/habits";
+import { HABITS_QUERY, HABIT_PAGE_FETCH, ROUTINES_QUERY } from "#graphql/habits";
 import type { Habit, HabitsData, Routine } from "#graphql/types";
 import { isDoneToday } from "#lib/habit-today";
 import { isDueOn, timeToMinutes } from "#lib/schedule";
@@ -131,11 +131,11 @@ function RoutineBlock({
  */
 export function DayCalendar() {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery<HabitsData>(HABITS_QUERY);
+  const { data, loading, error } = useQuery<HabitsData>(HABITS_QUERY, HABIT_PAGE_FETCH);
   const { data: routinesData } = useQuery<{ routines: Routine[] }>(ROUTINES_QUERY);
   const [dialog, setDialog] = useState<{ routine?: Routine } | null>(null);
 
-  if (loading) return <DayCalendarSkeleton />;
+  if (loading && !data) return <DayCalendarSkeleton />;
   if (error) return <p className="text-destructive">{error.message}</p>;
 
   const today = new Date();

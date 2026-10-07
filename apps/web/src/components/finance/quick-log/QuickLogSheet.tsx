@@ -187,7 +187,13 @@ function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState
     saving,
     prefillApplied,
   } = form;
-  const [catchUp, setCatchUp] = useStoredState("lifeos.quickLog.catchUp", false);
+  const [storedCatchUp, setStoredCatchUp] = useStoredState("lifeos.quickLog.catchUp", false);
+  // A habit can open the sheet in catch-up mode without changing the remembered choice.
+  const [catchUp, setCatchUpNow] = useState(prefill?.catchUp || storedCatchUp);
+  const setCatchUp = (on: boolean) => {
+    setCatchUpNow(on);
+    setStoredCatchUp(on);
+  };
   const amountRef = useRef<HTMLInputElement>(null);
 
   const [quickLog] = useMutation<QuickLogData>(QUICK_LOG_MUTATION, {

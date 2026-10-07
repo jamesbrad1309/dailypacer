@@ -4,6 +4,8 @@ import { Archive, Ban, CalendarClock, Clock, Flame, Pause, Play, Star } from "lu
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { EditHabitDialog } from "#components/EditHabitDialog";
+import { HabitCheck } from "#components/HabitCheck";
+import { HabitCost } from "#components/HabitCost";
 import { HeatmapGrid } from "#components/HeatmapGrid";
 import { Badge } from "#components/ui/badge";
 import { Button } from "#components/ui/button";
@@ -144,7 +146,9 @@ export function HabitCard({ habit, onTagClick }: Props) {
               {t("habits.card.streakLabel")}
             </span>
           </div>
-          {avoid ? (
+          {habit.financeSource ? (
+            <HabitCheck habit={habit} />
+          ) : avoid ? (
             <Button
               size="sm"
               variant={slipped ? "destructive" : "outline"}
@@ -189,7 +193,7 @@ export function HabitCard({ habit, onTagClick }: Props) {
       </CardHeader>
 
       <CardContent className="flex flex-col gap-3">
-        {habit.unit && !avoid ? (
+        {habit.unit && !avoid && !habit.financeSource ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Input
               type="number"
@@ -242,6 +246,7 @@ export function HabitCard({ habit, onTagClick }: Props) {
           {t("habits.card.best", { count: habit.longestStreak })} ·{" "}
           {t("habits.card.checkIns", { count: habit.totalCompletions })}
         </p>
+        <HabitCost habit={habit} />
 
         <div className="flex justify-end gap-1 border-t pt-2">
           <EditHabitDialog habit={habit} />

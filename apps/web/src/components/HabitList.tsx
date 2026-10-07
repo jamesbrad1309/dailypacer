@@ -2,7 +2,7 @@ import { useQuery } from "@apollo/client/react";
 import { useTranslation } from "react-i18next";
 import { HabitCard } from "#components/HabitCard";
 import { HabitCardsSkeleton } from "#components/layout/Skeletons";
-import { HABITS_QUERY } from "#graphql/habits";
+import { HABITS_QUERY, HABIT_PAGE_FETCH } from "#graphql/habits";
 import type { HabitsData } from "#graphql/types";
 
 interface Props {
@@ -13,9 +13,9 @@ interface Props {
 
 export function HabitList({ tag = null, onTagClick }: Props) {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery<HabitsData>(HABITS_QUERY);
+  const { data, loading, error } = useQuery<HabitsData>(HABITS_QUERY, HABIT_PAGE_FETCH);
 
-  if (loading) return <HabitCardsSkeleton />;
+  if (loading && !data) return <HabitCardsSkeleton />;
   if (error) return <p className="text-destructive">{error.message}</p>;
   if (!data?.habits.length) {
     return <p className="text-muted-foreground">{t("habits.none")}</p>;

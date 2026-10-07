@@ -23,6 +23,8 @@ export const updateHabitSchema = z.object({
   endDate: endDateSchema.nullable().optional(),
   /** Replaces the list. */
   customFields: customFieldsSchema.optional(),
+  /** A no-spend habit's categories (`metadata.categoryIds`, read by finance); [] means all spending. */
+  financeCategoryIds: z.array(z.string().uuid()).max(100).optional(),
 });
 
 export type UpdateHabitInput = z.infer<typeof updateHabitSchema>;

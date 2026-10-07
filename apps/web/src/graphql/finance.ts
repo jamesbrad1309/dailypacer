@@ -81,6 +81,14 @@ export const TRANSACTIONS_REFETCH = [
   "SubscriptionCharges",
   "PendingSubscriptionCharges",
   "SubscriptionSummary",
+  // Finance-linked habits (no-spend day, log today's spending) are ticked from transactions.
+  "Habits",
+  "HabitDetail",
+  "DashboardStats",
+  "HabitCalendar",
+  // A habit's cost, and the LifeOS level's finance XP.
+  "HabitSpend",
+  "LifeLevel",
 ];
 
 export const CREATE_ACCOUNT_MUTATION = gql`
@@ -712,6 +720,8 @@ const GOAL_FIELDS = gql`
     requiredPerMonthMinor
     onTrack
     expectedMinor
+    dailyHabitMinor
+    habitId
     account {
       id
       name

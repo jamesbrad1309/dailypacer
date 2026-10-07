@@ -19,6 +19,7 @@ import type {
   ReorderAccountsInput,
   UpdateAccountInput,
 } from "#finance/dto/account.dto";
+import { FinanceHabitsService } from "#finance/finance-habits.service";
 import { MonthlyTotalsService } from "#finance/monthly-totals.service";
 
 const log = scopedLogger("AccountsService");
@@ -43,6 +44,7 @@ export class AccountsService {
     private readonly categories: CategoriesService,
     private readonly totals: MonthlyTotalsService,
     private readonly currencies: CurrenciesService,
+    private readonly financeHabits: FinanceHabitsService,
   ) {}
 
   list(archived = false): Promise<Account[]> {
@@ -211,6 +213,7 @@ export class AccountsService {
       return tx.account.update({ where: { id }, data: { lastReconciledAt: new Date() } });
     });
     log.info({ accountId: id, differenceMinor }, "account reconciled");
+    await this.financeHabits.markReconciled(input.date);
     return account;
   }
 

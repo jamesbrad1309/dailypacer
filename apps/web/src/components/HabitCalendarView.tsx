@@ -17,6 +17,7 @@ import {
   DASHBOARD_STATS_QUERY,
   HABITS_QUERY,
   HABIT_CALENDAR_QUERY,
+  HABIT_PAGE_FETCH,
   HABIT_PROGRESS_REFETCH,
   UPSERT_HABIT_ENTRY_MUTATION,
 } from "#graphql/habits";
@@ -92,9 +93,10 @@ export function HabitCalendarView({
       ? { from: startOfWeek(anchor), to: addDays(startOfWeek(anchor), 6) }
       : monthGridRange(month);
   const { data, loading, error } = useQuery<HabitCalendarData>(HABIT_CALENDAR_QUERY, {
+    ...HABIT_PAGE_FETCH,
     variables: { ...range, today },
   });
-  const { data: habitsData } = useQuery<HabitsData>(HABITS_QUERY);
+  const { data: habitsData } = useQuery<HabitsData>(HABITS_QUERY, HABIT_PAGE_FETCH);
   const habits = habitsData?.habits ?? [];
   const rows = data?.habitCalendar ?? [];
   const cellsFor = (habitId: string) => rows.find((r) => r.habitId === habitId)?.days ?? [];
@@ -240,8 +242,12 @@ function DayButton({ habit, cell, today }: { habit: Habit; cell: HabitDayCell; t
     date: formatShortDate(cell.date),
     status: t(`habits.calendar.status.${cell.status}`),
   });
+  // A finance-linked habit's days come from transactions, so they aren't ticked here.
   const editable =
-    cell.date <= today && EDITABLE.has(cell.status) && (cell.status !== "OFF" || !avoid);
+    !habit.financeSource &&
+    cell.date <= today &&
+    EDITABLE.has(cell.status) &&
+    (cell.status !== "OFF" || !avoid);
   if (!editable) {
     return (
       <span role="img" aria-label={label} title={label} className="flex justify-center">

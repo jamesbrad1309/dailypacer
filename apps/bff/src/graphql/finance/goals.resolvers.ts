@@ -62,6 +62,7 @@ export default {
   SavingsGoal: {
     account: (g: ApiSavingsGoal, _: unknown, ctx: GraphQLContext) =>
       g.accountId ? ctx.loaders.accountById.load(g.accountId) : null,
+    habitId: (g: ApiSavingsGoal) => (g.dailyHabitMinor === null ? null : g.habitId),
   },
   PayeeRule: {
     category: (r: ApiPayeeRule, _: unknown, ctx: GraphQLContext) =>

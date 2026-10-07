@@ -17,6 +17,9 @@ const HABIT_FIELDS = gql`
       label
       value
     }
+    financeSource
+    financeCategoryIds
+    savingsGoalId
     paused
     currentStreak
     longestStreak
@@ -472,8 +475,48 @@ export const DELETE_ROUTINE_MUTATION = gql`
  * achievements), challenges, the calendar and the review. Refetched by
  * name, so only the queries on screen run again.
  */
+/** What each habit's linked spending categories cost (HabitCost). */
+export const HABIT_SPEND_QUERY = gql`
+  query HabitSpend($today: String!) {
+    habitSpend(today: $today) {
+      habitId
+      currency
+      thisMonthMinor
+      lastMonthMinor
+    }
+  }
+`;
+
+/** The LifeOS level: habit points plus finance XP. */
+export const LIFE_LEVEL_QUERY = gql`
+  query LifeLevel($today: String!) {
+    lifeLevel(today: $today) {
+      level
+      totalXp
+      xpIntoLevel
+      xpForNextLevel
+      habitXp
+      financeXp
+      budgetXp
+      goalXp
+      loggingXp
+    }
+  }
+`;
+
+/**
+ * Habit pages show what's cached, then fetch fresh. A finance write on
+ * another page (quick log over Spending) can tick a habit while these
+ * aren't mounted, and a refetch by name only reaches mounted queries.
+ */
+export const HABIT_PAGE_FETCH = {
+  fetchPolicy: "cache-and-network",
+  nextFetchPolicy: "cache-first",
+} as const;
+
 export const HABIT_PROGRESS_REFETCH = [
   "DashboardStats",
+  "LifeLevel",
   "HabitRecords",
   "PointsWallet",
   "Achievements",
