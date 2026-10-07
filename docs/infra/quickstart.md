@@ -25,7 +25,7 @@ until docker compose exec -T postgres pg_isready -U dailypacer >/dev/null 2>&1; 
 done
 
 echo "-> running database migrations"
-pnpm --filter api exec dotenv -e ../../.env -- prisma migrate deploy
+pnpm --filter api exec dotenv run -f ../../.env -- prisma migrate deploy
 
 echo "-> starting web + api in dev mode"
 pnpm dev

@@ -71,10 +71,10 @@ Two different commands for two different situations:
 - **`pnpm --filter api migrate:dev`** — local development. Diffs
   `schema.prisma` against the dev database, writes a new
   `prisma/migrations/<timestamp>_<name>/migration.sql`, and applies it
-  immediately. Wrapped with `dotenv-cli` (`dotenv -e ../../.env -- prisma
-  migrate dev`) because Prisma's CLI looks for `.env` next to
-  `schema.prisma` or in the CLI's own cwd — neither of which is this
-  project's root `.env`.
+  immediately. Wrapped with dotenv's CLI (`dotenv run -f ../../.env --
+  prisma migrate dev`) because Prisma's CLI doesn't load `.env` itself
+  when there's a `prisma.config.ts`, and the project's `.env` is at the
+  repo root anyway.
 - **`prisma migrate deploy`** — production. Applies whatever migrations
   already exist in `prisma/migrations/`; never generates new ones, never
   prompts. This runs automatically as part of the container's start command
