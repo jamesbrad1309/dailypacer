@@ -17,6 +17,7 @@ import {
   DASHBOARD_STATS_QUERY,
   HABITS_QUERY,
   HABIT_CALENDAR_QUERY,
+  HABIT_PAGE_FETCH,
   HABIT_PROGRESS_REFETCH,
   UPSERT_HABIT_ENTRY_MUTATION,
 } from "#graphql/habits";
@@ -92,9 +93,10 @@ export function HabitCalendarView({
       ? { from: startOfWeek(anchor), to: addDays(startOfWeek(anchor), 6) }
       : monthGridRange(month);
   const { data, loading, error } = useQuery<HabitCalendarData>(HABIT_CALENDAR_QUERY, {
+    ...HABIT_PAGE_FETCH,
     variables: { ...range, today },
   });
-  const { data: habitsData } = useQuery<HabitsData>(HABITS_QUERY);
+  const { data: habitsData } = useQuery<HabitsData>(HABITS_QUERY, HABIT_PAGE_FETCH);
   const habits = habitsData?.habits ?? [];
   const rows = data?.habitCalendar ?? [];
   const cellsFor = (habitId: string) => rows.find((r) => r.habitId === habitId)?.days ?? [];

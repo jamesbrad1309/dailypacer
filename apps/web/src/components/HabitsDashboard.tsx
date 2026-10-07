@@ -7,13 +7,13 @@ import { ArchivedHabits } from "#components/ArchivedHabits";
 import { CreateHabitDialog } from "#components/CreateHabitDialog";
 import { HabitList } from "#components/HabitList";
 import { StatTiles } from "#components/StatTiles";
-import { HABITS_QUERY } from "#graphql/habits";
+import { HABITS_QUERY, HABIT_PAGE_FETCH } from "#graphql/habits";
 import type { HabitsData } from "#graphql/types";
 import { cn } from "#lib/utils";
 
 export function HabitsDashboard() {
   const { t } = useTranslation();
-  const { data } = useQuery<HabitsData>(HABITS_QUERY);
+  const { data } = useQuery<HabitsData>(HABITS_QUERY, HABIT_PAGE_FETCH);
   const count = data?.habits.length;
   const allTags = [...new Set(data?.habits.flatMap((habit) => habit.tags) ?? [])].sort();
   const [tag, setTag] = useState<string | null>(null);

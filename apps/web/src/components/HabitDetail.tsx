@@ -18,6 +18,7 @@ import {
   HABITS_QUERY,
   HABIT_CORRELATIONS_QUERY,
   HABIT_DETAIL_QUERY,
+  HABIT_PAGE_FETCH,
   HABIT_RECORDS_QUERY,
 } from "#graphql/habits";
 import { JOURNAL_FEELINGS_QUERY } from "#graphql/journal";
@@ -41,6 +42,7 @@ import { cn } from "#lib/utils";
 export function HabitDetail({ habitId }: { habitId: string }) {
   const { t } = useTranslation();
   const { data, loading, error } = useQuery<HabitDetailData>(HABIT_DETAIL_QUERY, {
+    ...HABIT_PAGE_FETCH,
     variables: { id: habitId },
   });
   // The records table's first page (same variables, so Apollo shares it):
@@ -57,7 +59,7 @@ export function HabitDetail({ habitId }: { habitId: string }) {
 
   const [showMood, setShowMood] = useState(false);
   const lexicon = useLexicon();
-  const { data: habitsData } = useQuery<HabitsData>(HABITS_QUERY);
+  const { data: habitsData } = useQuery<HabitsData>(HABITS_QUERY, HABIT_PAGE_FETCH);
   const { data: correlationsData } = useQuery<{ habitCorrelations: HabitCorrelation[] }>(
     HABIT_CORRELATIONS_QUERY,
     { variables: { today: todayIsoDate() } },

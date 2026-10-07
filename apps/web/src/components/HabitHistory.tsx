@@ -2,7 +2,7 @@ import { useQuery } from "@apollo/client/react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { HabitHistorySkeleton } from "#components/layout/Skeletons";
-import { HABITS_QUERY } from "#graphql/habits";
+import { HABITS_QUERY, HABIT_PAGE_FETCH } from "#graphql/habits";
 import type { HabitsData, HeatmapDay } from "#graphql/types";
 import { formatShortDate, formatWeekday, fromIsoDate } from "#lib/dates";
 import { cn } from "#lib/utils";
@@ -23,9 +23,9 @@ function cellClass(day: HeatmapDay): string {
  */
 export function HabitHistory() {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery<HabitsData>(HABITS_QUERY);
+  const { data, loading, error } = useQuery<HabitsData>(HABITS_QUERY, HABIT_PAGE_FETCH);
 
-  if (loading) return <HabitHistorySkeleton />;
+  if (loading && !data) return <HabitHistorySkeleton />;
   if (error) return <p className="text-destructive">{error.message}</p>;
   if (!data?.habits.length) {
     return <p className="text-muted-foreground">{t("habits.none")}</p>;

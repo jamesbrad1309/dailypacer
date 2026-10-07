@@ -7,7 +7,12 @@ import { ListSkeleton } from "#components/layout/Skeletons";
 import { Button } from "#components/ui/button";
 import { Card, CardContent } from "#components/ui/card";
 import { Progress } from "#components/ui/progress";
-import { HABITS_QUERY, HABIT_CORRELATIONS_QUERY, WEEKLY_REVIEW_QUERY } from "#graphql/habits";
+import {
+  HABITS_QUERY,
+  HABIT_CORRELATIONS_QUERY,
+  HABIT_PAGE_FETCH,
+  WEEKLY_REVIEW_QUERY,
+} from "#graphql/habits";
 import type { HabitCorrelation, HabitsData, ReviewTotals, WeeklyReview } from "#graphql/types";
 import {
   addDays,
@@ -41,7 +46,7 @@ export function WeeklyReviewView({
   const { data, loading, error } = useQuery<{ weeklyReview: WeeklyReview }>(WEEKLY_REVIEW_QUERY, {
     variables: { weekStart: week, today },
   });
-  const { data: habitsData } = useQuery<HabitsData>(HABITS_QUERY);
+  const { data: habitsData } = useQuery<HabitsData>(HABITS_QUERY, HABIT_PAGE_FETCH);
   const { data: correlationsData } = useQuery<{ habitCorrelations: HabitCorrelation[] }>(
     HABIT_CORRELATIONS_QUERY,
     { variables: { today } },

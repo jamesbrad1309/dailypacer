@@ -1,7 +1,7 @@
 import { useQuery } from "@apollo/client/react";
 import { Wallet } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { HABIT_SPEND_QUERY } from "#graphql/habits";
+import { HABIT_PAGE_FETCH, HABIT_SPEND_QUERY } from "#graphql/habits";
 import type { Habit, HabitSpend } from "#graphql/types";
 import { todayIsoDate } from "#lib/dates";
 import { formatMoney } from "#lib/money";
@@ -15,6 +15,7 @@ export function HabitCost({ habit }: { habit: Habit }) {
   const { t } = useTranslation();
   const today = todayIsoDate();
   const { data } = useQuery<{ habitSpend: HabitSpend[] }>(HABIT_SPEND_QUERY, {
+    ...HABIT_PAGE_FETCH,
     variables: { today },
     skip: habit.financeCategoryIds.length === 0,
   });

@@ -504,6 +504,16 @@ export const LIFE_LEVEL_QUERY = gql`
   }
 `;
 
+/**
+ * Habit pages show what's cached, then fetch fresh. A finance write on
+ * another page (quick log over Spending) can tick a habit while these
+ * aren't mounted, and a refetch by name only reaches mounted queries.
+ */
+export const HABIT_PAGE_FETCH = {
+  fetchPolicy: "cache-and-network",
+  nextFetchPolicy: "cache-first",
+} as const;
+
 export const HABIT_PROGRESS_REFETCH = [
   "DashboardStats",
   "LifeLevel",
