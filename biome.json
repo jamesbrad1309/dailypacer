@@ -7,7 +7,19 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": ["dist", "build", "node_modules", "**/*.graphql", "**/routeTree.gen.ts"]
+    "ignore": [
+      "dist",
+      "build",
+      "node_modules",
+      "**/*.graphql",
+      "**/routeTree.gen.ts",
+      "biome.json",
+      "**/.oxlintrc.json",
+      "**/package.json",
+      "**/tsconfig*.json",
+      "**/components.json",
+      "**/*.config.ts"
+    ]
   },
   "formatter": {
     "enabled": true,
