@@ -118,10 +118,21 @@ export default {
       t.categoryId ? ctx.loaders.categoryById.load(t.categoryId) : null,
     isTransfer: (t: ApiTransaction) => t.transferId != null,
     splits: (t: ApiTransaction) => t.splits ?? [],
+    sharedTotalMinor: (t: ApiTransaction) =>
+      (t.metadata as { sharedTotalMinor?: number }).sharedTotalMinor ?? null,
+    sharedWith: (t: ApiTransaction) =>
+      (t.metadata as { sharedWith?: { accountId: string; amountMinor: number }[] }).sharedWith ??
+      [],
+    splitGroupId: (t: ApiTransaction) =>
+      (t.metadata as { splitGroupId?: string }).splitGroupId ?? null,
     transferAccount: (t: ApiTransaction, _: unknown, ctx: GraphQLContext) => {
       const id = (t.metadata as { transferAccountId?: string }).transferAccountId;
       return t.transferId && id ? ctx.loaders.accountById.load(id) : null;
     },
+  },
+  TransactionShare: {
+    account: (s: { accountId: string }, _: unknown, ctx: GraphQLContext) =>
+      ctx.loaders.accountById.load(s.accountId),
   },
   CsvPreviewRow: {
     status: (r: { status: string }) =>

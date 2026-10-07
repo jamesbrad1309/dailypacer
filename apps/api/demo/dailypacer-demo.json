@@ -63,6 +63,16 @@
       "openedDay": -62,
       "owedByMe": false,
       "archived": false
+    },
+    {
+      "ref": "alex",
+      "name": "Alex",
+      "type": "IOU",
+      "currency": "GBP",
+      "currentBalanceMinor": 0,
+      "openedDay": -62,
+      "owedByMe": false,
+      "archived": false
     }
   ],
   "budgets": [
@@ -1172,6 +1182,44 @@
       "tags": [],
       "source": "form",
       "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -4,
+      "amountMinor": -7200,
+      "category": "eating-out",
+      "payee": "Dishoom",
+      "note": null,
+      "tags": ["friends"],
+      "source": "quick",
+      "status": "CLEARED",
+      "shares": [
+        {
+          "account": "sam",
+          "amountMinor": 2400
+        },
+        {
+          "account": "alex",
+          "amountMinor": 2400
+        }
+      ]
+    },
+    {
+      "account": "test-current",
+      "day": -12,
+      "amountMinor": -3000,
+      "category": "entertainment",
+      "payee": "Everyman Cinema",
+      "note": "Tickets for both of us",
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED",
+      "shares": [
+        {
+          "account": "sam",
+          "amountMinor": 1500
+        }
+      ]
     }
   ],
   "transfers": [

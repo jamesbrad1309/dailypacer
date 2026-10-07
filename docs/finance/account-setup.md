@@ -111,4 +111,4 @@ These cover the common case "I paid for dinner, Sam owes me £25":
 - **Settle up** is a transfer between the IOU account and a real account
   when money actually changes hands.
 - Quick log can split an expense into "my share" and "Sam owes me" in one
-  step. This is a follow-up; see [quick-log.md](quick-log.md).
+  step: see [Split with…](quick-log.md#split-with).

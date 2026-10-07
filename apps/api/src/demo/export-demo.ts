@@ -121,7 +121,7 @@ async function exportFixture(prisma: PrismaClient, today: string): Promise<DemoF
       .map((t) => ({
         account: acc(t.accountId),
         day: day(today, t.date),
-        amountMinor: t.amountMinor,
+        ...sharedBill(t, acc),
         category: ref(t.categoryId),
         payee: t.payee,
         note: t.note,
@@ -139,7 +139,9 @@ async function exportFixture(prisma: PrismaClient, today: string): Promise<DemoF
           })),
         }),
       })),
+    // A shared bill's transfers come back with the bill (its `shares`).
     transfers: [...legs.values()].flatMap((pair) => {
+      if ((pair[0].metadata as { splitGroupId?: string }).splitGroupId) return [];
       const out = pair.find((t) => t.amountMinor < 0);
       const into = pair.find((t) => t.amountMinor > 0);
       if (!out || !into) return [];
@@ -243,6 +245,25 @@ async function exportFixture(prisma: PrismaClient, today: string): Promise<DemoF
       console.error(`Not exported (demo:import can't rebuild them yet): ${count} ${what}`);
   }
   return fixture;
+}
+
+/**
+ * A shared bill ("Split with…") is written whole, with who owes what, so the
+ * import rebuilds it linked; any other transaction just keeps its amount.
+ */
+function sharedBill(
+  t: { amountMinor: number; metadata: unknown },
+  acc: (id: string) => string,
+): { amountMinor: number; shares?: { account: string; amountMinor: number }[] } {
+  const { sharedTotalMinor, sharedWith } = t.metadata as {
+    sharedTotalMinor?: number;
+    sharedWith?: { accountId: string; amountMinor: number }[];
+  };
+  if (!sharedTotalMinor || !sharedWith?.length) return { amountMinor: t.amountMinor };
+  return {
+    amountMinor: -sharedTotalMinor,
+    shares: sharedWith.map((s) => ({ account: acc(s.accountId), amountMinor: s.amountMinor })),
+  };
 }
 
 /** The create input as the user typed it: owed amounts positive (storedBalance in reverse). */

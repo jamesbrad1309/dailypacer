@@ -1,10 +1,11 @@
 import { useMutation, useQuery } from "@apollo/client/react";
 import { Link } from "@tanstack/react-router";
-import { ChevronDown, ChevronUp, Sparkles, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Sparkles, Users, X } from "lucide-react";
 import { type FormEvent, useMemo, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Amount, MONEY_IN_CLASS, MONEY_OUT_CLASS } from "#components/finance/Amount";
 import { AmountKeypad, applyKey } from "#components/finance/quick-log/AmountKeypad";
+import { SplitWithPicker } from "#components/finance/quick-log/SplitWithPicker";
 import { Button } from "#components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "#components/ui/dialog";
 import { Input } from "#components/ui/input";
@@ -39,6 +40,7 @@ import {
   toMoneyInput,
 } from "#lib/money";
 import { parseQuickLog } from "#lib/quick-log-parse";
+import { EMPTY_SPLIT, type SplitDraft, splitShares } from "#lib/split-with";
 import { toast } from "#lib/toast";
 import { cn } from "#lib/utils";
 
@@ -101,6 +103,8 @@ interface QuickLogState {
   saving: boolean;
   /** A deep link's category is matched once, when categories have loaded. */
   prefillApplied: boolean;
+  /** "Split with…" open, and who's on the bill; null when it's all yours. */
+  split: SplitDraft | null;
 }
 
 type QuickLogAction =
@@ -131,6 +135,7 @@ function quickLogReducer(state: QuickLogState, action: QuickLogAction): QuickLog
         error: null,
         clientId: crypto.randomUUID(),
         openedAt: performance.now(),
+        split: null,
       };
   }
 }
@@ -150,6 +155,7 @@ function initialQuickLog(prefill: ReturnType<typeof useQuickLogState>["prefill"]
     openedAt: performance.now(),
     saving: false,
     prefillApplied: !prefill?.category,
+    split: null,
   };
 }
 
@@ -186,6 +192,7 @@ function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState
     openedAt,
     saving,
     prefillApplied,
+    split,
   } = form;
   const [storedCatchUp, setStoredCatchUp] = useStoredState("dailypacer.quickLog.catchUp", false);
   // A habit can open the sheet in catch-up mode without changing the remembered choice.
@@ -302,6 +309,12 @@ function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState
       return;
     }
     const category = categoryId ? byId.get(categoryId) : undefined;
+    const sharing = split && split.people.length > 0 && category?.kind !== "income" && !isIncome;
+    const shares = sharing ? splitShares(split, minor, currency) : null;
+    if (shares?.problem) {
+      set("error", t(`finance.splitWith.${shares.problem}`));
+      return;
+    }
     dispatch({ type: "saving", on: true });
     try {
       const { data: result } = await quickLog({
@@ -317,6 +330,7 @@ function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState
             note: preset ? null : parsed.note,
             presetId: preset?.id ?? parsed.presetId,
             durationMs: Math.round(performance.now() - openedAt),
+            ...(shares && { splitWith: shares.shares }),
           },
         },
       });
@@ -344,7 +358,13 @@ function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState
     const what = category
       ? `${category.icon ?? ""} ${categoryName(category)}`.trim()
       : t("finance.quickLog.loggedToReview");
-    toast(t("finance.quickLog.logged", { amount, what }), {
+    const owed = tx.sharedWith.map((s) =>
+      t("finance.splitWith.owesYou", {
+        name: s.account.name,
+        amount: formatMoney(s.amountMinor, tx.account.currency),
+      }),
+    );
+    toast([t("finance.quickLog.logged", { amount, what }), ...owed].join(" · "), {
       actions: [
         { label: t("common.undo"), onClick: () => deleteTransaction({ variables: { id: tx.id } }) },
       ],
@@ -538,6 +558,26 @@ function QuickLogForm({ prefill }: { prefill: ReturnType<typeof useQuickLogState
           {!hinted && amountMinor ? t("finance.quickLog.enterToReview") : null}
         </p>
       </div>
+
+      {!income &&
+        (split ? (
+          <SplitWithPicker
+            draft={split}
+            onChange={(next) => set("split", next)}
+            onClose={() => set("split", null)}
+            people={accounts.filter((a) => a.type === "IOU" && a.currency === currency)}
+            totalMinor={amountMinor ?? null}
+            currency={currency}
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => set("split", EMPTY_SPLIT)}
+            className="-mt-2 flex items-center gap-1 self-start text-xs text-muted-foreground hover:text-foreground"
+          >
+            <Users className="size-3.5" /> {t("finance.splitWith.open")}
+          </button>
+        ))}
 
       <fieldset className="flex flex-wrap gap-1.5">
         <legend className="sr-only">{t("finance.quickLog.saveToCategory")}</legend>

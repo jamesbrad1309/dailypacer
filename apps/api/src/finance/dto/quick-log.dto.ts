@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isoDate, minor } from "#finance/dto/account.dto";
+import { MAX_SHARES } from "#finance/split-with.util";
 
 const optionalText = (max: number) => z.string().trim().max(max).nullable().optional();
 
@@ -29,6 +30,15 @@ export const quickLogSchema = z.object({
   payee: optionalText(200),
   note: optionalText(1000),
   presetId: z.string().uuid().nullable().optional(),
+  /**
+   * "Split with…": other people's shares of the bill, each moved to their
+   * IOU account; `amountMinor` is the whole bill and your share is what's
+   * left (split-with.util.ts). Expenses only.
+   */
+  splitWith: z
+    .array(z.object({ accountId: z.string().uuid(), amountMinor: minor.positive() }))
+    .max(MAX_SHARES)
+    .optional(),
   /** Open-to-save time, logged at debug to watch for friction. */
   durationMs: z.number().int().min(0).max(3_600_000).optional(),
 });

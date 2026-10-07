@@ -261,6 +261,15 @@ type Transaction {
   status: TransactionStatus!
   """Split across categories: then `category` is null and these add up to the amount."""
   splits: [TransactionSplit!]!
+  """
+  A bill split with others ("Split with…"): the whole bill, while amountMinor
+  is your share. Null for an ordinary transaction.
+  """
+  sharedTotalMinor: Int
+  """Who else's share it carried, moved to their IOU accounts."""
+  sharedWith: [TransactionShare!]!
+  """Links a split bill's rows: deleting one deletes them all."""
+  splitGroupId: ID
   """ISO timestamp it was logged."""
   createdAt: String!
 }
@@ -447,6 +456,24 @@ input QuickLogInput {
   presetId: ID
   """Open-to-save time, for spotting friction."""
   durationMs: Int
+  """
+  "Split with…": other people's shares, each moved to their IOU account.
+  amountMinor is then the whole bill and your share is what's left. Expenses only.
+  """
+  splitWith: [ShareInput!]
+}
+
+input ShareInput {
+  """The person's IOU account."""
+  accountId: ID!
+  """Positive: what they owe you for it."""
+  amountMinor: Int!
+}
+
+"""One other person's share of a split bill."""
+type TransactionShare {
+  account: Account!
+  amountMinor: Int!
 }
 
 type QuickLogPayload {

@@ -1,5 +1,3 @@
-// Before anything reads preferences: carries saved ones over from the old name.
-import "#lib/legacy-storage";
 import { ApolloProvider } from "@apollo/client/react";
 import { RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";

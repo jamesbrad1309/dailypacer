@@ -209,6 +209,14 @@ const TRANSACTION_FIELDS = gql`
         ...CategoryFields
       }
     }
+    sharedTotalMinor
+    sharedWith {
+      amountMinor
+      account {
+        id
+        name
+      }
+    }
   }
 `;
 

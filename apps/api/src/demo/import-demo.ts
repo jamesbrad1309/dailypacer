@@ -10,6 +10,7 @@ import { createTransactionSchema, createTransferSchema } from "#finance/dto/tran
 import { FinanceHabitsService } from "#finance/finance-habits.service";
 import { FINANCE_HABIT_SOURCES, LOGGED_TODAY, NO_SPEND } from "#finance/finance-habits.util";
 import { SavingsGoalsService } from "#finance/savings-goals.service";
+import { shareProblem } from "#finance/split-with.util";
 import { TransactionsService } from "#finance/transactions.service";
 import { HabitEntriesService } from "#habit-entries/habit-entries.service";
 import { createHabitSchema } from "#habits/dto/create-habit.dto";
@@ -106,19 +107,27 @@ async function importFixture(app: App, fixture: DemoFixture, today: string) {
   // ── Transactions and transfers ──
   const transactions = app.get(TransactionsService);
   for (const t of fixture.transactions) {
-    const created = await transactions.create(
-      createTransactionSchema.parse({
-        accountId: account(t.account),
-        categoryId: t.splits?.length ? null : category(t.category),
-        date: day(t.day),
-        amountMinor: t.amountMinor,
-        payee: t.payee ?? null,
-        note: t.note ?? null,
-        tags: t.tags ?? [],
-        status: t.status ?? "CLEARED",
-      }),
-      t.source ?? "form",
-    );
+    const input = createTransactionSchema.parse({
+      accountId: account(t.account),
+      categoryId: t.splits?.length ? null : category(t.category),
+      date: day(t.day),
+      amountMinor: t.amountMinor,
+      payee: t.payee ?? null,
+      note: t.note ?? null,
+      tags: t.tags ?? [],
+      status: t.status ?? "CLEARED",
+    });
+    // A shared bill comes back linked, the same way quick log's "Split with…" makes it.
+    const shares = (t.shares ?? []).map((s) => ({
+      accountId: account(s.account),
+      amountMinor: s.amountMinor,
+    }));
+    const problem = shares.length > 0 ? shareProblem(-t.amountMinor, shares) : null;
+    if (problem) throw new Error(`Shared bill on day ${t.day}: ${problem}`);
+    const created =
+      shares.length > 0
+        ? await transactions.createSharedExpense(input, shares, t.source ?? "form")
+        : await transactions.create(input, t.source ?? "form");
     if (t.splits?.length) {
       await transactions.setSplits(created.id, {
         splits: t.splits.map((s) => ({

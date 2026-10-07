@@ -24,16 +24,21 @@ Postgres on port 5433), so the stack's `postgres` service must be up.
   your own, listed under `categories`.
 - **Accounts** have a `ref` that transactions, transfers and goals use.
   Their balance is as typed in the app, so a card's amount owed is positive.
+- **Shared bills** ("Split with…") are one transaction with the whole bill
+  as `amountMinor` and `shares` saying who owes what. The import rebuilds
+  them linked through `createSharedExpense`, like quick log. The export
+  writes them back the same way and leaves out their transfers.
 - **Finance-ticked habits** (no-spend, log today's spending, a goal's daily
   saving habit) carry no entries. The import works them out from the
   transactions. A goal brings its daily habit with it (`dailyHabitMinor`).
 
 `apps/api/demo/dailypacer-demo.json` is about 8 weeks of history:
 
-- **Money:** a current account, savings, a credit card, cash and an IOU,
+- **Money:** a current account, savings, a credit card, cash and two IOUs,
   with salary, rent, bills and everyday spending. Some days have no
   spending, so the no-spend habits have streaks. There's one split
-  transaction, card payments, and daily transfers into savings.
+  transaction, two bills shared with Sam and Alex, card payments, and
+  daily transfers into savings.
 - **Budgets and goals:** budgets for two months back, and three savings
   goals.
 - **Habits:** thirteen, including one paused and one archived.

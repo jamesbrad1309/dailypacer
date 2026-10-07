@@ -113,8 +113,8 @@ Where phase 2 differs from [quick-log-implementation.md](quick-log-implementatio
   aliases. A matched alias ("lunch") stays in the note; a matched category
   name ("coffee") doesn't.
 - **Not optimistic yet.** The save is ~20 ms locally, so the toast follows
-  the server's reply. Offline queueing, the PWA manifest shortcut and
-  "Split with…" are still to do.
+  the server's reply. Offline queueing and the PWA manifest shortcut are
+  still to do. "Split with…" is built ([quick-log.md](quick-log.md#split-with)).
 - **`deleteTransaction` returns `[ID!]!`**, every id deleted (both legs
   for a transfer). Transfers themselves ("Pay off card") aren't built yet.
 

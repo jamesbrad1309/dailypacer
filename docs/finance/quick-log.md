@@ -124,9 +124,39 @@ expenses can be entered in a row without closing and reopening the log.
 - **No bank sync.** [CSV import](recurring-and-import.md) and recurring
   rules remove bulk data entry. Quick log is for spending in the moment.
 
+## Split with…
+
+"Split with…" under the amount shares a bill. Take a £60 dinner paid on
+the card, split three ways with Sam and Alex:
+
+- **Your £20 is the expense.** It's what budgets, reports and the no-spend
+  habit count.
+- **Each other share is a transfer** from the card to that person's IOU
+  account, noted "Dishoom: Sam's share". Sam and Alex now owe you £20 each,
+  and the card still shows the whole £60 gone.
+
+How it works:
+
+- Pick people from your IOU accounts, or type a new name to add one.
+- **Evenly** gives everyone the same share, with you taking the leftover
+  pennies. **Custom amounts** lets you type each share. Either way,
+  others' shares must leave you one: paying for someone outright is a
+  transfer, not a split.
+- All the rows are written in one database transaction, linked by
+  `metadata.splitGroupId`. Undo, or deleting any one of them, deletes the
+  whole bill.
+- The expense row keeps `sharedTotalMinor` and `sharedWith`, so the list
+  shows "Your share of £60.00, with Sam, Alex".
+- When they pay you back, use **Settle up** on their IOU, as before.
+- Expenses only. People must be in the paying account's currency. Editing
+  the expense later doesn't change their shares.
+
+Code: `QuickLogInput.splitWith` → `TransactionsService.createSharedExpense`,
+with the rules in `split-with.util.ts` (and `lib/split-with.ts` in the web
+app), and `SplitWithPicker` for the picker.
+
 ## Follow-ups (not v1)
 
-- "Split with…": log £50 dinner as £25 mine + £25 owed by Sam (IOU).
 - Receipt photo → OCR → amount/payee pre-filled.
 - An evening reminder ("Log today's spending?"), once DailyPacer has
   notifications. The "Log today's spending" habit already covers the
