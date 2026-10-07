@@ -1190,9 +1190,7 @@
       "category": "eating-out",
       "payee": "Dishoom",
       "note": null,
-      "tags": [
-        "friends"
-      ],
+      "tags": ["friends"],
       "source": "quick",
       "status": "CLEARED",
       "shares": [
