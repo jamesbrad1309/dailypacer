@@ -16,7 +16,9 @@
     "format": "biome format --write .",
     "check": "biome check --write .",
     "quickstart": "bash scripts/quickstart.sh",
-    "lexicon:fetch": "node scripts/fetch-emotion-lexicon.mjs"
+    "lexicon:fetch": "node scripts/fetch-emotion-lexicon.mjs",
+    "demo:import": "pnpm --filter api demo:import",
+    "demo:export": "pnpm --filter api demo:export"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
