@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  type Schedule,
   chargesBetween,
   isChargeDate,
   monthlyCost,
   nextCharge,
   nthCharge,
   priceOn,
+  type Schedule,
   yearlyCost,
 } from "#finance/subscription-schedule.util";
 

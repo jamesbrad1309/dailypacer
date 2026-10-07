@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
 import { describe, expect, it } from "vitest";
-import { PREFIX_PATTERN, dueState, fieldErrors, positionBetween, todoListSchema } from "#lib/todos";
+import { dueState, fieldErrors, PREFIX_PATTERN, positionBetween, todoListSchema } from "#lib/todos";
 
 describe("positionBetween", () => {
   it("goes between neighbours, or past either end", () => {

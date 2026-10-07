@@ -2,7 +2,7 @@ import type { Request } from "express";
 import type { Logger } from "pino";
 import { ApiClient } from "#clients/api-client";
 import { logger } from "#common/logger/logger";
-import { type Loaders, createLoaders } from "#graphql/loaders";
+import { createLoaders, type Loaders } from "#graphql/loaders";
 
 export interface GraphQLContext {
   /** Per-request logger (pino-http's `req.log`) — shares the request id with the access log line. */

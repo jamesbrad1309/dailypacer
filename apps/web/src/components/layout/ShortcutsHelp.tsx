@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from "#components/ui/dialog";
 import { getOverlay, setOverlay, subscribeOverlay } from "#lib/command-palette";
-import { SHORTCUTS, type ShortcutGroup, displayKeys } from "#lib/shortcuts";
+import { displayKeys, SHORTCUTS, type ShortcutGroup } from "#lib/shortcuts";
 
 const ORDER: ShortcutGroup[] = ["general", "goTo", "journal", "palette"];
 

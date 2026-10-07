@@ -1,5 +1,5 @@
-import { type Day, addDays, toLocalDate } from "#habits/day.util";
-import { type PauseRange, isPausedOn } from "#habits/pause.util";
+import { addDays, type Day, toLocalDate } from "#habits/day.util";
+import { isPausedOn, type PauseRange } from "#habits/pause.util";
 import { type HabitSchedule, isDueOn } from "#habits/schedule.util";
 
 /** How far back the weekday pattern looks: twelve of each weekday. */

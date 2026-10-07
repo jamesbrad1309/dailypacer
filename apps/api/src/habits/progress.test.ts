@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { DayCell, DayStatus } from "#habits/day-status.util";
 import { addDays } from "#habits/day.util";
+import type { DayCell, DayStatus } from "#habits/day-status.util";
 import { habitProgress } from "#habits/progress.util";
 
 function cells(from: string, pattern: string): DayCell[] {

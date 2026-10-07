@@ -5,7 +5,7 @@ import {
   type NestInterceptor,
 } from "@nestjs/common";
 import type { Request } from "express";
-import { type Observable, from, switchMap } from "rxjs";
+import { from, type Observable, switchMap } from "rxjs";
 import { scopedLogger } from "#common/logger/logger";
 import { toIsoDate } from "#finance/calendar.util";
 import { SubscriptionsService } from "#finance/subscriptions.service";

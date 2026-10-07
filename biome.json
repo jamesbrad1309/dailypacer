@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -7,18 +7,20 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": [
-      "dist",
-      "build",
-      "node_modules",
-      "**/*.graphql",
-      "**/routeTree.gen.ts",
-      "biome.json",
-      "**/.oxlintrc.json",
-      "**/package.json",
-      "**/tsconfig*.json",
-      "**/components.json",
-      "**/*.config.ts"
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/build",
+      "!**/node_modules",
+      "!**/*.graphql",
+      "!**/*.svg",
+      "!**/routeTree.gen.ts",
+      "!**/biome.json",
+      "!**/.oxlintrc.json",
+      "!**/package.json",
+      "!**/tsconfig*.json",
+      "!**/components.json",
+      "!**/*.config.ts"
     ]
   },
   "formatter": {
@@ -30,7 +32,7 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "style": {
         "useImportType": "off"
       }
@@ -53,6 +55,11 @@
     "parser": {
       "allowComments": true,
       "allowTrailingCommas": true
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
     }
   }
 }

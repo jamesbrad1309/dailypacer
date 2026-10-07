@@ -7,8 +7,8 @@ import { BudgetsService } from "#finance/budgets.service";
 import { fromIsoDate, toIsoDate } from "#finance/calendar.util";
 import {
   CategoriesService,
-  STARTER_CATEGORY_NAMES,
   categoryMetadata,
+  STARTER_CATEGORY_NAMES,
 } from "#finance/categories.service";
 import type {
   CreateQuickPresetInput,

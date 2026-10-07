@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { achievements } from "#habits/achievements.util";
 import { correlations } from "#habits/correlations.util";
-import type { DayCell, DayStatus } from "#habits/day-status.util";
 import { addDays } from "#habits/day.util";
+import type { DayCell, DayStatus } from "#habits/day-status.util";
 import { weeklyReview } from "#habits/weekly-review.util";
 
 /** Cells from `from`, one status per character: D done, M missed, O off, F frozen, U due. */

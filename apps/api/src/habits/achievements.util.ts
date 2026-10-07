@@ -1,5 +1,5 @@
+import { addDays, type Day, startOfWeek } from "#habits/day.util";
 import { COUNTS_AS_DUE, type DayCell } from "#habits/day-status.util";
-import { type Day, addDays, startOfWeek } from "#habits/day.util";
 
 export type AchievementKey =
   | "FIRST_CHECK_IN"

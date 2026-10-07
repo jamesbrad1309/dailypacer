@@ -1,5 +1,5 @@
-import { type Day, addDays, startOfWeek, toLocalDate } from "#habits/day.util";
-import { type PauseRange, isPausedOn } from "#habits/pause.util";
+import { addDays, type Day, startOfWeek, toLocalDate } from "#habits/day.util";
+import { isPausedOn, type PauseRange } from "#habits/pause.util";
 import { type HabitSchedule, isDueOn } from "#habits/schedule.util";
 
 export type RecordStatus = "DONE" | "PARTIAL" | "NOT_DONE" | "MISSED" | "MISSED_WEEK" | "SLIPPED";

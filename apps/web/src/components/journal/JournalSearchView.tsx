@@ -11,7 +11,7 @@ import type { JournalEntry, JournalEntryKind } from "#graphql/types";
 import { useSyntaxLanguage } from "#hooks/useSyntaxLanguage";
 import { formatDayHeading } from "#lib/dates";
 import { emotionFor } from "#lib/emotions";
-import { KINDS, KIND_BY_ID } from "#lib/journal-kinds";
+import { KIND_BY_ID, KINDS } from "#lib/journal-kinds";
 import { emotionName } from "#lib/journal-syntax";
 import { capitalizeFirst, cn } from "#lib/utils";
 

@@ -3,8 +3,8 @@ import { z } from "zod";
 import { SubscriptionsView } from "#components/finance/subscriptions/SubscriptionsView";
 import {
   PENDING_CHARGES_QUERY,
-  SUBSCRIPTIONS_QUERY,
   SUBSCRIPTION_SUMMARY_QUERY,
+  SUBSCRIPTIONS_QUERY,
 } from "#graphql/subscriptions";
 import { todayIsoDate } from "#lib/dates";
 

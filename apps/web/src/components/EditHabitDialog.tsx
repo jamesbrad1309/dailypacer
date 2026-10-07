@@ -20,9 +20,9 @@ import { Textarea } from "#components/ui/textarea";
 import { DASHBOARD_STATS_QUERY, HABITS_QUERY, UPDATE_HABIT_MUTATION } from "#graphql/habits";
 import type { Habit } from "#graphql/types";
 import {
+  cleanCustomFields,
   type HabitDraft,
   type HabitDraftAction,
-  cleanCustomFields,
   habitDraftFrom,
   habitDraftReducer,
 } from "#lib/habit-draft";

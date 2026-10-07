@@ -21,7 +21,10 @@ const EXPORT_PAGE = 200;
 export function ExportCsvButton({
   filter,
   fileName,
-}: { filter: TransactionFilter; fileName: string }) {
+}: {
+  filter: TransactionFilter;
+  fileName: string;
+}) {
   const { t } = useTranslation();
   const client = useApolloClient();
   const categoryName = useCategoryName();

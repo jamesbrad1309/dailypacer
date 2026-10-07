@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type HabitDays, dayStatus, entriesByDay } from "#habits/day-status.util";
+import { dayStatus, entriesByDay, type HabitDays } from "#habits/day-status.util";
 
 const base: HabitDays = {
   schedule: { type: "daily" },

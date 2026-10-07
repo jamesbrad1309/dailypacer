@@ -21,7 +21,7 @@
     "demo:export": "pnpm --filter api demo:export"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
+    "@biomejs/biome": "^2.5.15",
     "oxlint": "^1.86.0",
     "typescript": "catalog:"
   },

@@ -15,9 +15,9 @@ import { formatDuration, nowTime, todayIsoDate } from "#lib/dates";
 import { emotionFor } from "#lib/emotions";
 import { KIND_BY_ID } from "#lib/journal-kinds";
 import {
-  type ParsedItem,
   commandFor,
   emotionName,
+  type ParsedItem,
   parseJournalText,
   serializeEntry,
 } from "#lib/journal-syntax";

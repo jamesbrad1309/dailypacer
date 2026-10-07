@@ -128,10 +128,8 @@ export function TaskPicker({ excludeDependenciesOf, onPick, disabled }: Props) {
       {showList && (
         // Focus stays in the input (aria-activedescendant), per the ARIA
         // combobox pattern, so the listbox is deliberately not focusable.
-        // biome-ignore lint/a11y/useFocusableInteractive: see above
         <div
           id={listboxId}
-          // biome-ignore lint/a11y/useSemanticElements: a <select> can't show search results under an input
           role="listbox"
           aria-label={t("todos.task.waitingFor")}
           className="absolute inset-x-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-md border bg-popover p-1 shadow-md"
@@ -145,7 +143,6 @@ export function TaskPicker({ excludeDependenciesOf, onPick, disabled }: Props) {
               <div
                 key={task.id}
                 id={`${listboxId}-${task.id}`}
-                // biome-ignore lint/a11y/useSemanticElements: option of the custom listbox above
                 role="option"
                 aria-selected={index === activeIndex}
                 tabIndex={-1}

@@ -7,8 +7,8 @@ import { Button } from "#components/ui/button";
 import { Checkbox } from "#components/ui/checkbox";
 import {
   DASHBOARD_STATS_QUERY,
-  HABITS_QUERY,
   HABIT_PROGRESS_REFETCH,
+  HABITS_QUERY,
   UPSERT_HABIT_ENTRY_MUTATION,
 } from "#graphql/habits";
 import type { Habit } from "#graphql/types";

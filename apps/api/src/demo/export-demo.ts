@@ -1,5 +1,6 @@
 import { writeFileSync } from "node:fs";
-import { type Account, PrismaClient } from "@prisma/client";
+import type { Account, PrismaClient } from "@prisma/client";
+import { PrismaService } from "#common/database/prisma.service";
 import {
   DEMO_VERSION,
   type DemoAccount,
@@ -21,7 +22,7 @@ async function main() {
   const args = process.argv.slice(2);
   const today = args.find((a) => a.startsWith("--today="))?.slice(8) ?? localToday();
   const file = args.find((a) => !a.startsWith("--"));
-  const prisma = new PrismaClient();
+  const prisma = new PrismaService();
   try {
     const fixture = await exportFixture(prisma, today);
     const json = `${JSON.stringify(fixture, null, 2)}\n`;

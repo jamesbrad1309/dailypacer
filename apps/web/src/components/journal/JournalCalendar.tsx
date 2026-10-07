@@ -21,7 +21,7 @@ import {
 } from "#lib/dates";
 import { dominantEmotion } from "#lib/emotions";
 import { KINDS } from "#lib/journal-kinds";
-import { type MoodBand, averageMood, formatMood, moodBand, moodScore } from "#lib/mood";
+import { averageMood, formatMood, type MoodBand, moodBand, moodScore } from "#lib/mood";
 import { cn } from "#lib/utils";
 
 /** Day-cell tint: teal for a pleasant day, orange for an unpleasant one, stronger the further from 0. */

@@ -1,5 +1,5 @@
-import { type Day, addDays, toDay, toLocalDate } from "#habits/day.util";
-import { type PauseRange, isPausedOn } from "#habits/pause.util";
+import { addDays, type Day, toDay, toLocalDate } from "#habits/day.util";
+import { isPausedOn, type PauseRange } from "#habits/pause.util";
 import { type HabitSchedule, isDueOn } from "#habits/schedule.util";
 import type { EntryLike } from "#habits/streak.util";
 

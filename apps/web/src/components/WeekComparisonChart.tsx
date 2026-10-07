@@ -199,6 +199,7 @@ export function WeekComparisonChart({ days }: { days: HeatmapDay[] }) {
 
             {/* Hit targets: a full-height column per day, wider than the marks. */}
             {points.map((p) => (
+              // biome-ignore lint/a11y/noStaticElementInteractions: hover mirrors focus; the label carries the tooltip text
               <rect
                 key={p.index}
                 x={x(p.index) - plotW / 12}

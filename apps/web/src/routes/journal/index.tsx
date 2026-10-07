@@ -3,7 +3,7 @@ import { z } from "zod";
 import { JournalView } from "#components/journal/JournalView";
 import { JournalSkeleton } from "#components/layout/Skeletons";
 import { JOURNAL_DAYS_QUERY, JOURNAL_ENTRIES_QUERY } from "#graphql/journal";
-import { addDays, fromIsoDate, startOfWeek, toIsoDate, todayIsoDate } from "#lib/dates";
+import { addDays, fromIsoDate, startOfWeek, todayIsoDate, toIsoDate } from "#lib/dates";
 
 const isoDate = z
   .string()

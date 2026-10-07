@@ -10,16 +10,16 @@ import { HabitInsights } from "#components/HabitInsights";
 import { HabitChallengeCard, StreakFreezes } from "#components/HabitMotivation";
 import { HabitRecordsTable, RECORDS_PAGE_SIZE } from "#components/HabitRecordsTable";
 import { HeatmapGrid } from "#components/HeatmapGrid";
-import { WeekComparisonChart } from "#components/WeekComparisonChart";
 import { HabitDetailSkeleton } from "#components/layout/Skeletons";
 import { Badge } from "#components/ui/badge";
 import { Button } from "#components/ui/button";
+import { WeekComparisonChart } from "#components/WeekComparisonChart";
 import {
-  HABITS_QUERY,
   HABIT_CORRELATIONS_QUERY,
   HABIT_DETAIL_QUERY,
   HABIT_PAGE_FETCH,
   HABIT_RECORDS_QUERY,
+  HABITS_QUERY,
 } from "#graphql/habits";
 import { JOURNAL_FEELINGS_QUERY } from "#graphql/journal";
 import type {

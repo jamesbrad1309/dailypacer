@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { StatTilesSkeleton } from "#components/layout/Skeletons";
 import { Card, CardContent } from "#components/ui/card";
 import { Progress } from "#components/ui/progress";
-import { DASHBOARD_STATS_QUERY, HABITS_QUERY, HABIT_PAGE_FETCH } from "#graphql/habits";
+import { DASHBOARD_STATS_QUERY, HABIT_PAGE_FETCH, HABITS_QUERY } from "#graphql/habits";
 import type { DashboardStatsData, HabitsData } from "#graphql/types";
 import { isDoneToday } from "#lib/habit-today";
 import { isDueOn } from "#lib/schedule";

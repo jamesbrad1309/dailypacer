@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type TotalsRow, collectDeltas, isCounted } from "#finance/monthly-totals.service";
+import { collectDeltas, isCounted, type TotalsRow } from "#finance/monthly-totals.service";
 
 const row = (over: Partial<TotalsRow> = {}): TotalsRow => ({
   accountId: "acc",

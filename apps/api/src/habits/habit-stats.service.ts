@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { challengeBonus } from "#habits/challenge.util";
-import { type DayStatus, dayStatus } from "#habits/day-status.util";
 import { addDays, toDay } from "#habits/day.util";
+import { type DayStatus, dayStatus } from "#habits/day-status.util";
 import {
   computeLevel,
   computePoints,

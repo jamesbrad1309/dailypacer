@@ -2,8 +2,8 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import { PrismaService } from "#common/database/prisma.service";
 import { scopedLogger } from "#common/logger/logger";
 import { challengeBonus, challengeProgress } from "#habits/challenge.util";
+import { addDays, type Day, toDay } from "#habits/day.util";
 import { dayStatus } from "#habits/day-status.util";
-import { type Day, addDays, toDay } from "#habits/day.util";
 import type { ChallengeInput, FreezeInput, RewardInput } from "#habits/dto/motivation.dto";
 import { FREEZE_COST, FREEZE_WINDOW_DAYS, POINTS_PER_CHECK_IN } from "#habits/gamification.util";
 import { HabitHistoryService, toChallenge } from "#habits/habit-history.service";

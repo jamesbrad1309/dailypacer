@@ -26,13 +26,13 @@ import type {
 import { FinanceHabitsService } from "#finance/finance-habits.service";
 import { catalogService } from "#finance/subscription-catalog";
 import {
-  type Schedule,
   chargesBetween,
   isChargeDate,
   monthlyCost,
   nextCharge,
   previousDay,
   priceOn,
+  type Schedule,
   yearlyCost,
 } from "#finance/subscription-schedule.util";
 import { TransactionsService } from "#finance/transactions.service";

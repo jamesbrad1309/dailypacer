@@ -1,7 +1,7 @@
 import type { JournalEntry, JournalEntryKind, JournalTone } from "#graphql/types";
 import { journal as en } from "#i18n/en/journal";
 import { journal as vi } from "#i18n/vi/journal";
-import { EMOTIONS, EMOTION_PHRASES, type Emotion, emotionFor } from "#lib/emotions";
+import { EMOTION_PHRASES, EMOTIONS, type Emotion, emotionFor } from "#lib/emotions";
 import { fold } from "#lib/fold";
 
 /** The languages the syntax is written in. Every language's words parse; this picks which to write. */

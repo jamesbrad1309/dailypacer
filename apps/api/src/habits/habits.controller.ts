@@ -5,9 +5,9 @@ import { type CreateHabitInput, createHabitSchema } from "#habits/dto/create-hab
 import {
   type HabitInsightsQuery,
   type HabitRecordsQuery,
-  type PauseDayInput,
   habitInsightsQuerySchema,
   habitRecordsQuerySchema,
+  type PauseDayInput,
   pauseDaySchema,
 } from "#habits/dto/habit-records.dto";
 import { type UpdateHabitInput, updateHabitSchema } from "#habits/dto/update-habit.dto";

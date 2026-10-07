@@ -122,7 +122,11 @@ function Grid({
   top,
   format,
   height,
-}: { top: number; format: (v: number) => string; height: number }) {
+}: {
+  top: number;
+  format: (v: number) => string;
+  height: number;
+}) {
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0" style={{ height }} aria-hidden>
       {[1, 0.5, 0].map((f) => (
@@ -149,7 +153,11 @@ function Tooltip({
   title,
   rows,
   alignRight,
-}: { title: string; rows: { label: ReactNode; value: string }[]; alignRight: boolean }) {
+}: {
+  title: string;
+  rows: { label: ReactNode; value: string }[];
+  alignRight: boolean;
+}) {
   return (
     <div
       role="tooltip"
@@ -325,7 +333,11 @@ export function RateLine({
   points,
   reference,
   referenceLabel,
-}: { points: RatePoint[]; reference?: number | null; referenceLabel?: string }) {
+}: {
+  points: RatePoint[];
+  reference?: number | null;
+  referenceLabel?: string;
+}) {
   const [hovered, setHovered] = useState<number | null>(null);
   const x = (i: number) => ((i + 0.5) / points.length) * 100;
   const y = (v: number) => (1 - v) * HEIGHT;
@@ -562,7 +574,9 @@ export function DivergingColumns({
 /** Horizontal bars of a rate per row, best first, the value written beside each. */
 export function RankedBars({
   rows,
-}: { rows: { key: string; label: string; value: number | null; detail: string }[] }) {
+}: {
+  rows: { key: string; label: string; value: number | null; detail: string }[];
+}) {
   return (
     <ul className="flex flex-col gap-2.5">
       {rows.map((row) => (

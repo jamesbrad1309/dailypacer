@@ -1,5 +1,5 @@
 import type { JournalDay, JournalDayFeeling } from "#graphql/types";
-import { type Valence, emotionFor, resolveEmotion } from "#lib/emotions";
+import { emotionFor, resolveEmotion, type Valence } from "#lib/emotions";
 import { type Lexicon, lexiconValence } from "#lib/lexicon";
 
 /** Intensity assumed when a feeling was logged without one (the middle of 1–5). */

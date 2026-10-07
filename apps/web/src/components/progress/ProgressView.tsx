@@ -21,11 +21,11 @@ import { addDays, formatShortDate, startOfWeek, todayIsoDate } from "#lib/dates"
 import { moodByDay } from "#lib/habit-mood";
 import { formatMood, moodBand } from "#lib/mood";
 import {
-  PERIODS,
-  type Period,
   halves,
   moodByHabitDays,
   moodByWeek,
+  PERIODS,
+  type Period,
   rateOf,
   topWithOther,
 } from "#lib/progress";
@@ -55,7 +55,10 @@ const pct = (rate: number | null) => (rate === null ? "—" : `${Math.round(rate
 export function ProgressView({
   weeks,
   onWeeksChange,
-}: { weeks: Period; onWeeksChange: (weeks: Period) => void }) {
+}: {
+  weeks: Period;
+  onWeeksChange: (weeks: Period) => void;
+}) {
   const { t } = useTranslation();
   const today = todayIsoDate();
   const lexicon = useLexicon();

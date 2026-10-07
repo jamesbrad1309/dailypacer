@@ -23,7 +23,7 @@ import {
 } from "#graphql/finance";
 import type { Account, AccountType } from "#graphql/types";
 import { useCurrencies } from "#hooks/useCurrencies";
-import { ACCOUNT_TYPES, ACCOUNT_TYPE_ORDER } from "#lib/account-types";
+import { ACCOUNT_TYPE_ORDER, ACCOUNT_TYPES } from "#lib/account-types";
 import { todayIsoDate } from "#lib/dates";
 import {
   currencyName,

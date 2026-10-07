@@ -1,5 +1,5 @@
+import { addDays, type Day } from "#habits/day.util";
 import { COUNTS_AS_DUE, type DayCell } from "#habits/day-status.util";
-import { type Day, addDays } from "#habits/day.util";
 import type { HabitSchedule } from "#habits/schedule.util";
 
 export interface ProgressHabitInput {

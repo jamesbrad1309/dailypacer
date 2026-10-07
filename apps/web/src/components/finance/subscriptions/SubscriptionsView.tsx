@@ -12,9 +12,9 @@ import { Badge } from "#components/ui/badge";
 import { Button } from "#components/ui/button";
 import { Card } from "#components/ui/card";
 import {
-  SUBSCRIPTIONS_QUERY,
   SUBSCRIPTION_CHARGES_QUERY,
   SUBSCRIPTION_SUMMARY_QUERY,
+  SUBSCRIPTIONS_QUERY,
 } from "#graphql/subscriptions";
 import type { Subscription, SubscriptionCharge, SubscriptionSummary } from "#graphql/types";
 import { cadenceText, chargeAmount } from "#lib/cadence";

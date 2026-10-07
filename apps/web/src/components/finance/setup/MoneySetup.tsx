@@ -20,8 +20,8 @@ import {
   SET_DEFAULT_ACCOUNT_MUTATION,
   UNARCHIVE_ACCOUNT_MUTATION,
 } from "#graphql/finance";
-import type { Account, AccountType, AccountsData, NetWorth } from "#graphql/types";
-import { ACCOUNT_GROUPS, ACCOUNT_TYPES, ACCOUNT_TYPE_ORDER } from "#lib/account-types";
+import type { Account, AccountsData, AccountType, NetWorth } from "#graphql/types";
+import { ACCOUNT_GROUPS, ACCOUNT_TYPE_ORDER, ACCOUNT_TYPES } from "#lib/account-types";
 import { daysBetween, formatShortDate, todayIsoDate } from "#lib/dates";
 import { formatMoney } from "#lib/money";
 import { cn } from "#lib/utils";

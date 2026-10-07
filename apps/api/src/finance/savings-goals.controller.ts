@@ -3,10 +3,10 @@ import { ZodValidationPipe } from "#common/http/zod-validation.pipe";
 import {
   type ContributeInput,
   type CreateSavingsGoalInput,
-  type UpdateSavingsGoalInput,
   contributeSchema,
   createSavingsGoalSchema,
   goalsQuerySchema,
+  type UpdateSavingsGoalInput,
   updateSavingsGoalSchema,
 } from "#finance/dto/savings-goal.dto";
 import { SavingsGoalsService } from "#finance/savings-goals.service";

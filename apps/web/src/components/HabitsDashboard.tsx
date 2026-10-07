@@ -7,7 +7,7 @@ import { ArchivedHabits } from "#components/ArchivedHabits";
 import { CreateHabitDialog } from "#components/CreateHabitDialog";
 import { HabitList } from "#components/HabitList";
 import { StatTiles } from "#components/StatTiles";
-import { HABITS_QUERY, HABIT_PAGE_FETCH } from "#graphql/habits";
+import { HABIT_PAGE_FETCH, HABITS_QUERY } from "#graphql/habits";
 import type { HabitsData } from "#graphql/types";
 import { cn } from "#lib/utils";
 

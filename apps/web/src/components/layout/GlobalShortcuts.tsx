@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { type KeybindingsMap, defaultKeybindingsHandlerIgnore, tinykeys } from "tinykeys";
+import { defaultKeybindingsHandlerIgnore, type KeybindingsMap, tinykeys } from "tinykeys";
 import { openQuickLog } from "#hooks/useQuickLog";
 import { getOverlay, setOverlay, togglePalette } from "#lib/command-palette";
 import { SHORTCUTS, shortcutById } from "#lib/shortcuts";

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  type BudgetRule,
   alertLevel,
+  type BudgetRule,
   budgetMonth,
   crossedAlert,
   monthProgress,

@@ -8,9 +8,9 @@ import { Button } from "#components/ui/button";
 import { Card, CardContent } from "#components/ui/card";
 import { Progress } from "#components/ui/progress";
 import {
-  HABITS_QUERY,
   HABIT_CORRELATIONS_QUERY,
   HABIT_PAGE_FETCH,
+  HABITS_QUERY,
   WEEKLY_REVIEW_QUERY,
 } from "#graphql/habits";
 import type { HabitCorrelation, HabitsData, ReviewTotals, WeeklyReview } from "#graphql/types";

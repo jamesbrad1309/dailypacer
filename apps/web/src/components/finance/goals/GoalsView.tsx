@@ -12,8 +12,8 @@ import {
 } from "lucide-react";
 import { type FormEvent, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { MoneyInput } from "#components/finance/MoneyInput";
 import { GoalDialog } from "#components/finance/goals/GoalDialog";
+import { MoneyInput } from "#components/finance/MoneyInput";
 import { ListSkeleton } from "#components/layout/Skeletons";
 import { ConfirmPrompt } from "#components/todos/ConfirmPrompt";
 import { Button } from "#components/ui/button";

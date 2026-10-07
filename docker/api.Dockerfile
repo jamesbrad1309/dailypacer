@@ -5,13 +5,14 @@ RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists
 RUN corepack enable
 WORKDIR /repo
 
-# 1. deps: only manifests (+ the Prisma schema, since api's own postinstall
+# 1. deps: only manifests (+ the Prisma schema and config, since api's own postinstall
 #    runs `prisma generate` right after this install), so this layer is
 #    cached until a dependency or the schema changes
 FROM base AS deps
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY apps/api/package.json apps/api/package.json
 COPY apps/api/prisma apps/api/prisma
+COPY apps/api/prisma.config.ts apps/api/prisma.config.ts
 COPY apps/bff/package.json apps/bff/package.json
 COPY apps/web/package.json apps/web/package.json
 RUN pnpm install --frozen-lockfile

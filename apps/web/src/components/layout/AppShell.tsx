@@ -14,7 +14,7 @@ import { Toaster } from "#components/layout/Toaster";
 import { Button } from "#components/ui/button";
 import { useStoredState } from "#hooks/useStoredState";
 import { useTheme } from "#hooks/useTheme";
-import { LANGUAGES, type Language, currentLanguage, setLanguage } from "#i18n/i18n";
+import { currentLanguage, LANGUAGES, type Language, setLanguage } from "#i18n/i18n";
 import { setOverlay } from "#lib/command-palette";
 import { formatLongDate } from "#lib/dates";
 import { displayKeys, shortcutById } from "#lib/shortcuts";

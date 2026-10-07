@@ -4,9 +4,9 @@ import { PrismaService } from "#common/database/prisma.service";
 import { scopedLogger } from "#common/logger/logger";
 import {
   type AccountMetrics,
-  SPENDABLE_TYPES,
   accountMetrics,
   lastStatementDate,
+  SPENDABLE_TYPES,
   storedBalance,
 } from "#finance/account-metrics.util";
 import { fromIsoDate, toIsoDate } from "#finance/calendar.util";

@@ -90,7 +90,12 @@ function Tile({
   label,
   value,
   strong,
-}: { icon: React.ReactNode; label: string; value: number; strong?: boolean }) {
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  strong?: boolean;
+}) {
   return (
     <Card>
       <CardContent className="flex flex-col gap-1 p-4">

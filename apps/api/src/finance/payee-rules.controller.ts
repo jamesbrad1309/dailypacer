@@ -2,8 +2,8 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestj
 import { ZodValidationPipe } from "#common/http/zod-validation.pipe";
 import {
   type CreatePayeeRuleInput,
-  type UpdatePayeeRuleInput,
   createPayeeRuleSchema,
+  type UpdatePayeeRuleInput,
   updatePayeeRuleSchema,
 } from "#finance/dto/payee-rule.dto";
 import { PayeeRulesService } from "#finance/payee-rules.service";

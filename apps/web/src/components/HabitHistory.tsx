@@ -2,7 +2,7 @@ import { useQuery } from "@apollo/client/react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { HabitHistorySkeleton } from "#components/layout/Skeletons";
-import { HABITS_QUERY, HABIT_PAGE_FETCH } from "#graphql/habits";
+import { HABIT_PAGE_FETCH, HABITS_QUERY } from "#graphql/habits";
 import type { HabitsData, HeatmapDay } from "#graphql/types";
 import { formatShortDate, formatWeekday, fromIsoDate } from "#lib/dates";
 import { cn } from "#lib/utils";

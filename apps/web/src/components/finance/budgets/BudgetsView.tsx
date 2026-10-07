@@ -304,7 +304,12 @@ function BudgetRow({
   monthProgress,
   currency,
   onEdit,
-}: { line: BudgetLine; monthProgress: number; currency: string; onEdit: () => void }) {
+}: {
+  line: BudgetLine;
+  monthProgress: number;
+  currency: string;
+  onEdit: () => void;
+}) {
   const { t } = useTranslation();
   const categoryName = useCategoryName();
   const status = PACE[line.pace];

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import type { Habit, Prisma } from "@prisma/client";
 import { PrismaService } from "#common/database/prisma.service";
 import { scopedLogger } from "#common/logger/logger";
-import { type Day, addDays, toDay } from "#habits/day.util";
+import { addDays, type Day, toDay } from "#habits/day.util";
 import type { CreateHabitInput } from "#habits/dto/create-habit.dto";
 import type { UpdateHabitInput } from "#habits/dto/update-habit.dto";
 import type { PauseRange } from "#habits/pause.util";

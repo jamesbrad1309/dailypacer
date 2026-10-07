@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SHORTCUTS, displayKeys, goToKeysFor } from "#lib/shortcuts";
+import { displayKeys, goToKeysFor, SHORTCUTS } from "#lib/shortcuts";
 
 describe("displayKeys", () => {
   it("shows ⌘-style symbols on a Mac and words elsewhere", () => {

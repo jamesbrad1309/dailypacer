@@ -2,17 +2,17 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestj
 import { ZodValidationPipe } from "#common/http/zod-validation.pipe";
 import {
   type ChallengeInput,
-  type FreezeInput,
-  type RewardInput,
-  type RoutineInput,
-  type UpdateRoutineInput,
   calendarQuerySchema,
   challengeSchema,
+  type FreezeInput,
   freezeSchema,
   progressQuerySchema,
+  type RewardInput,
+  type RoutineInput,
   rewardSchema,
   routineSchema,
   todayQuerySchema,
+  type UpdateRoutineInput,
   updateRoutineSchema,
   weeklyQuerySchema,
 } from "#habits/dto/motivation.dto";

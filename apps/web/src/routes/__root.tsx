@@ -1,7 +1,7 @@
 import {
+  createRootRouteWithContext,
   type ErrorComponentProps,
   Outlet,
-  createRootRouteWithContext,
   useRouter,
 } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";

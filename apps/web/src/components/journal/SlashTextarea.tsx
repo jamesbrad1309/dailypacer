@@ -286,10 +286,8 @@ export function SlashTextarea({
       {suggestions && (
         // Focus stays in the textarea (aria-activedescendant), per the ARIA
         // combobox pattern, so the listbox is deliberately not focusable.
-        // biome-ignore lint/a11y/useFocusableInteractive: see above
         <div
           id={menuId}
-          // biome-ignore lint/a11y/useSemanticElements: a <select> can't anchor at the caret
           role="listbox"
           aria-label={
             suggestions.items[0].type === "command"
@@ -303,7 +301,6 @@ export function SlashTextarea({
             <div
               key={item.label}
               id={`${menuId}-${i}`}
-              // biome-ignore lint/a11y/useSemanticElements: option of the custom listbox above
               role="option"
               aria-selected={i === activeIndex}
               tabIndex={-1}
@@ -346,7 +343,11 @@ function CommandRow({
   kind,
   label,
   hint,
-}: { kind: keyof typeof KIND_BY_ID; label: string; hint: string }) {
+}: {
+  kind: keyof typeof KIND_BY_ID;
+  label: string;
+  hint: string;
+}) {
   const config = KIND_BY_ID[kind];
   const Icon = config.icon;
   return (

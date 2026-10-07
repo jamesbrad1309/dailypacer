@@ -3,10 +3,10 @@ import { ZodValidationPipe } from "#common/http/zod-validation.pipe";
 import { CategoriesService } from "#finance/categories.service";
 import {
   type CreateCategoryInput,
-  type DismissPresetSuggestionInput,
-  type UpdateCategoryInput,
   createCategorySchema,
+  type DismissPresetSuggestionInput,
   dismissPresetSuggestionSchema,
+  type UpdateCategoryInput,
   updateCategorySchema,
 } from "#finance/dto/category.dto";
 

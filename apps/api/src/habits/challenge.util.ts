@@ -1,4 +1,4 @@
-import { type Day, addDays } from "#habits/day.util";
+import { addDays, type Day } from "#habits/day.util";
 import { POINTS_PER_CHECK_IN } from "#habits/gamification.util";
 
 export interface ChallengeLike {

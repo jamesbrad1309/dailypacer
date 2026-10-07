@@ -223,7 +223,12 @@ function RowLink({
   month,
   className,
   children,
-}: { c: CategorySpend; month: string; className?: string; children: ReactNode }) {
+}: {
+  c: CategorySpend;
+  month: string;
+  className?: string;
+  children: ReactNode;
+}) {
   return c.category ? (
     <Link
       to="/finance/transactions"

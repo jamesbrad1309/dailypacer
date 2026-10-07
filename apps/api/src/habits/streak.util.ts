@@ -1,5 +1,5 @@
 import type { HabitEntry } from "@prisma/client";
-import { type PauseRange, isPausedOn } from "#habits/pause.util";
+import { isPausedOn, type PauseRange } from "#habits/pause.util";
 import type { HabitSchedule } from "#habits/schedule.util";
 import { isDueOn } from "#habits/schedule.util";
 

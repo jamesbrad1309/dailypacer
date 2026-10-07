@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   type ConversionContext,
-  type RateTable,
   currencyDigits,
   perUsdOn,
+  type RateTable,
   rateToMain,
   toMainMinor,
 } from "#finance/currency-math.util";

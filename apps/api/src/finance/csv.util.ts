@@ -224,7 +224,10 @@ export function applyMapping(
     const line = i + 1;
     const dateText = record[mapping.dateColumn] ?? "";
     const date = parseCsvDate(dateText, mapping.dateFormat);
-    if (!date) return problems.push({ line, reason: "date", value: dateText });
+    if (!date) {
+      problems.push({ line, reason: "date", value: dateText });
+      return;
+    }
 
     let amountMinor: number | null;
     if (mapping.amount.mode === "single") {
@@ -242,7 +245,8 @@ export function applyMapping(
         mapping.amount.mode === "single"
           ? record[mapping.amount.column]
           : record[mapping.amount.debitColumn];
-      return problems.push({ line, reason: "amount", value: raw ?? "" });
+      problems.push({ line, reason: "amount", value: raw ?? "" });
+      return;
     }
 
     const cell = (column: number | null) =>

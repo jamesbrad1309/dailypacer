@@ -31,15 +31,15 @@ import {
 } from "#components/ui/command";
 import {
   DASHBOARD_STATS_QUERY,
-  HABITS_QUERY,
   HABIT_PROGRESS_REFETCH,
+  HABITS_QUERY,
   UPSERT_HABIT_ENTRY_MUTATION,
 } from "#graphql/habits";
 import { CREATE_TASK_MUTATION, SEARCH_TASKS_QUERY, TODO_REFETCH } from "#graphql/todos";
 import type { HabitsData, Task } from "#graphql/types";
 import { openQuickLog } from "#hooks/useQuickLog";
 import { toggleTheme, useTheme } from "#hooks/useTheme";
-import { LANGUAGES, type Language, currentLanguage, setLanguage } from "#i18n/i18n";
+import { currentLanguage, LANGUAGES, type Language, setLanguage } from "#i18n/i18n";
 import { getOverlay, requestAction, setOverlay, subscribeOverlay } from "#lib/command-palette";
 import { todayIsoDate } from "#lib/dates";
 import { isDoneToday } from "#lib/habit-today";

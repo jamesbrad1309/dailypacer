@@ -71,6 +71,7 @@ export function JournalEntryItem({ entry, onEdit, onDelete, onLogFeeling, onTagC
               {entry.intensity && (
                 <span
                   className="flex items-center gap-0.5"
+                  role="img"
                   title={intensityLabels[entry.intensity - 1]}
                   aria-label={t("journal.intensityLabel", {
                     label: intensityLabels[entry.intensity - 1],

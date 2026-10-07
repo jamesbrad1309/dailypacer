@@ -21,7 +21,7 @@ import {
   UPDATE_TODO_COLUMN_MUTATION,
 } from "#graphql/todos";
 import type { TaskStatus, TodoColumn, TodoList } from "#graphql/types";
-import { TASK_STATUSES, columnName, positionBetween } from "#lib/todos";
+import { columnName, positionBetween, TASK_STATUSES } from "#lib/todos";
 
 const SELECT = "h-9 rounded-md border border-input bg-transparent px-2 text-sm shadow-sm";
 const MAX_COLUMNS = 10;

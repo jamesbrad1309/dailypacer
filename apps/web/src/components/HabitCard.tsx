@@ -13,11 +13,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "#components/ui/card";
 import { Checkbox } from "#components/ui/checkbox";
 import { Input } from "#components/ui/input";
 import {
-  ARCHIVED_HABITS_QUERY,
   ARCHIVE_HABIT_MUTATION,
+  ARCHIVED_HABITS_QUERY,
   DASHBOARD_STATS_QUERY,
-  HABITS_QUERY,
   HABIT_PROGRESS_REFETCH,
+  HABITS_QUERY,
   PAUSE_HABIT_MUTATION,
   RESUME_HABIT_MUTATION,
   UPSERT_HABIT_ENTRY_MUTATION,

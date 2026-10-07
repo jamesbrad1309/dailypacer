@@ -5,7 +5,7 @@ import { expressMiddleware } from "@as-integrations/express5";
 import express from "express";
 import { env } from "#common/config/env";
 import { httpLogger, logger } from "#common/logger/logger";
-import { type GraphQLContext, buildContext } from "#graphql/context";
+import { buildContext, type GraphQLContext } from "#graphql/context";
 import { loggingPlugin } from "#graphql/logging.plugin";
 import { executableSchema } from "#graphql/schema";
 import { serviceLogo } from "#routes/logos";

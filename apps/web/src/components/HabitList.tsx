@@ -2,7 +2,7 @@ import { useQuery } from "@apollo/client/react";
 import { useTranslation } from "react-i18next";
 import { HabitCard } from "#components/HabitCard";
 import { HabitCardsSkeleton } from "#components/layout/Skeletons";
-import { HABITS_QUERY, HABIT_PAGE_FETCH } from "#graphql/habits";
+import { HABIT_PAGE_FETCH, HABITS_QUERY } from "#graphql/habits";
 import type { HabitsData } from "#graphql/types";
 
 interface Props {

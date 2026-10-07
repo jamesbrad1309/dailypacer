@@ -15,10 +15,10 @@ import { ListSkeleton } from "#components/layout/Skeletons";
 import { Button } from "#components/ui/button";
 import {
   DASHBOARD_STATS_QUERY,
-  HABITS_QUERY,
   HABIT_CALENDAR_QUERY,
   HABIT_PAGE_FETCH,
   HABIT_PROGRESS_REFETCH,
+  HABITS_QUERY,
   UPSERT_HABIT_ENTRY_MUTATION,
 } from "#graphql/habits";
 import type {

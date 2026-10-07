@@ -21,9 +21,9 @@ import { CREATE_HABIT_MUTATION, DASHBOARD_STATS_QUERY, HABITS_QUERY } from "#gra
 import { onAction } from "#lib/command-palette";
 import {
   BLANK_HABIT_DRAFT,
+  cleanCustomFields,
   type HabitDraft,
   type HabitDraftAction,
-  cleanCustomFields,
   habitDraftReducer,
 } from "#lib/habit-draft";
 import { HABIT_TEMPLATES, type HabitTemplate } from "#lib/habit-templates";
