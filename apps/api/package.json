@@ -3,6 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "imports": {
+    "#demo/*": {
+      "types": "./src/demo/*.ts",
+      "default": "./dist/demo/*.js"
+    },
     "#habits/*": {
       "types": "./src/habits/*.ts",
       "default": "./dist/habits/*.js"
@@ -36,7 +40,9 @@
     "test": "vitest run",
     "migrate:dev": "dotenv -e ../../.env -- prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
-    "prisma:studio": "dotenv -e ../../.env -- prisma studio"
+    "prisma:studio": "dotenv -e ../../.env -- prisma studio",
+    "demo:export": "pnpm run build && dotenv -e ../../.env -- node dist/demo/export-demo.js",
+    "demo:import": "pnpm run build && LOG_LEVEL=warn dotenv -e ../../.env -- node dist/demo/import-demo.js"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.0",

@@ -1,0 +1,3565 @@
+{
+  "version": 1,
+  "exportedOn": "2026-10-07",
+  "categories": [],
+  "accounts": [
+    {
+      "ref": "test-current",
+      "name": "Test current",
+      "type": "CURRENT",
+      "currency": "GBP",
+      "institution": null,
+      "last4": null,
+      "icon": null,
+      "color": null,
+      "currentBalanceMinor": 320000,
+      "openedDay": -62,
+      "archived": false
+    },
+    {
+      "ref": "test-savings",
+      "name": "Test savings",
+      "type": "SAVINGS",
+      "currency": "GBP",
+      "institution": null,
+      "last4": null,
+      "icon": null,
+      "color": null,
+      "currentBalanceMinor": 450000,
+      "openedDay": -62,
+      "archived": false
+    },
+    {
+      "ref": "amex",
+      "name": "Amex Gold",
+      "type": "CREDIT_CARD",
+      "currency": "GBP",
+      "institution": "American Express",
+      "last4": "1005",
+      "currentBalanceMinor": 0,
+      "openedDay": -62,
+      "creditLimitMinor": 300000,
+      "statementDay": 20,
+      "paymentDueDay": 5,
+      "minPaymentMinor": 2500,
+      "aprBps": 2990,
+      "archived": false
+    },
+    {
+      "ref": "wallet",
+      "name": "Wallet",
+      "type": "CASH",
+      "currency": "GBP",
+      "currentBalanceMinor": 6000,
+      "openedDay": -62,
+      "archived": false
+    },
+    {
+      "ref": "sam",
+      "name": "Sam",
+      "type": "IOU",
+      "currency": "GBP",
+      "currentBalanceMinor": 1500,
+      "openedDay": -62,
+      "owedByMe": false,
+      "archived": false
+    }
+  ],
+  "budgets": [
+    {
+      "category": "coffee",
+      "month": -1,
+      "amountMinor": 10000,
+      "rollover": false
+    },
+    {
+      "category": "groceries",
+      "month": -2,
+      "amountMinor": 30000,
+      "rollover": false
+    },
+    {
+      "category": "eating-out",
+      "month": -2,
+      "amountMinor": 12000,
+      "rollover": false
+    },
+    {
+      "category": "coffee",
+      "month": -2,
+      "amountMinor": 4000,
+      "rollover": false
+    },
+    {
+      "category": "shopping",
+      "month": -2,
+      "amountMinor": 15000,
+      "rollover": false
+    },
+    {
+      "category": "drinks",
+      "month": -2,
+      "amountMinor": 8000,
+      "rollover": false
+    },
+    {
+      "category": "entertainment",
+      "month": -2,
+      "amountMinor": 4000,
+      "rollover": false
+    },
+    {
+      "category": "transport",
+      "month": -2,
+      "amountMinor": 6000,
+      "rollover": false
+    }
+  ],
+  "transactions": [
+    {
+      "account": "test-current",
+      "day": -22,
+      "amountMinor": -4800,
+      "category": "coffee",
+      "payee": null,
+      "note": null,
+      "tags": [],
+      "source": "form",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -6,
+      "amountMinor": -500,
+      "category": null,
+      "payee": null,
+      "note": null,
+      "tags": [],
+      "source": "form",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -1,
+      "amountMinor": -90000,
+      "category": "groceries",
+      "payee": null,
+      "note": null,
+      "tags": [],
+      "source": "form",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -1,
+      "amountMinor": -340,
+      "category": "coffee",
+      "payee": null,
+      "note": null,
+      "tags": [],
+      "source": "form",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": 0,
+      "amountMinor": -100,
+      "category": "coffee",
+      "payee": null,
+      "note": null,
+      "tags": [],
+      "source": "form",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -43,
+      "amountMinor": 285000,
+      "category": "salary",
+      "payee": "Acme Ltd",
+      "note": null,
+      "tags": [],
+      "source": "import",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -12,
+      "amountMinor": 285000,
+      "category": "salary",
+      "payee": "Acme Ltd",
+      "note": null,
+      "tags": [],
+      "source": "import",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -36,
+      "amountMinor": -115000,
+      "category": "bills",
+      "payee": "Landlord",
+      "note": "Rent",
+      "tags": [],
+      "source": "import",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -6,
+      "amountMinor": -115000,
+      "category": "bills",
+      "payee": "Landlord",
+      "note": "Rent",
+      "tags": [],
+      "source": "import",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -27,
+      "amountMinor": -6800,
+      "category": "bills",
+      "payee": "Octopus Energy",
+      "note": null,
+      "tags": [],
+      "source": "import",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -53,
+      "amountMinor": -1500,
+      "category": "bills",
+      "payee": "Giffgaff",
+      "note": null,
+      "tags": [],
+      "source": "import",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -22,
+      "amountMinor": -1500,
+      "category": "bills",
+      "payee": "Giffgaff",
+      "note": null,
+      "tags": [],
+      "source": "import",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -35,
+      "amountMinor": -3500,
+      "category": "health",
+      "payee": "PureGym",
+      "note": null,
+      "tags": ["gym"],
+      "source": "import",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -5,
+      "amountMinor": -3500,
+      "category": "health",
+      "payee": "PureGym",
+      "note": null,
+      "tags": ["gym"],
+      "source": "import",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -34,
+      "amountMinor": -1099,
+      "category": "subscriptions",
+      "payee": "Netflix",
+      "note": null,
+      "tags": [],
+      "source": "import",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -4,
+      "amountMinor": -1099,
+      "category": "subscriptions",
+      "payee": "Netflix",
+      "note": null,
+      "tags": [],
+      "source": "import",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -56,
+      "amountMinor": -1199,
+      "category": "subscriptions",
+      "payee": "Spotify",
+      "note": null,
+      "tags": [],
+      "source": "import",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -25,
+      "amountMinor": -1199,
+      "category": "subscriptions",
+      "payee": "Spotify",
+      "note": null,
+      "tags": [],
+      "source": "import",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -56,
+      "amountMinor": -375,
+      "category": "coffee",
+      "payee": "Gail's",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -56,
+      "amountMinor": -6115,
+      "category": "groceries",
+      "payee": "Lidl",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -54,
+      "amountMinor": -295,
+      "category": "coffee",
+      "payee": "Pret A Manger",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -54,
+      "amountMinor": -780,
+      "category": "transport",
+      "payee": "TfL",
+      "note": null,
+      "tags": ["commute"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -53,
+      "amountMinor": -2810,
+      "category": "eating-out",
+      "payee": "Dishoom",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -50,
+      "amountMinor": -335,
+      "category": "coffee",
+      "payee": "Monmouth Coffee",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -50,
+      "amountMinor": -385,
+      "category": "transport",
+      "payee": "TfL",
+      "note": null,
+      "tags": ["commute"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -49,
+      "amountMinor": -305,
+      "category": "coffee",
+      "payee": "Pret A Manger",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -48,
+      "amountMinor": -350,
+      "category": "coffee",
+      "payee": "Pret A Manger",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -48,
+      "amountMinor": -410,
+      "category": "transport",
+      "payee": "TfL",
+      "note": null,
+      "tags": ["commute"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -48,
+      "amountMinor": -4180,
+      "category": "groceries",
+      "payee": "Tesco",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -48,
+      "amountMinor": -4265,
+      "category": "eating-out",
+      "payee": "Wagamama",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -47,
+      "amountMinor": -350,
+      "category": "coffee",
+      "payee": "Pret A Manger",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -47,
+      "amountMinor": -330,
+      "category": "transport",
+      "payee": "TfL",
+      "note": null,
+      "tags": ["commute"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -47,
+      "amountMinor": -2255,
+      "category": "drinks",
+      "payee": "Brewdog",
+      "note": null,
+      "tags": ["friends"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -46,
+      "amountMinor": -4175,
+      "category": "eating-out",
+      "payee": "Wagamama",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -46,
+      "amountMinor": -8845,
+      "category": "shopping",
+      "payee": "Uniqlo",
+      "note": null,
+      "tags": [],
+      "source": "form",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -44,
+      "amountMinor": -300,
+      "category": "coffee",
+      "payee": "Pret A Manger",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -44,
+      "amountMinor": -590,
+      "category": "transport",
+      "payee": "TfL",
+      "note": null,
+      "tags": ["commute"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -44,
+      "amountMinor": -5270,
+      "category": "groceries",
+      "payee": "Sainsbury's",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -44,
+      "amountMinor": -3015,
+      "category": "shopping",
+      "payee": "Boots",
+      "note": null,
+      "tags": [],
+      "source": "form",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -43,
+      "amountMinor": -305,
+      "category": "coffee",
+      "payee": "Gail's",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -43,
+      "amountMinor": -435,
+      "category": "transport",
+      "payee": "TfL",
+      "note": null,
+      "tags": ["commute"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -42,
+      "amountMinor": -2910,
+      "category": "groceries",
+      "payee": "Lidl",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -41,
+      "amountMinor": -315,
+      "category": "coffee",
+      "payee": "Pret A Manger",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -41,
+      "amountMinor": -610,
+      "category": "transport",
+      "payee": "TfL",
+      "note": null,
+      "tags": ["commute"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -40,
+      "amountMinor": -300,
+      "category": "coffee",
+      "payee": "Pret A Manger",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -40,
+      "amountMinor": -470,
+      "category": "transport",
+      "payee": "TfL",
+      "note": null,
+      "tags": ["commute"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -40,
+      "amountMinor": -5885,
+      "category": "groceries",
+      "payee": "Waitrose",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -40,
+      "amountMinor": -2995,
+      "category": "drinks",
+      "payee": "Pub",
+      "note": null,
+      "tags": ["friends"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -39,
+      "amountMinor": -2660,
+      "category": "drinks",
+      "payee": "The Crown",
+      "note": null,
+      "tags": ["friends"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -37,
+      "amountMinor": -295,
+      "category": "coffee",
+      "payee": "Gail's",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -37,
+      "amountMinor": -545,
+      "category": "transport",
+      "payee": "TfL",
+      "note": null,
+      "tags": ["commute"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -37,
+      "amountMinor": -4205,
+      "category": "groceries",
+      "payee": "Tesco",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -36,
+      "amountMinor": -385,
+      "category": "coffee",
+      "payee": "Gail's",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -36,
+      "amountMinor": -4525,
+      "category": "groceries",
+      "payee": "Sainsbury's",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -34,
+      "amountMinor": -630,
+      "category": "transport",
+      "payee": "TfL",
+      "note": null,
+      "tags": ["commute"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -33,
+      "amountMinor": -380,
+      "category": "coffee",
+      "payee": "Monmouth Coffee",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -32,
+      "amountMinor": -4920,
+      "category": "groceries",
+      "payee": "Sainsbury's",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -29,
+      "amountMinor": -465,
+      "category": "transport",
+      "payee": "TfL",
+      "note": null,
+      "tags": ["commute"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -28,
+      "amountMinor": -380,
+      "category": "coffee",
+      "payee": "Pret A Manger",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -28,
+      "amountMinor": -725,
+      "category": "transport",
+      "payee": "TfL",
+      "note": null,
+      "tags": ["commute"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -28,
+      "amountMinor": -1970,
+      "category": "groceries",
+      "payee": "Lidl",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -27,
+      "amountMinor": -335,
+      "category": "coffee",
+      "payee": "Monmouth Coffee",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -27,
+      "amountMinor": -4550,
+      "category": "eating-out",
+      "payee": "Wagamama",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -26,
+      "amountMinor": -325,
+      "category": "coffee",
+      "payee": "Blank Street",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -25,
+      "amountMinor": -3400,
+      "category": "drinks",
+      "payee": "Brewdog",
+      "note": null,
+      "tags": ["friends"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -25,
+      "amountMinor": -4020,
+      "category": "eating-out",
+      "payee": "Dishoom",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -23,
+      "amountMinor": -490,
+      "category": "transport",
+      "payee": "TfL",
+      "note": null,
+      "tags": ["commute"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -22,
+      "amountMinor": -375,
+      "category": "coffee",
+      "payee": "Gail's",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -21,
+      "amountMinor": -310,
+      "category": "transport",
+      "payee": "TfL",
+      "note": null,
+      "tags": ["commute"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -20,
+      "amountMinor": -2495,
+      "category": "groceries",
+      "payee": "Sainsbury's",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -19,
+      "amountMinor": -465,
+      "category": "transport",
+      "payee": "TfL",
+      "note": null,
+      "tags": ["commute"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -18,
+      "amountMinor": -2490,
+      "category": "drinks",
+      "payee": "Pub",
+      "note": null,
+      "tags": ["friends"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -16,
+      "amountMinor": -340,
+      "category": "coffee",
+      "payee": "Gail's",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -16,
+      "amountMinor": -540,
+      "category": "transport",
+      "payee": "TfL",
+      "note": null,
+      "tags": ["commute"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -16,
+      "amountMinor": -4740,
+      "category": "groceries",
+      "payee": "Sainsbury's",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -15,
+      "amountMinor": -335,
+      "category": "coffee",
+      "payee": "Blank Street",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -15,
+      "amountMinor": -505,
+      "category": "transport",
+      "payee": "TfL",
+      "note": null,
+      "tags": ["commute"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -13,
+      "amountMinor": -320,
+      "category": "coffee",
+      "payee": "Blank Street",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -13,
+      "amountMinor": -4735,
+      "category": "shopping",
+      "payee": "Boots",
+      "note": null,
+      "tags": [],
+      "source": "form",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -12,
+      "amountMinor": -3080,
+      "category": "groceries",
+      "payee": "Sainsbury's",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -8,
+      "amountMinor": -725,
+      "category": "transport",
+      "payee": "TfL",
+      "note": null,
+      "tags": ["commute"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -8,
+      "amountMinor": -4265,
+      "category": "groceries",
+      "payee": "Waitrose",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -7,
+      "amountMinor": -385,
+      "category": "coffee",
+      "payee": "Gail's",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -6,
+      "amountMinor": -335,
+      "category": "coffee",
+      "payee": "Monmouth Coffee",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -5,
+      "amountMinor": -320,
+      "category": "transport",
+      "payee": "TfL",
+      "note": null,
+      "tags": ["commute"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -4,
+      "amountMinor": -2905,
+      "category": "groceries",
+      "payee": "Sainsbury's",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -4,
+      "amountMinor": -1420,
+      "category": "drinks",
+      "payee": "The Crown",
+      "note": null,
+      "tags": ["friends"],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -4,
+      "amountMinor": -2425,
+      "category": "eating-out",
+      "payee": "Dishoom",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -2,
+      "amountMinor": -340,
+      "category": "coffee",
+      "payee": "Blank Street",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -2,
+      "amountMinor": -6755,
+      "category": "groceries",
+      "payee": "Sainsbury's",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -1,
+      "amountMinor": -315,
+      "category": "coffee",
+      "payee": "Pret A Manger",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -1,
+      "amountMinor": -6090,
+      "category": "groceries",
+      "payee": "Sainsbury's",
+      "note": null,
+      "tags": [],
+      "source": "quick",
+      "status": "CLEARED"
+    },
+    {
+      "account": "amex",
+      "day": -20,
+      "amountMinor": -2400,
+      "category": "entertainment",
+      "payee": "Everyman Cinema",
+      "note": null,
+      "tags": ["date-night"],
+      "source": "form",
+      "status": "CLEARED"
+    },
+    {
+      "account": "test-current",
+      "day": -9,
+      "amountMinor": -6240,
+      "category": null,
+      "payee": "Tesco Extra",
+      "note": "Big shop",
+      "tags": [],
+      "source": "form",
+      "status": "CLEARED",
+      "splits": [
+        {
+          "category": "groceries",
+          "amountMinor": -4800,
+          "note": null
+        },
+        {
+          "category": "home",
+          "amountMinor": -1440,
+          "note": "Cleaning stuff"
+        }
+      ]
+    },
+    {
+      "account": "amex",
+      "day": -27,
+      "amountMinor": -4200,
+      "category": "gifts",
+      "payee": "Etsy",
+      "note": "Mum's birthday",
+      "tags": [],
+      "source": "form",
+      "status": "CLEARED"
+    }
+  ],
+  "transfers": [
+    {
+      "from": "test-current",
+      "to": "test-savings",
+      "day": -1,
+      "amountMinor": 1000,
+      "note": null
+    },
+    {
+      "from": "test-current",
+      "to": "test-savings",
+      "day": -1,
+      "amountMinor": 500,
+      "note": null
+    },
+    {
+      "from": "test-current",
+      "to": "test-savings",
+      "day": -1,
+      "amountMinor": 500,
+      "note": null
+    },
+    {
+      "from": "test-current",
+      "to": "amex",
+      "day": -32,
+      "amountMinor": 24400,
+      "note": "Card payment"
+    },
+    {
+      "from": "test-current",
+      "to": "amex",
+      "day": -2,
+      "amountMinor": 23400,
+      "note": "Card payment"
+    },
+    {
+      "from": "test-current",
+      "to": "test-savings",
+      "day": -23,
+      "amountMinor": 2000,
+      "note": "Car fund"
+    },
+    {
+      "from": "test-current",
+      "to": "test-savings",
+      "day": -22,
+      "amountMinor": 2000,
+      "note": "Car fund"
+    },
+    {
+      "from": "test-current",
+      "to": "test-savings",
+      "day": -21,
+      "amountMinor": 2000,
+      "note": "Car fund"
+    },
+    {
+      "from": "test-current",
+      "to": "test-savings",
+      "day": -19,
+      "amountMinor": 2000,
+      "note": "Car fund"
+    },
+    {
+      "from": "test-current",
+      "to": "test-savings",
+      "day": -18,
+      "amountMinor": 2000,
+      "note": "Car fund"
+    },
+    {
+      "from": "test-current",
+      "to": "test-savings",
+      "day": -17,
+      "amountMinor": 2000,
+      "note": "Car fund"
+    },
+    {
+      "from": "test-current",
+      "to": "test-savings",
+      "day": -16,
+      "amountMinor": 2000,
+      "note": "Car fund"
+    },
+    {
+      "from": "test-current",
+      "to": "test-savings",
+      "day": -14,
+      "amountMinor": 2000,
+      "note": "Car fund"
+    },
+    {
+      "from": "test-current",
+      "to": "test-savings",
+      "day": -13,
+      "amountMinor": 2000,
+      "note": "Car fund"
+    },
+    {
+      "from": "test-current",
+      "to": "test-savings",
+      "day": -12,
+      "amountMinor": 2000,
+      "note": "Car fund"
+    },
+    {
+      "from": "test-current",
+      "to": "test-savings",
+      "day": -10,
+      "amountMinor": 2000,
+      "note": "Car fund"
+    },
+    {
+      "from": "test-current",
+      "to": "test-savings",
+      "day": -9,
+      "amountMinor": 2000,
+      "note": "Car fund"
+    },
+    {
+      "from": "test-current",
+      "to": "test-savings",
+      "day": -7,
+      "amountMinor": 2000,
+      "note": "Car fund"
+    },
+    {
+      "from": "test-current",
+      "to": "test-savings",
+      "day": -6,
+      "amountMinor": 2000,
+      "note": "Car fund"
+    },
+    {
+      "from": "test-current",
+      "to": "test-savings",
+      "day": -4,
+      "amountMinor": 2000,
+      "note": "Car fund"
+    },
+    {
+      "from": "test-current",
+      "to": "test-savings",
+      "day": -3,
+      "amountMinor": 2000,
+      "note": "Car fund"
+    },
+    {
+      "from": "test-current",
+      "to": "test-savings",
+      "day": -2,
+      "amountMinor": 2000,
+      "note": "Car fund"
+    },
+    {
+      "from": "test-current",
+      "to": "test-savings",
+      "day": -42,
+      "amountMinor": 20000,
+      "note": "Monthly saving"
+    },
+    {
+      "from": "test-current",
+      "to": "test-savings",
+      "day": -11,
+      "amountMinor": 20000,
+      "note": "Monthly saving"
+    },
+    {
+      "from": "test-current",
+      "to": "wallet",
+      "day": -15,
+      "amountMinor": 4000,
+      "note": "Cash machine"
+    }
+  ],
+  "habits": [
+    {
+      "name": "No-spend day",
+      "createdDay": -42,
+      "description": null,
+      "tags": [],
+      "icon": null,
+      "unit": null,
+      "targetValue": null,
+      "startTime": null,
+      "schedule": {
+        "type": "daily"
+      },
+      "polarity": "avoid",
+      "endDay": null,
+      "customFields": [],
+      "finance": "NO_SPEND",
+      "categories": [],
+      "pausedDay": null,
+      "archived": false,
+      "entries": []
+    },
+    {
+      "name": "Log spending",
+      "createdDay": -42,
+      "description": null,
+      "tags": [],
+      "icon": null,
+      "unit": null,
+      "targetValue": null,
+      "startTime": "21:00",
+      "schedule": {
+        "type": "daily"
+      },
+      "polarity": "build",
+      "endDay": null,
+      "customFields": [],
+      "finance": "LOGGED_TODAY",
+      "categories": [],
+      "pausedDay": null,
+      "archived": false,
+      "entries": []
+    },
+    {
+      "name": "No-spend v2",
+      "createdDay": -42,
+      "description": null,
+      "tags": [],
+      "icon": null,
+      "unit": null,
+      "targetValue": null,
+      "startTime": null,
+      "schedule": {
+        "type": "daily"
+      },
+      "polarity": "avoid",
+      "endDay": null,
+      "customFields": [],
+      "finance": "NO_SPEND",
+      "categories": [],
+      "pausedDay": null,
+      "archived": false,
+      "entries": []
+    },
+    {
+      "name": "No-spend (coffee only)",
+      "createdDay": -42,
+      "description": null,
+      "tags": [],
+      "icon": null,
+      "unit": null,
+      "targetValue": null,
+      "startTime": null,
+      "schedule": {
+        "type": "daily"
+      },
+      "polarity": "avoid",
+      "endDay": null,
+      "customFields": [],
+      "finance": "NO_SPEND",
+      "categories": ["groceries"],
+      "pausedDay": null,
+      "archived": false,
+      "entries": []
+    },
+    {
+      "name": "Gym-ish coffee",
+      "createdDay": -42,
+      "description": null,
+      "tags": [],
+      "icon": null,
+      "unit": null,
+      "targetValue": null,
+      "startTime": null,
+      "schedule": {
+        "type": "daily"
+      },
+      "polarity": "build",
+      "endDay": null,
+      "customFields": [],
+      "finance": null,
+      "categories": ["coffee"],
+      "pausedDay": null,
+      "archived": false,
+      "entries": []
+    },
+    {
+      "name": "Read",
+      "createdDay": -42,
+      "description": "A few pages before bed instead of the phone.",
+      "tags": ["mind"],
+      "icon": "📖",
+      "unit": "pages",
+      "targetValue": 20,
+      "startTime": "21:30",
+      "schedule": {
+        "type": "daily"
+      },
+      "polarity": "build",
+      "endDay": null,
+      "customFields": [],
+      "finance": null,
+      "categories": [],
+      "pausedDay": null,
+      "archived": false,
+      "entries": [
+        {
+          "day": -42,
+          "completed": true,
+          "value": 33,
+          "note": null
+        },
+        {
+          "day": -41,
+          "completed": false,
+          "value": 18,
+          "note": null
+        },
+        {
+          "day": -40,
+          "completed": false,
+          "value": 16,
+          "note": null
+        },
+        {
+          "day": -39,
+          "completed": true,
+          "value": 26,
+          "note": null
+        },
+        {
+          "day": -38,
+          "completed": true,
+          "value": 22,
+          "note": null
+        },
+        {
+          "day": -34,
+          "completed": true,
+          "value": 25,
+          "note": null
+        },
+        {
+          "day": -33,
+          "completed": true,
+          "value": 30,
+          "note": null
+        },
+        {
+          "day": -31,
+          "completed": true,
+          "value": 21,
+          "note": null
+        },
+        {
+          "day": -30,
+          "completed": true,
+          "value": 25,
+          "note": null
+        },
+        {
+          "day": -29,
+          "completed": true,
+          "value": 24,
+          "note": null
+        },
+        {
+          "day": -28,
+          "completed": true,
+          "value": 35,
+          "note": null
+        },
+        {
+          "day": -27,
+          "completed": true,
+          "value": 27,
+          "note": null
+        },
+        {
+          "day": -25,
+          "completed": true,
+          "value": 34,
+          "note": null
+        },
+        {
+          "day": -24,
+          "completed": true,
+          "value": 22,
+          "note": null
+        },
+        {
+          "day": -23,
+          "completed": true,
+          "value": 27,
+          "note": null
+        },
+        {
+          "day": -22,
+          "completed": true,
+          "value": 27,
+          "note": null
+        },
+        {
+          "day": -21,
+          "completed": false,
+          "value": 16,
+          "note": null
+        },
+        {
+          "day": -17,
+          "completed": true,
+          "value": 34,
+          "note": null
+        },
+        {
+          "day": -16,
+          "completed": true,
+          "value": 33,
+          "note": null
+        },
+        {
+          "day": -14,
+          "completed": true,
+          "value": 27,
+          "note": null
+        },
+        {
+          "day": -13,
+          "completed": false,
+          "value": 12,
+          "note": null
+        },
+        {
+          "day": -12,
+          "completed": false,
+          "value": 14,
+          "note": null
+        },
+        {
+          "day": -11,
+          "completed": false,
+          "value": 17,
+          "note": null
+        },
+        {
+          "day": -10,
+          "completed": true,
+          "value": 23,
+          "note": null
+        },
+        {
+          "day": -9,
+          "completed": false,
+          "value": 12,
+          "note": null
+        },
+        {
+          "day": -8,
+          "completed": true,
+          "value": 25,
+          "note": null
+        },
+        {
+          "day": -7,
+          "completed": false,
+          "value": 17,
+          "note": null
+        },
+        {
+          "day": -6,
+          "completed": true,
+          "value": 27,
+          "note": null
+        },
+        {
+          "day": -5,
+          "completed": false,
+          "value": 14,
+          "note": null
+        },
+        {
+          "day": -4,
+          "completed": true,
+          "value": 29,
+          "note": null
+        },
+        {
+          "day": -3,
+          "completed": false,
+          "value": 16,
+          "note": null
+        },
+        {
+          "day": -2,
+          "completed": true,
+          "value": 28,
+          "note": null
+        },
+        {
+          "day": -1,
+          "completed": true,
+          "value": 35,
+          "note": null
+        }
+      ]
+    },
+    {
+      "name": "Meditate",
+      "createdDay": -42,
+      "description": null,
+      "tags": ["mind"],
+      "icon": "🧘",
+      "unit": "minutes",
+      "targetValue": 10,
+      "startTime": "07:30",
+      "schedule": {
+        "type": "daily"
+      },
+      "polarity": "build",
+      "endDay": null,
+      "customFields": [],
+      "finance": null,
+      "categories": [],
+      "pausedDay": null,
+      "archived": false,
+      "entries": [
+        {
+          "day": -42,
+          "completed": true,
+          "value": 10,
+          "note": null
+        },
+        {
+          "day": -40,
+          "completed": true,
+          "value": 12,
+          "note": null
+        },
+        {
+          "day": -39,
+          "completed": true,
+          "value": 15,
+          "note": null
+        },
+        {
+          "day": -38,
+          "completed": true,
+          "value": 10,
+          "note": null
+        },
+        {
+          "day": -37,
+          "completed": true,
+          "value": 10,
+          "note": null
+        },
+        {
+          "day": -36,
+          "completed": true,
+          "value": 10,
+          "note": null
+        },
+        {
+          "day": -34,
+          "completed": true,
+          "value": 10,
+          "note": null
+        },
+        {
+          "day": -31,
+          "completed": true,
+          "value": 10,
+          "note": null
+        },
+        {
+          "day": -30,
+          "completed": true,
+          "value": 15,
+          "note": null
+        },
+        {
+          "day": -29,
+          "completed": true,
+          "value": 12,
+          "note": null
+        },
+        {
+          "day": -28,
+          "completed": true,
+          "value": 12,
+          "note": null
+        },
+        {
+          "day": -27,
+          "completed": true,
+          "value": 12,
+          "note": null
+        },
+        {
+          "day": -26,
+          "completed": true,
+          "value": 15,
+          "note": null
+        },
+        {
+          "day": -25,
+          "completed": true,
+          "value": 15,
+          "note": null
+        },
+        {
+          "day": -23,
+          "completed": true,
+          "value": 10,
+          "note": null
+        },
+        {
+          "day": -22,
+          "completed": true,
+          "value": 12,
+          "note": null
+        },
+        {
+          "day": -21,
+          "completed": true,
+          "value": 10,
+          "note": null
+        },
+        {
+          "day": -17,
+          "completed": true,
+          "value": 12,
+          "note": null
+        },
+        {
+          "day": -16,
+          "completed": true,
+          "value": 10,
+          "note": null
+        },
+        {
+          "day": -15,
+          "completed": true,
+          "value": 10,
+          "note": null
+        },
+        {
+          "day": -14,
+          "completed": true,
+          "value": 15,
+          "note": null
+        },
+        {
+          "day": -13,
+          "completed": true,
+          "value": 10,
+          "note": null
+        },
+        {
+          "day": -12,
+          "completed": true,
+          "value": 10,
+          "note": null
+        },
+        {
+          "day": -10,
+          "completed": true,
+          "value": 10,
+          "note": null
+        },
+        {
+          "day": -9,
+          "completed": true,
+          "value": 10,
+          "note": null
+        },
+        {
+          "day": -8,
+          "completed": true,
+          "value": 10,
+          "note": null
+        },
+        {
+          "day": -7,
+          "completed": true,
+          "value": 10,
+          "note": null
+        },
+        {
+          "day": -5,
+          "completed": true,
+          "value": 15,
+          "note": null
+        },
+        {
+          "day": -4,
+          "completed": true,
+          "value": 10,
+          "note": null
+        },
+        {
+          "day": -3,
+          "completed": true,
+          "value": 15,
+          "note": null
+        },
+        {
+          "day": -2,
+          "completed": true,
+          "value": 10,
+          "note": null
+        },
+        {
+          "day": -1,
+          "completed": true,
+          "value": 15,
+          "note": null
+        },
+        {
+          "day": 0,
+          "completed": true,
+          "value": 10,
+          "note": null
+        }
+      ]
+    },
+    {
+      "name": "Drink water",
+      "createdDay": -42,
+      "description": null,
+      "tags": ["health"],
+      "icon": "💧",
+      "unit": "glasses",
+      "targetValue": 8,
+      "startTime": null,
+      "schedule": {
+        "type": "daily"
+      },
+      "polarity": "build",
+      "endDay": null,
+      "customFields": [],
+      "finance": null,
+      "categories": [],
+      "pausedDay": null,
+      "archived": false,
+      "entries": [
+        {
+          "day": -42,
+          "completed": false,
+          "value": 5,
+          "note": null
+        },
+        {
+          "day": -41,
+          "completed": true,
+          "value": 8,
+          "note": null
+        },
+        {
+          "day": -40,
+          "completed": false,
+          "value": 7,
+          "note": null
+        },
+        {
+          "day": -39,
+          "completed": false,
+          "value": 5,
+          "note": null
+        },
+        {
+          "day": -38,
+          "completed": false,
+          "value": 5,
+          "note": null
+        },
+        {
+          "day": -36,
+          "completed": true,
+          "value": 8,
+          "note": null
+        },
+        {
+          "day": -35,
+          "completed": false,
+          "value": 7,
+          "note": null
+        },
+        {
+          "day": -34,
+          "completed": false,
+          "value": 5,
+          "note": null
+        },
+        {
+          "day": -33,
+          "completed": false,
+          "value": 5,
+          "note": null
+        },
+        {
+          "day": -32,
+          "completed": true,
+          "value": 8,
+          "note": null
+        },
+        {
+          "day": -31,
+          "completed": false,
+          "value": 6,
+          "note": null
+        },
+        {
+          "day": -30,
+          "completed": false,
+          "value": 5,
+          "note": null
+        },
+        {
+          "day": -29,
+          "completed": true,
+          "value": 8,
+          "note": null
+        },
+        {
+          "day": -28,
+          "completed": true,
+          "value": 8,
+          "note": null
+        },
+        {
+          "day": -27,
+          "completed": false,
+          "value": 7,
+          "note": null
+        },
+        {
+          "day": -26,
+          "completed": false,
+          "value": 7,
+          "note": null
+        },
+        {
+          "day": -25,
+          "completed": false,
+          "value": 6,
+          "note": null
+        },
+        {
+          "day": -24,
+          "completed": true,
+          "value": 8,
+          "note": null
+        },
+        {
+          "day": -23,
+          "completed": true,
+          "value": 9,
+          "note": null
+        },
+        {
+          "day": -22,
+          "completed": true,
+          "value": 8,
+          "note": null
+        },
+        {
+          "day": -21,
+          "completed": false,
+          "value": 7,
+          "note": null
+        },
+        {
+          "day": -20,
+          "completed": false,
+          "value": 7,
+          "note": null
+        },
+        {
+          "day": -19,
+          "completed": false,
+          "value": 7,
+          "note": null
+        },
+        {
+          "day": -18,
+          "completed": true,
+          "value": 8,
+          "note": null
+        },
+        {
+          "day": -17,
+          "completed": false,
+          "value": 5,
+          "note": null
+        },
+        {
+          "day": -16,
+          "completed": false,
+          "value": 6,
+          "note": null
+        },
+        {
+          "day": -15,
+          "completed": true,
+          "value": 8,
+          "note": null
+        },
+        {
+          "day": -14,
+          "completed": false,
+          "value": 7,
+          "note": null
+        },
+        {
+          "day": -13,
+          "completed": false,
+          "value": 5,
+          "note": null
+        },
+        {
+          "day": -12,
+          "completed": false,
+          "value": 5,
+          "note": null
+        },
+        {
+          "day": -11,
+          "completed": true,
+          "value": 8,
+          "note": null
+        },
+        {
+          "day": -10,
+          "completed": false,
+          "value": 7,
+          "note": null
+        },
+        {
+          "day": -9,
+          "completed": false,
+          "value": 6,
+          "note": null
+        },
+        {
+          "day": -8,
+          "completed": false,
+          "value": 5,
+          "note": null
+        },
+        {
+          "day": -7,
+          "completed": true,
+          "value": 8,
+          "note": null
+        },
+        {
+          "day": -6,
+          "completed": true,
+          "value": 9,
+          "note": null
+        },
+        {
+          "day": -5,
+          "completed": false,
+          "value": 7,
+          "note": null
+        },
+        {
+          "day": -4,
+          "completed": false,
+          "value": 5,
+          "note": null
+        },
+        {
+          "day": -3,
+          "completed": true,
+          "value": 9,
+          "note": null
+        },
+        {
+          "day": -2,
+          "completed": false,
+          "value": 7,
+          "note": null
+        },
+        {
+          "day": -1,
+          "completed": false,
+          "value": 7,
+          "note": null
+        }
+      ]
+    },
+    {
+      "name": "Morning run",
+      "createdDay": -42,
+      "description": null,
+      "tags": ["health", "morning"],
+      "icon": "🏃",
+      "unit": null,
+      "targetValue": null,
+      "startTime": "07:00",
+      "schedule": {
+        "type": "timesPerWeek",
+        "count": 3
+      },
+      "polarity": "build",
+      "endDay": null,
+      "customFields": [],
+      "finance": null,
+      "categories": [],
+      "pausedDay": null,
+      "archived": false,
+      "entries": [
+        {
+          "day": -42,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -39,
+          "completed": true,
+          "value": null,
+          "note": "5k"
+        },
+        {
+          "day": -35,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -32,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -30,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -28,
+          "completed": true,
+          "value": null,
+          "note": "5k"
+        },
+        {
+          "day": -25,
+          "completed": true,
+          "value": null,
+          "note": "5k"
+        },
+        {
+          "day": -23,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -21,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -18,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -16,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -14,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -11,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -9,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -7,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -2,
+          "completed": true,
+          "value": null,
+          "note": null
+        }
+      ]
+    },
+    {
+      "name": "Gym",
+      "createdDay": -42,
+      "description": "Membership's paid for: make it count.",
+      "tags": ["health"],
+      "icon": "🏋️",
+      "unit": null,
+      "targetValue": null,
+      "startTime": null,
+      "schedule": {
+        "type": "timesPerWeek",
+        "count": 2
+      },
+      "polarity": "build",
+      "endDay": null,
+      "customFields": [],
+      "finance": null,
+      "categories": ["health"],
+      "pausedDay": null,
+      "archived": false,
+      "entries": [
+        {
+          "day": -36,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -29,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -27,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -20,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -13,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -8,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -1,
+          "completed": true,
+          "value": null,
+          "note": null
+        }
+      ]
+    },
+    {
+      "name": "No sugar",
+      "createdDay": -42,
+      "description": null,
+      "tags": ["health"],
+      "icon": "🍬",
+      "unit": null,
+      "targetValue": null,
+      "startTime": null,
+      "schedule": {
+        "type": "daily"
+      },
+      "polarity": "avoid",
+      "endDay": null,
+      "customFields": [],
+      "finance": null,
+      "categories": [],
+      "pausedDay": null,
+      "archived": false,
+      "entries": [
+        {
+          "day": -42,
+          "completed": false,
+          "value": 1,
+          "note": "Office cake"
+        },
+        {
+          "day": -41,
+          "completed": false,
+          "value": 1,
+          "note": null
+        },
+        {
+          "day": -37,
+          "completed": false,
+          "value": 1,
+          "note": null
+        },
+        {
+          "day": -32,
+          "completed": false,
+          "value": 1,
+          "note": null
+        },
+        {
+          "day": -21,
+          "completed": false,
+          "value": 1,
+          "note": null
+        },
+        {
+          "day": -13,
+          "completed": false,
+          "value": 1,
+          "note": null
+        }
+      ]
+    },
+    {
+      "name": "Guitar practice",
+      "createdDay": -42,
+      "description": null,
+      "tags": ["fun"],
+      "icon": "🎸",
+      "unit": "minutes",
+      "targetValue": 15,
+      "startTime": null,
+      "schedule": {
+        "type": "daily"
+      },
+      "polarity": "build",
+      "endDay": null,
+      "customFields": [],
+      "finance": null,
+      "categories": [],
+      "pausedDay": -5,
+      "archived": false,
+      "entries": [
+        {
+          "day": -41,
+          "completed": true,
+          "value": 20,
+          "note": null
+        },
+        {
+          "day": -40,
+          "completed": true,
+          "value": 30,
+          "note": null
+        },
+        {
+          "day": -39,
+          "completed": true,
+          "value": 20,
+          "note": null
+        },
+        {
+          "day": -37,
+          "completed": true,
+          "value": 30,
+          "note": null
+        },
+        {
+          "day": -35,
+          "completed": true,
+          "value": 20,
+          "note": null
+        },
+        {
+          "day": -31,
+          "completed": true,
+          "value": 15,
+          "note": null
+        },
+        {
+          "day": -30,
+          "completed": true,
+          "value": 15,
+          "note": null
+        },
+        {
+          "day": -29,
+          "completed": true,
+          "value": 30,
+          "note": null
+        },
+        {
+          "day": -27,
+          "completed": true,
+          "value": 20,
+          "note": null
+        },
+        {
+          "day": -26,
+          "completed": true,
+          "value": 20,
+          "note": null
+        },
+        {
+          "day": -23,
+          "completed": true,
+          "value": 15,
+          "note": null
+        },
+        {
+          "day": -20,
+          "completed": true,
+          "value": 20,
+          "note": null
+        },
+        {
+          "day": -19,
+          "completed": true,
+          "value": 15,
+          "note": null
+        },
+        {
+          "day": -18,
+          "completed": true,
+          "value": 30,
+          "note": null
+        },
+        {
+          "day": -17,
+          "completed": true,
+          "value": 15,
+          "note": null
+        },
+        {
+          "day": -14,
+          "completed": true,
+          "value": 15,
+          "note": null
+        },
+        {
+          "day": -11,
+          "completed": true,
+          "value": 15,
+          "note": null
+        },
+        {
+          "day": -9,
+          "completed": true,
+          "value": 20,
+          "note": null
+        },
+        {
+          "day": -8,
+          "completed": true,
+          "value": 15,
+          "note": null
+        }
+      ]
+    },
+    {
+      "name": "Cold showers",
+      "createdDay": -56,
+      "description": null,
+      "tags": ["health"],
+      "icon": "🚿",
+      "unit": null,
+      "targetValue": null,
+      "startTime": null,
+      "schedule": {
+        "type": "daily"
+      },
+      "polarity": "build",
+      "endDay": null,
+      "customFields": [],
+      "finance": null,
+      "categories": [],
+      "pausedDay": null,
+      "archived": true,
+      "entries": [
+        {
+          "day": -55,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -53,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -52,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -47,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -44,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -43,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -41,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -40,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -39,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -38,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -37,
+          "completed": true,
+          "value": null,
+          "note": null
+        },
+        {
+          "day": -35,
+          "completed": true,
+          "value": null,
+          "note": null
+        }
+      ]
+    }
+  ],
+  "goals": [
+    {
+      "name": "Japan",
+      "emoji": "🗾",
+      "targetMinor": 200000,
+      "createdDay": -50,
+      "deadlineDay": 200,
+      "account": null,
+      "startingSavedMinor": 0,
+      "dailyHabitMinor": 1000,
+      "archived": false,
+      "contributions": [
+        {
+          "day": -1,
+          "amountMinor": 400
+        },
+        {
+          "day": -1,
+          "amountMinor": 600
+        },
+        {
+          "day": -1,
+          "amountMinor": 1000
+        },
+        {
+          "day": -1,
+          "amountMinor": 198000
+        }
+      ]
+    },
+    {
+      "name": "Car",
+      "emoji": "🚗",
+      "targetMinor": 1200000,
+      "createdDay": -25,
+      "deadlineDay": 365,
+      "account": "test-savings",
+      "dailyHabitMinor": 2000,
+      "archived": false,
+      "contributions": []
+    },
+    {
+      "name": "New laptop",
+      "emoji": "💻",
+      "targetMinor": 120000,
+      "createdDay": -30,
+      "deadlineDay": 90,
+      "account": null,
+      "startingSavedMinor": 15000,
+      "dailyHabitMinor": 1000,
+      "archived": false,
+      "contributions": [
+        {
+          "day": -29,
+          "amountMinor": 1000
+        },
+        {
+          "day": -28,
+          "amountMinor": 1000
+        },
+        {
+          "day": -27,
+          "amountMinor": 1000
+        },
+        {
+          "day": -25,
+          "amountMinor": 1000
+        },
+        {
+          "day": -24,
+          "amountMinor": 1000
+        },
+        {
+          "day": -21,
+          "amountMinor": 1000
+        },
+        {
+          "day": -20,
+          "amountMinor": 1000
+        },
+        {
+          "day": -17,
+          "amountMinor": 1000
+        },
+        {
+          "day": -16,
+          "amountMinor": 1000
+        },
+        {
+          "day": -14,
+          "amountMinor": 1000
+        },
+        {
+          "day": -12,
+          "amountMinor": 1000
+        },
+        {
+          "day": -10,
+          "amountMinor": 1000
+        },
+        {
+          "day": -9,
+          "amountMinor": 1000
+        },
+        {
+          "day": -8,
+          "amountMinor": 1000
+        },
+        {
+          "day": -7,
+          "amountMinor": 1000
+        },
+        {
+          "day": -4,
+          "amountMinor": 1000
+        },
+        {
+          "day": -2,
+          "amountMinor": 1000
+        },
+        {
+          "day": -1,
+          "amountMinor": 1000
+        }
+      ]
+    }
+  ],
+  "journal": [
+    {
+      "day": -21,
+      "entries": [
+        {
+          "kind": "EVENT",
+          "time": "14:00",
+          "text": "Long day of meetings #work",
+          "tone": "NEGATIVE",
+          "durationMinutes": null,
+          "emotion": null,
+          "intensity": null,
+          "triggerIndex": null
+        },
+        {
+          "kind": "FEELING",
+          "time": null,
+          "text": "",
+          "emotion": "tired",
+          "intensity": 3,
+          "durationMinutes": null,
+          "tone": null,
+          "triggerIndex": 0
+        },
+        {
+          "kind": "ACTION",
+          "time": "21:00",
+          "text": "Practised guitar #guitar",
+          "durationMinutes": 20,
+          "emotion": null,
+          "intensity": null,
+          "tone": null,
+          "triggerIndex": null
+        }
+      ]
+    },
+    {
+      "day": -20,
+      "entries": [
+        {
+          "kind": "EVENT",
+          "time": "16:45",
+          "text": "Long day of meetings #work",
+          "tone": "NEGATIVE",
+          "durationMinutes": null,
+          "emotion": null,
+          "intensity": null,
+          "triggerIndex": null
+        },
+        {
+          "kind": "FEELING",
+          "time": null,
+          "text": "",
+          "emotion": "tired",
+          "intensity": 3,
+          "durationMinutes": null,
+          "tone": null,
+          "triggerIndex": 0
+        },
+        {
+          "kind": "ACTION",
+          "time": "21:00",
+          "text": "Read before bed #reading",
+          "durationMinutes": 25,
+          "emotion": null,
+          "intensity": null,
+          "tone": null,
+          "triggerIndex": null
+        }
+      ]
+    },
+    {
+      "day": -19,
+      "entries": [
+        {
+          "kind": "EVENT",
+          "time": "18:45",
+          "text": "Missed the train #commute",
+          "tone": "NEGATIVE",
+          "durationMinutes": null,
+          "emotion": null,
+          "intensity": null,
+          "triggerIndex": null
+        },
+        {
+          "kind": "FEELING",
+          "time": null,
+          "text": "",
+          "emotion": "frustrated",
+          "intensity": 2,
+          "durationMinutes": null,
+          "tone": null,
+          "triggerIndex": 0
+        },
+        {
+          "kind": "ACTION",
+          "time": "18:00",
+          "text": "Practised guitar #guitar",
+          "durationMinutes": 20,
+          "emotion": null,
+          "intensity": null,
+          "tone": null,
+          "triggerIndex": null
+        }
+      ]
+    },
+    {
+      "day": -18,
+      "entries": [
+        {
+          "kind": "EVENT",
+          "time": "14:00",
+          "text": "Call with Mum #family",
+          "tone": "POSITIVE",
+          "durationMinutes": null,
+          "emotion": null,
+          "intensity": null,
+          "triggerIndex": null
+        },
+        {
+          "kind": "FEELING",
+          "time": null,
+          "text": "",
+          "emotion": "loved",
+          "intensity": 4,
+          "durationMinutes": null,
+          "tone": null,
+          "triggerIndex": 0
+        },
+        {
+          "kind": "ACTION",
+          "time": "18:00",
+          "text": "Walked by the canal",
+          "durationMinutes": 50,
+          "emotion": null,
+          "intensity": null,
+          "tone": null,
+          "triggerIndex": null
+        }
+      ]
+    },
+    {
+      "day": -16,
+      "entries": [
+        {
+          "kind": "EVENT",
+          "time": "09:45",
+          "text": "Missed the train #commute",
+          "tone": "NEGATIVE",
+          "durationMinutes": null,
+          "emotion": null,
+          "intensity": null,
+          "triggerIndex": null
+        },
+        {
+          "kind": "FEELING",
+          "time": null,
+          "text": "",
+          "emotion": "frustrated",
+          "intensity": 2,
+          "durationMinutes": null,
+          "tone": null,
+          "triggerIndex": 0
+        }
+      ]
+    },
+    {
+      "day": -15,
+      "entries": [
+        {
+          "kind": "EVENT",
+          "time": "12:45",
+          "text": "Ran a new personal best #run",
+          "tone": "POSITIVE",
+          "durationMinutes": null,
+          "emotion": null,
+          "intensity": null,
+          "triggerIndex": null
+        },
+        {
+          "kind": "FEELING",
+          "time": null,
+          "text": "",
+          "emotion": "energized",
+          "intensity": 5,
+          "durationMinutes": null,
+          "tone": null,
+          "triggerIndex": 0
+        },
+        {
+          "kind": "ACTION",
+          "time": "21:00",
+          "text": "Tidied the flat #home",
+          "durationMinutes": 40,
+          "emotion": null,
+          "intensity": null,
+          "tone": null,
+          "triggerIndex": null
+        }
+      ]
+    },
+    {
+      "day": -14,
+      "entries": [
+        {
+          "kind": "EVENT",
+          "time": "15:30",
+          "text": "Missed the train #commute",
+          "tone": "NEGATIVE",
+          "durationMinutes": null,
+          "emotion": null,
+          "intensity": null,
+          "triggerIndex": null
+        },
+        {
+          "kind": "FEELING",
+          "time": null,
+          "text": "",
+          "emotion": "frustrated",
+          "intensity": 2,
+          "durationMinutes": null,
+          "tone": null,
+          "triggerIndex": 0
+        },
+        {
+          "kind": "ACTION",
+          "time": "20:00",
+          "text": "Tidied the flat #home",
+          "durationMinutes": 40,
+          "emotion": null,
+          "intensity": null,
+          "tone": null,
+          "triggerIndex": null
+        }
+      ]
+    },
+    {
+      "day": -12,
+      "entries": [
+        {
+          "kind": "EVENT",
+          "time": "16:30",
+          "text": "Shipped the release #work",
+          "tone": "POSITIVE",
+          "durationMinutes": null,
+          "emotion": null,
+          "intensity": null,
+          "triggerIndex": null
+        },
+        {
+          "kind": "FEELING",
+          "time": null,
+          "text": "",
+          "emotion": "proud",
+          "intensity": 4,
+          "durationMinutes": null,
+          "tone": null,
+          "triggerIndex": 0
+        }
+      ]
+    },
+    {
+      "day": -11,
+      "entries": [
+        {
+          "kind": "EVENT",
+          "time": "09:00",
+          "text": "Shipped the release #work",
+          "tone": "POSITIVE",
+          "durationMinutes": null,
+          "emotion": null,
+          "intensity": null,
+          "triggerIndex": null
+        },
+        {
+          "kind": "FEELING",
+          "time": null,
+          "text": "",
+          "emotion": "proud",
+          "intensity": 4,
+          "durationMinutes": null,
+          "tone": null,
+          "triggerIndex": 0
+        },
+        {
+          "kind": "ACTION",
+          "time": "18:00",
+          "text": "Practised guitar #guitar",
+          "durationMinutes": 20,
+          "emotion": null,
+          "intensity": null,
+          "tone": null,
+          "triggerIndex": null
+        }
+      ]
+    },
+    {
+      "day": -10,
+      "entries": [
+        {
+          "kind": "EVENT",
+          "time": "13:30",
+          "text": "Ran a new personal best #run",
+          "tone": "POSITIVE",
+          "durationMinutes": null,
+          "emotion": null,
+          "intensity": null,
+          "triggerIndex": null
+        },
+        {
+          "kind": "FEELING",
+          "time": null,
+          "text": "",
+          "emotion": "energized",
+          "intensity": 5,
+          "durationMinutes": null,
+          "tone": null,
+          "triggerIndex": 0
+        },
+        {
+          "kind": "ACTION",
+          "time": "21:00",
+          "text": "Read before bed #reading",
+          "durationMinutes": 25,
+          "emotion": null,
+          "intensity": null,
+          "tone": null,
+          "triggerIndex": null
+        }
+      ]
+    },
+    {
+      "day": -9,
+      "entries": [
+        {
+          "kind": "EVENT",
+          "time": "11:15",
+          "text": "Missed the train #commute",
+          "tone": "NEGATIVE",
+          "durationMinutes": null,
+          "emotion": null,
+          "intensity": null,
+          "triggerIndex": null
+        },
+        {
+          "kind": "FEELING",
+          "time": null,
+          "text": "",
+          "emotion": "frustrated",
+          "intensity": 2,
+          "durationMinutes": null,
+          "tone": null,
+          "triggerIndex": 0
+        }
+      ]
+    },
+    {
+      "day": -8,
+      "entries": [
+        {
+          "kind": "EVENT",
+          "time": "10:30",
+          "text": "Ran a new personal best #run",
+          "tone": "POSITIVE",
+          "durationMinutes": null,
+          "emotion": null,
+          "intensity": null,
+          "triggerIndex": null
+        },
+        {
+          "kind": "FEELING",
+          "time": null,
+          "text": "",
+          "emotion": "energized",
+          "intensity": 5,
+          "durationMinutes": null,
+          "tone": null,
+          "triggerIndex": 0
+        }
+      ]
+    },
+    {
+      "day": -6,
+      "entries": [
+        {
+          "kind": "EVENT",
+          "time": "11:15",
+          "text": "Call with Mum #family",
+          "tone": "POSITIVE",
+          "durationMinutes": null,
+          "emotion": null,
+          "intensity": null,
+          "triggerIndex": null
+        },
+        {
+          "kind": "FEELING",
+          "time": null,
+          "text": "",
+          "emotion": "loved",
+          "intensity": 4,
+          "durationMinutes": null,
+          "tone": null,
+          "triggerIndex": 0
+        },
+        {
+          "kind": "ACTION",
+          "time": "20:00",
+          "text": "Practised guitar #guitar",
+          "durationMinutes": 20,
+          "emotion": null,
+          "intensity": null,
+          "tone": null,
+          "triggerIndex": null
+        }
+      ]
+    },
+    {
+      "day": -5,
+      "entries": [
+        {
+          "kind": "EVENT",
+          "time": "12:45",
+          "text": "Rainy Sunday at home",
+          "tone": "NEUTRAL",
+          "durationMinutes": null,
+          "emotion": null,
+          "intensity": null,
+          "triggerIndex": null
+        },
+        {
+          "kind": "FEELING",
+          "time": null,
+          "text": "",
+          "emotion": "calm",
+          "intensity": 3,
+          "durationMinutes": null,
+          "tone": null,
+          "triggerIndex": 0
+        },
+        {
+          "kind": "ACTION",
+          "time": "21:00",
+          "text": "Cooked a proper dinner #home",
+          "durationMinutes": 45,
+          "emotion": null,
+          "intensity": null,
+          "tone": null,
+          "triggerIndex": null
+        }
+      ]
+    },
+    {
+      "day": -4,
+      "entries": [
+        {
+          "kind": "EVENT",
+          "time": "09:15",
+          "text": "Rainy Sunday at home",
+          "tone": "NEUTRAL",
+          "durationMinutes": null,
+          "emotion": null,
+          "intensity": null,
+          "triggerIndex": null
+        },
+        {
+          "kind": "FEELING",
+          "time": null,
+          "text": "",
+          "emotion": "calm",
+          "intensity": 3,
+          "durationMinutes": null,
+          "tone": null,
+          "triggerIndex": 0
+        },
+        {
+          "kind": "ACTION",
+          "time": "20:00",
+          "text": "Practised guitar #guitar",
+          "durationMinutes": 20,
+          "emotion": null,
+          "intensity": null,
+          "tone": null,
+          "triggerIndex": null
+        }
+      ]
+    },
+    {
+      "day": -3,
+      "entries": [
+        {
+          "kind": "EVENT",
+          "time": "15:45",
+          "text": "Shipped the release #work",
+          "tone": "POSITIVE",
+          "durationMinutes": null,
+          "emotion": null,
+          "intensity": null,
+          "triggerIndex": null
+        },
+        {
+          "kind": "FEELING",
+          "time": null,
+          "text": "",
+          "emotion": "proud",
+          "intensity": 4,
+          "durationMinutes": null,
+          "tone": null,
+          "triggerIndex": 0
+        },
+        {
+          "kind": "ACTION",
+          "time": "20:00",
+          "text": "Tidied the flat #home",
+          "durationMinutes": 40,
+          "emotion": null,
+          "intensity": null,
+          "tone": null,
+          "triggerIndex": null
+        }
+      ]
+    },
+    {
+      "day": -2,
+      "entries": [
+        {
+          "kind": "EVENT",
+          "time": "13:00",
+          "text": "Call with Mum #family",
+          "tone": "POSITIVE",
+          "durationMinutes": null,
+          "emotion": null,
+          "intensity": null,
+          "triggerIndex": null
+        },
+        {
+          "kind": "FEELING",
+          "time": null,
+          "text": "",
+          "emotion": "loved",
+          "intensity": 4,
+          "durationMinutes": null,
+          "tone": null,
+          "triggerIndex": 0
+        },
+        {
+          "kind": "ACTION",
+          "time": "19:00",
+          "text": "Cooked a proper dinner #home",
+          "durationMinutes": 45,
+          "emotion": null,
+          "intensity": null,
+          "tone": null,
+          "triggerIndex": null
+        }
+      ]
+    },
+    {
+      "day": -1,
+      "entries": [
+        {
+          "kind": "EVENT",
+          "time": "18:45",
+          "text": "Dinner with Sam #friends",
+          "tone": "POSITIVE",
+          "durationMinutes": null,
+          "emotion": null,
+          "intensity": null,
+          "triggerIndex": null
+        },
+        {
+          "kind": "FEELING",
+          "time": null,
+          "text": "",
+          "emotion": "connected",
+          "intensity": 4,
+          "durationMinutes": null,
+          "tone": null,
+          "triggerIndex": 0
+        },
+        {
+          "kind": "ACTION",
+          "time": "19:00",
+          "text": "Read before bed #reading",
+          "durationMinutes": 25,
+          "emotion": null,
+          "intensity": null,
+          "tone": null,
+          "triggerIndex": null
+        }
+      ]
+    }
+  ],
+  "todoLists": [
+    {
+      "name": "Inbox",
+      "tasks": [
+        {
+          "title": "Book dentist",
+          "notes": null,
+          "status": "TODO",
+          "createdDay": -6,
+          "plannedDay": 0,
+          "dueDay": null,
+          "doneDay": null
+        },
+        {
+          "title": "Reply to Alex about Saturday",
+          "notes": null,
+          "status": "TODO",
+          "createdDay": -1,
+          "plannedDay": 0,
+          "dueDay": null,
+          "doneDay": null
+        },
+        {
+          "title": "Renew passport",
+          "notes": "Photo booth at the station",
+          "status": "TODO",
+          "createdDay": -14,
+          "plannedDay": null,
+          "dueDay": 12,
+          "doneDay": null
+        }
+      ]
+    },
+    {
+      "name": "Groceries",
+      "prefix": "GRO",
+      "tasks": [
+        {
+          "title": "Oat milk",
+          "notes": null,
+          "status": "TODO",
+          "createdDay": -1,
+          "plannedDay": 0,
+          "dueDay": null,
+          "doneDay": null
+        },
+        {
+          "title": "Coffee beans",
+          "notes": null,
+          "status": "TODO",
+          "createdDay": -2,
+          "plannedDay": 0,
+          "dueDay": null,
+          "doneDay": null
+        },
+        {
+          "title": "Washing-up liquid",
+          "notes": null,
+          "status": "TODO",
+          "createdDay": -3,
+          "plannedDay": null,
+          "dueDay": null,
+          "doneDay": null
+        },
+        {
+          "title": "Eggs",
+          "notes": null,
+          "status": "DONE",
+          "createdDay": -8,
+          "plannedDay": null,
+          "dueDay": null,
+          "doneDay": -6
+        },
+        {
+          "title": "Rice",
+          "notes": null,
+          "status": "DONE",
+          "createdDay": -12,
+          "plannedDay": null,
+          "dueDay": null,
+          "doneDay": -9
+        }
+      ]
+    },
+    {
+      "name": "Home",
+      "prefix": "HOME",
+      "tasks": [
+        {
+          "title": "Fix the bathroom tap",
+          "notes": "Washer's probably gone",
+          "status": "TODO",
+          "createdDay": -20,
+          "plannedDay": null,
+          "dueDay": -2,
+          "doneDay": null
+        },
+        {
+          "title": "Hang the shelves",
+          "notes": null,
+          "status": "IN_PROGRESS",
+          "createdDay": -9,
+          "plannedDay": 0,
+          "dueDay": null,
+          "doneDay": null
+        },
+        {
+          "title": "Sort out the spare room",
+          "notes": null,
+          "status": "TODO",
+          "createdDay": -15,
+          "plannedDay": -3,
+          "dueDay": null,
+          "doneDay": null
+        },
+        {
+          "title": "Pay council tax",
+          "notes": null,
+          "status": "DONE",
+          "createdDay": -30,
+          "plannedDay": null,
+          "dueDay": -25,
+          "doneDay": -26
+        },
+        {
+          "title": "Book boiler service",
+          "notes": null,
+          "status": "DONE",
+          "createdDay": -21,
+          "plannedDay": null,
+          "dueDay": null,
+          "doneDay": -18
+        },
+        {
+          "title": "Return Amazon parcel",
+          "notes": null,
+          "status": "DONE",
+          "createdDay": -12,
+          "plannedDay": null,
+          "dueDay": null,
+          "doneDay": -10
+        }
+      ]
+    },
+    {
+      "name": "Work",
+      "prefix": "WRK",
+      "tasks": [
+        {
+          "title": "Write Q4 plan",
+          "notes": null,
+          "status": "IN_PROGRESS",
+          "createdDay": -7,
+          "plannedDay": 0,
+          "dueDay": 3,
+          "doneDay": null
+        },
+        {
+          "title": "Review Priya's PR",
+          "notes": null,
+          "status": "TODO",
+          "createdDay": -1,
+          "plannedDay": 0,
+          "dueDay": null,
+          "doneDay": null
+        },
+        {
+          "title": "Prepare demo for Friday",
+          "notes": null,
+          "status": "TODO",
+          "createdDay": -4,
+          "plannedDay": null,
+          "dueDay": 2,
+          "doneDay": null
+        },
+        {
+          "title": "Expenses for September",
+          "notes": null,
+          "status": "DONE",
+          "createdDay": -14,
+          "plannedDay": null,
+          "dueDay": null,
+          "doneDay": -11
+        },
+        {
+          "title": "Onboard new starter",
+          "notes": null,
+          "status": "DONE",
+          "createdDay": -35,
+          "plannedDay": null,
+          "dueDay": null,
+          "doneDay": -28
+        },
+        {
+          "title": "Fix flaky deploy",
+          "notes": null,
+          "status": "DONE",
+          "createdDay": -40,
+          "plannedDay": null,
+          "dueDay": null,
+          "doneDay": -37
+        }
+      ]
+    }
+  ]
+}
