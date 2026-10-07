@@ -1,4 +1,4 @@
-# LifeOS
+# DailyPacer
 
 A habit tracker for **custom habits**: each one gets its own schedule, unit,
 target and start time. You check habits off (or log a value) each day and
@@ -34,7 +34,7 @@ When it's running:
 | Web           | http://localhost:5173            |
 | GraphQL (BFF) | http://localhost:4000/graphql    |
 | REST API      | http://localhost:3000 (internal; the BFF calls it) |
-| Postgres      | `localhost:5433` (lifeos/lifeos) |
+| Postgres      | `localhost:5433` (dailypacer/dailypacer) |
 
 In development, Vite proxies `/graphql` to the BFF.
 
@@ -90,7 +90,7 @@ pnpm --filter api prisma:studio    # browse the database
 
 | Variable       | Default                                             |
 | -------------- | --------------------------------------------------- |
-| `DATABASE_URL` | `postgres://lifeos:lifeos@localhost:5433/lifeos`    |
+| `DATABASE_URL` | `postgres://dailypacer:dailypacer@localhost:5433/dailypacer` |
 | `API_PORT`     | `3000`                                              |
 | `BFF_PORT`     | `4000`                                              |
 | `API_URL`      | `http://localhost:3000` (where the BFF finds the API) |
@@ -114,6 +114,6 @@ scripts/      quickstart.sh
 ## Docs
 
 Design notes are in [`docs/`](docs/index.md) and mirrored to the
-[wiki](https://github.com/jamesbrad1309/lifeos/wiki). They cover the
+[wiki](https://github.com/jamesbrad1309/dailypacer/wiki). They cover the
 architecture, data model, use cases (with build status), GraphQL/Nest
 structure, logging, and the Docker setup.

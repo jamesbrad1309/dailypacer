@@ -14,7 +14,7 @@ const BUDGET_MONTHS = 12;
 const LOGGED_SOURCES = ["quick", "form", "import"];
 
 /**
- * The LifeOS level: habit points plus finance XP (life-xp.util.ts). Lives
+ * The DailyPacer level: habit points plus finance XP (life-xp.util.ts). Lives
  * in finance because finance may read habits, never the other way round.
  */
 @Injectable()

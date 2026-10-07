@@ -487,7 +487,7 @@ export const HABIT_SPEND_QUERY = gql`
   }
 `;
 
-/** The LifeOS level: habit points plus finance XP. */
+/** The DailyPacer level: habit points plus finance XP. */
 export const LIFE_LEVEL_QUERY = gql`
   query LifeLevel($today: String!) {
     lifeLevel(today: $today) {

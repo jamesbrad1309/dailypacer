@@ -1,12 +1,12 @@
 # Demo data
 
-A dataset you can load into an empty LifeOS whenever you like, and whose
+A dataset you can load into an empty DailyPacer whenever you like, and whose
 history always ends today: every date in it is stored as an offset from
 the import day, so importing it next year still gives yesterday's coffee,
 this week's runs and last month's budget.
 
 ```sh
-pnpm demo:import                      # apps/api/demo/lifeos-demo.json, day 0 = today
+pnpm demo:import                      # apps/api/demo/dailypacer-demo.json, day 0 = today
 pnpm demo:import -- path/to/file.json --today=2027-01-15
 pnpm demo:export -- path/to/file.json # the current database, as a fixture
 ```
@@ -28,7 +28,7 @@ Postgres on port 5433), so the stack's `postgres` service must be up.
   saving habit) carry no entries. The import works them out from the
   transactions. A goal brings its daily habit with it (`dailyHabitMinor`).
 
-`apps/api/demo/lifeos-demo.json` is about 8 weeks of history:
+`apps/api/demo/dailypacer-demo.json` is about 8 weeks of history:
 
 - **Money:** a current account, savings, a credit card, cash and an IOU,
   with salary, rent, bills and everyday spending. Some days have no

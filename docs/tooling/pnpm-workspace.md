@@ -12,7 +12,7 @@ packages:
 
 ```json
 {
-  "name": "lifeos",
+  "name": "dailypacer",
   "private": true,
   "packageManager": "pnpm@9.x",
   "scripts": {
@@ -83,7 +83,7 @@ Bumping `graphql` for the whole monorepo is then a one-line change in
 // apps/web/package.json
 {
   "dependencies": {
-    "@lifeos/graphql-schema": "workspace:*"
+    "@dailypacer/graphql-schema": "workspace:*"
   }
 }
 ```

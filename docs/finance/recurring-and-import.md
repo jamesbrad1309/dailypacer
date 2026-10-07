@@ -64,7 +64,7 @@ choose account + file
   (Cancel / close)                      discardCsvImport(uploadId) deletes the file
 ```
 
-- **The upload is temporary.** Files live in `os.tmpdir()/lifeos-imports`
+- **The upload is temporary.** Files live in `os.tmpdir()/dailypacer-imports`
   (directory `0700`, files `0600`), named by a server-generated UUID; the
   client's filename is never used. Import or cancel deletes it straight
   away, and a sweep every 15 minutes deletes anything older than an hour

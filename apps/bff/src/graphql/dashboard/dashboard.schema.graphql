@@ -18,7 +18,7 @@ type DashboardStats {
 }
 
 """
-The LifeOS level: habit points plus finance XP (25 per category that
+The DailyPacer level: habit points plus finance XP (25 per category that
 finished a month under budget, 100 per savings goal reached, 10 per week
 with transactions logged or imported), on the habits' level curve. Each
 part is kept so it's clear where the XP came from.

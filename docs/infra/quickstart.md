@@ -20,7 +20,7 @@ echo "-> starting postgres"
 docker compose up -d postgres
 
 echo "-> waiting for postgres to accept connections"
-until docker compose exec -T postgres pg_isready -U lifeos >/dev/null 2>&1; do
+until docker compose exec -T postgres pg_isready -U dailypacer >/dev/null 2>&1; do
   sleep 1
 done
 
@@ -49,7 +49,7 @@ pnpm quickstart
 ## `.env.example`
 
 ```
-DATABASE_URL=postgres://lifeos:lifeos@localhost:5433/lifeos
+DATABASE_URL=postgres://dailypacer:dailypacer@localhost:5433/dailypacer
 API_PORT=3000
 WEB_PORT=5173
 ```

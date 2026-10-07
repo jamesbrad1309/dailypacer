@@ -48,7 +48,7 @@ export function ChartCard({
   children,
 }: ChartCardProps) {
   const { t } = useTranslation();
-  const [asTable, setAsTable] = useStoredState(`lifeos.progress.${id}.table`, false);
+  const [asTable, setAsTable] = useStoredState(`dailypacer.progress.${id}.table`, false);
   return (
     <section
       className="flex min-w-0 flex-col gap-3 rounded-xl border bg-card p-4 sm:p-5"

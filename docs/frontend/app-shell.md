@@ -17,7 +17,7 @@
 ```
 
 - **Sidebar** (`Sidebar.tsx`): typed `<Link>`s grouped by `lib/navigation.ts`, planned
-  screens greyed out as "Coming soon", and a LifeOS level card at the bottom (habit points plus finance XP, `Query.lifeLevel`).
+  screens greyed out as "Coming soon", and a DailyPacer level card at the bottom (habit points plus finance XP, `Query.lifeLevel`).
   On desktop it collapses to a 64 px icon rail (remembered). Below the `lg`
   breakpoint it's a slide-in drawer (Radix Dialog) opened from ☰, which
   closes when a link is followed.
@@ -149,7 +149,7 @@ at `2xl`, and stack above or below the main column on phones.
 ## UI preferences
 
 Sidebar collapse is stored in `localStorage` through
-`hooks/useStoredState.ts`, and the theme under `lifeos.theme` by
+`hooks/useStoredState.ts`, and the theme under `dailypacer.theme` by
 `hooks/useTheme.ts`. Both fall back to plain state when storage is
 unavailable (private windows, blocked site data). Only UI preferences go
 there. Data always comes from the API.

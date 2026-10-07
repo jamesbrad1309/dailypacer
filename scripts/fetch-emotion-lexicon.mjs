@@ -28,7 +28,7 @@ if (!process.argv.includes("--accept-terms")) {
   - not to be redistributed: don't commit it, publish it, or ship it in a hosted app.
 It is © National Research Council Canada. Read the full terms on the page above.
 
-If that fits how you use LifeOS, run:  pnpm lexicon:fetch --accept-terms`);
+If that fits how you use DailyPacer, run:  pnpm lexicon:fetch --accept-terms`);
   process.exit(1);
 }
 

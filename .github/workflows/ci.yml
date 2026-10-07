@@ -50,17 +50,17 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_DB: lifeos
-          POSTGRES_USER: lifeos
-          POSTGRES_PASSWORD: lifeos
+          POSTGRES_DB: dailypacer
+          POSTGRES_USER: dailypacer
+          POSTGRES_PASSWORD: dailypacer
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U lifeos"
+          --health-cmd "pg_isready -U dailypacer"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
     env:
-      DATABASE_URL: postgres://lifeos:lifeos@localhost:5432/lifeos
+      DATABASE_URL: postgres://dailypacer:dailypacer@localhost:5432/dailypacer
     defaults:
       run:
         working-directory: apps/api

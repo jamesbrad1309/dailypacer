@@ -1,7 +1,7 @@
 import type { shell as en } from "#i18n/en/shell";
 
 export const shell: typeof en = {
-  appName: "LifeOS",
+  appName: "DailyPacer",
   nav: {
     groups: {
       overview: "Tổng quan",
@@ -134,7 +134,7 @@ export const shell: typeof en = {
   },
   crash: {
     title: "Đã xảy ra lỗi",
-    body: "LifeOS gặp lỗi không mong muốn. Dữ liệu của bạn vẫn an toàn: hãy tải lại trang để tiếp tục.",
+    body: "DailyPacer gặp lỗi không mong muốn. Dữ liệu của bạn vẫn an toàn: hãy tải lại trang để tiếp tục.",
     details: "Chi tiết lỗi",
     reload: "Tải lại",
   },

@@ -5,7 +5,7 @@ accounts, credit cards (with limits), loans and personal debts, and cash.
 You set this up once and rarely touch it again, so it can be thorough.
 Logging, by contrast, has to be fast (see [quick-log.md](quick-log.md)).
 
-Single user in v1, like the rest of LifeOS: there's no `User` entity, and
+Single user in v1, like the rest of DailyPacer: there's no `User` entity, and
 every account belongs to the one person using the app.
 
 ## Account types and what each one asks for

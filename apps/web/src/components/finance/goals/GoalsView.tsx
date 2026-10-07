@@ -29,7 +29,7 @@ import { formatShortDate, todayIsoDate } from "#lib/dates";
 import { formatMoney, parseMoneyInput } from "#lib/money";
 import { cn } from "#lib/utils";
 
-// A reached goal adds to the LifeOS level.
+// A reached goal adds to the DailyPacer level.
 const REFETCH = { refetchQueries: ["SavingsGoals", "LifeLevel"], awaitRefetchQueries: true };
 
 /**

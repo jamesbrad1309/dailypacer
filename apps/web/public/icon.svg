@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- LifeOS app icon: the sidebar's sparkle on the dark brand square.
+  <!-- DailyPacer app icon: the sidebar's sparkle on the dark brand square.
        Full-bleed background with the mark inside the maskable safe zone (centre 80%). -->
   <rect width="512" height="512" fill="#1a1a1a"/>
   <g transform="translate(128 128) scale(10.667)" fill="none" stroke="#fafafa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

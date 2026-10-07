@@ -1,7 +1,7 @@
 import { computeLevel, levelTitle, pointsRequiredForLevel } from "#habits/gamification.util";
 
 /**
- * Finance's share of the LifeOS level (docs/finance/habits-integration.md
+ * Finance's share of the DailyPacer level (docs/finance/habits-integration.md
  * §4). Like habit points it's derived, never stored: the counts come from
  * budgets, goals and transactions on every read.
  */

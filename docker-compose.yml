@@ -7,17 +7,21 @@
 # so `./start.sh` can run the backend here and Vite's dev server (:5173) on
 # the host, whose proxy sends /graphql to localhost:4000.
 
+# Fixed project name, so container and volume names (dailypacer_pgdata) don't
+# depend on the checkout's folder name.
+name: dailypacer
+
 services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: lifeos
-      POSTGRES_USER: lifeos
-      POSTGRES_PASSWORD: lifeos
+      POSTGRES_DB: dailypacer
+      POSTGRES_USER: dailypacer
+      POSTGRES_PASSWORD: dailypacer
     ports: ["5433:5432"]
     volumes: ["pgdata:/var/lib/postgresql/data"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U lifeos"]
+      test: ["CMD-SHELL", "pg_isready -U dailypacer"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -27,7 +31,7 @@ services:
       context: .
       dockerfile: docker/api.Dockerfile
     environment:
-      DATABASE_URL: postgres://lifeos:lifeos@postgres:5432/lifeos
+      DATABASE_URL: postgres://dailypacer:dailypacer@postgres:5432/dailypacer
       API_PORT: "3000"
       NODE_ENV: production
     expose: ["3000"]

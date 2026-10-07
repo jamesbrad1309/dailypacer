@@ -48,7 +48,7 @@ export function CashFlowChart({
   const { data, error } = useQuery<{ cashFlow: CashFlowReport }>(CASH_FLOW_QUERY, {
     variables: { to: month, months: MONTHS },
   });
-  const [asTable, setAsTable] = useStoredState("lifeos.cashFlow.asTable", false);
+  const [asTable, setAsTable] = useStoredState("dailypacer.cashFlow.asTable", false);
   const report = data?.cashFlow;
 
   if (error) return <p className="text-sm text-destructive">{error.message}</p>;

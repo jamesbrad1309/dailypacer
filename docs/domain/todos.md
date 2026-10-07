@@ -20,7 +20,7 @@ columns, due dates, and dependencies between tasks in any lists. Code: `apps/api
   stored. Renaming a prefix (`GRO` → `FOOD`) is one update, and every task in
   the list is re-keyed with its number unchanged.
 - A prefix is 2–6 characters, a letter first, then letters or digits,
-  uppercase. It's unique across lists. LifeOS has no user accounts, so "your
+  uppercase. It's unique across lists. DailyPacer has no user accounts, so "your
   lists" is all lists; with accounts this would become `@@unique([userId, prefix])`.
 - A new list's prefix is suggested from its name: the first three letters,
   accents folded (`Đi chợ` → `DIC`), then `DIC2`, `DIC3`… if taken

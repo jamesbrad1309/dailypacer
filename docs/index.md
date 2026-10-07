@@ -1,4 +1,4 @@
-# lifeos — Habit Tracker: Architecture & Setup Docs
+# dailypacer — Habit Tracker: Architecture & Setup Docs
 
 Research notes for building a habit tracker where users define **custom habits**
 (arbitrary schedule, unit, target, extra fields) and track entries over time.

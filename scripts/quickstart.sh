@@ -14,7 +14,7 @@ echo "-> starting postgres"
 docker compose up -d postgres
 
 echo "-> waiting for postgres to accept connections"
-until docker compose exec -T postgres pg_isready -U lifeos >/dev/null 2>&1; do
+until docker compose exec -T postgres pg_isready -U dailypacer >/dev/null 2>&1; do
   sleep 1
 done
 

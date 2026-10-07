@@ -104,7 +104,7 @@ per-habit field, it's one query for every card: `habitSpend(today)` (GraphQL)
 → `GET /finance/habits/spend`, which reads one `spendByCategory` report
 (`habitSpend` in `finance-habits.util.ts`). Transaction writes refetch it.
 
-## 4. Unified LifeOS XP
+## 4. Unified DailyPacer XP
 
 Built, keeping the rule that XP is derived and never stored:
 
@@ -125,7 +125,7 @@ and puts the total on the same level curve (`gamification.util.ts`).
   0 and it wasn't overspent.
 - **Logging:** weeks are Monday-based, counting `quick`, `form` and
   `import` transactions.
-- **Where it shows:** the sidebar's level card shows the LifeOS level with
+- **Where it shows:** the sidebar's level card shows the DailyPacer level with
   "Habits 95 · Money 155 XP", and its tooltip breaks money XP down. The
   dashboard's Total XP tile stays habits-only, and spendable points
   (rewards) are unchanged.

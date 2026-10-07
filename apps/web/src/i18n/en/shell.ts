@@ -1,6 +1,6 @@
 /** App frame: navigation, page titles, app bar, route status. */
 export const shell = {
-  appName: "LifeOS",
+  appName: "DailyPacer",
   nav: {
     groups: {
       overview: "Overview",
@@ -117,7 +117,7 @@ export const shell = {
   },
   crash: {
     title: "Something went wrong",
-    body: "LifeOS hit an unexpected error. Your data is safe: reload to carry on.",
+    body: "DailyPacer hit an unexpected error. Your data is safe: reload to carry on.",
     details: "Error details",
     reload: "Reload",
   },

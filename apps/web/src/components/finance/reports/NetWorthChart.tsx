@@ -53,7 +53,7 @@ export function NetWorthChart({ month }: { month: string }) {
   const { data, error } = useQuery<NetWorthHistoryData>(NET_WORTH_HISTORY_QUERY, {
     variables: { to: month, months: MONTHS },
   });
-  const [asTable, setAsTable] = useStoredState("lifeos.netWorth.asTable", false);
+  const [asTable, setAsTable] = useStoredState("dailypacer.netWorth.asTable", false);
   const report = data?.netWorthHistory;
 
   if (error) return <p className="text-sm text-destructive">{error.message}</p>;

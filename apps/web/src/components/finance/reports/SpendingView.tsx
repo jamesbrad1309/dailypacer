@@ -42,7 +42,7 @@ export function SpendingView({ search, onSearchChange }: Props) {
     variables: { month, accountId: search.account ?? null },
   });
   const { data: accountsData } = useQuery<AccountsData>(ACCOUNTS_QUERY);
-  const [asTable, setAsTable] = useStoredState("lifeos.spending.asTable", false);
+  const [asTable, setAsTable] = useStoredState("dailypacer.spending.asTable", false);
 
   const report = data?.spendByCategory;
   const accounts = accountsData?.accounts ?? [];

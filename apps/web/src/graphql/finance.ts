@@ -86,7 +86,7 @@ export const TRANSACTIONS_REFETCH = [
   "HabitDetail",
   "DashboardStats",
   "HabitCalendar",
-  // A habit's cost, and the LifeOS level's finance XP.
+  // A habit's cost, and the DailyPacer level's finance XP.
   "HabitSpend",
   "LifeLevel",
 ];

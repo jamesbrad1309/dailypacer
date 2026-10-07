@@ -5,7 +5,7 @@ API, and any code shared between them. See [overview.md](overview.md) for
 how they talk to each other.
 
 ```
-lifeos/
+dailypacer/
 ├── apps/
 │   ├── web/                 # React + Vite + TS + shadcn/ui
 │   ├── bff/                 # Express + Apollo Server: GraphQL for the frontend
@@ -43,13 +43,13 @@ These are two different mechanisms and it's easy to conflate them:
   imports described in [typescript-import-aliases.md](../shared/typescript-import-aliases.md).
   These are private to that package and never cross a package boundary.
 - **Between packages** (e.g. `apps/api` importing `packages/graphql-schema`),
-  use a normal package-name import (`@lifeos/graphql-schema`) resolved by
+  use a normal package-name import (`@dailypacer/graphql-schema`) resolved by
   pnpm's workspace linking (`workspace:*` in `package.json`). This is regular
   Node module resolution, not aliasing.
 
 ## Naming
 
-Use a scope for internal packages, e.g. `@lifeos/*`, so an import like
-`@lifeos/graphql-schema` is unambiguous — it's a workspace, not a real npm
+Use a scope for internal packages, e.g. `@dailypacer/*`, so an import like
+`@dailypacer/graphql-schema` is unambiguous — it's a workspace, not a real npm
 package. Set `"private": true` on every `package.json` so nothing is
 accidentally published.

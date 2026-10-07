@@ -76,7 +76,7 @@ top-level/shared alias config, because Node scopes `imports` resolution to
 the nearest `package.json` above the importing file. This is why the
 monorepo doc ([monorepo-layout.md](../architecture/monorepo-layout.md))
 draws a hard line between these intra-app `#` aliases and real cross-package
-imports (`@lifeos/graphql-schema`), which go through pnpm's workspace
+imports (`@dailypacer/graphql-schema`), which go through pnpm's workspace
 linking instead.
 
 ## Suggested alias prefixes

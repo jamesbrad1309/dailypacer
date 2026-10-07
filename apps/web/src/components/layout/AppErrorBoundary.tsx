@@ -19,7 +19,7 @@ export class AppErrorBoundary extends Component<{ children: ReactNode }, State> 
   }
 
   componentDidCatch(error: unknown, info: ErrorInfo) {
-    console.error("[LifeOS] uncaught render error", error, info.componentStack);
+    console.error("[DailyPacer] uncaught render error", error, info.componentStack);
   }
 
   render() {

@@ -17,7 +17,7 @@ import { cn } from "#lib/utils";
 /** Collapsed by default; archived habits are only fetched once it's opened. */
 export function ArchivedHabits() {
   const { t } = useTranslation();
-  const [open, setOpen] = useStoredState("lifeos.habits.showArchived", false);
+  const [open, setOpen] = useStoredState("dailypacer.habits.showArchived", false);
   const { data, loading, error } = useQuery<ArchivedHabitsData>(ARCHIVED_HABITS_QUERY, {
     skip: !open,
   });

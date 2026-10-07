@@ -32,7 +32,7 @@ interface Props {
  * content area that pages fill edge to edge.
  */
 export function AppShell({ actions, children }: Props) {
-  const [collapsed, setCollapsed] = useStoredState("lifeos.sidebarCollapsed", false);
+  const [collapsed, setCollapsed] = useStoredState("dailypacer.sidebarCollapsed", false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { theme, toggle } = useTheme();
   const { t } = useTranslation();

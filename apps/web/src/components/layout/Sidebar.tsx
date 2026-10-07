@@ -142,7 +142,7 @@ function ToReviewBadge({ collapsed }: { collapsed: boolean }) {
 }
 
 /**
- * The LifeOS level (habit points plus finance XP), always in view whichever
+ * The DailyPacer level (habit points plus finance XP), always in view whichever
  * page is open, with where the XP came from.
  */
 function LevelCard({ collapsed }: { collapsed: boolean }) {

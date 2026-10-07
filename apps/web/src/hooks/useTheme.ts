@@ -2,7 +2,7 @@ import { useEffect, useSyncExternalStore } from "react";
 
 export type Theme = "light" | "dark";
 
-const KEY = "lifeos.theme";
+const KEY = "dailypacer.theme";
 
 function systemTheme(): Theme {
   return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";

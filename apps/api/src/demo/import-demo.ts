@@ -32,7 +32,7 @@ import { AppModule } from "../app.module";
 async function main() {
   const args = process.argv.slice(2);
   const today = args.find((a) => a.startsWith("--today="))?.slice(8) ?? localToday();
-  const file = args.find((a) => !a.startsWith("--")) ?? "demo/lifeos-demo.json";
+  const file = args.find((a) => !a.startsWith("--")) ?? "demo/dailypacer-demo.json";
   const fixture = JSON.parse(readFileSync(file, "utf8")) as DemoFixture;
   if (fixture.version !== DEMO_VERSION) {
     throw new Error(`${file} is version ${fixture.version}; this importer reads ${DEMO_VERSION}`);

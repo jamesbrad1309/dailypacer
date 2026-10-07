@@ -4,7 +4,7 @@ import { en } from "#i18n/en/index";
 import { setLocale } from "#i18n/locale";
 import { vi } from "#i18n/vi/index";
 
-/** The languages LifeOS speaks, and the Intl locale each formats numbers and dates with. */
+/** The languages DailyPacer speaks, and the Intl locale each formats numbers and dates with. */
 export const LANGUAGES = {
   en: { label: "English", short: "EN", locale: "en-GB" },
   vi: { label: "Tiếng Việt", short: "VI", locale: "vi-VN" },
@@ -12,7 +12,7 @@ export const LANGUAGES = {
 
 export type Language = keyof typeof LANGUAGES;
 
-const STORAGE_KEY = "lifeos.language";
+const STORAGE_KEY = "dailypacer.language";
 
 function isLanguage(value: unknown): value is Language {
   return typeof value === "string" && value in LANGUAGES;

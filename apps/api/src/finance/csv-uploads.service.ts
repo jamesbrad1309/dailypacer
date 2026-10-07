@@ -20,7 +20,7 @@ import { type ImportResult, type ImportRowStatus, ImportService } from "#finance
 const log = scopedLogger("CsvUploadsService");
 
 /** Uploaded files live here only until imported, discarded or swept. */
-const UPLOAD_DIR = join(tmpdir(), "lifeos-imports");
+const UPLOAD_DIR = join(tmpdir(), "dailypacer-imports");
 /** Abandoned uploads (dialog closed, tab gone) are deleted after this. */
 const MAX_AGE_MS = 60 * 60 * 1000;
 const SWEEP_EVERY_MS = 15 * 60 * 1000;
