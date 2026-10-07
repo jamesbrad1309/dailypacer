@@ -65,3 +65,4 @@ Each file below is a short, standalone read.
 **Infra**
 - [Docker setup](infra/docker.md) — multi-stage builds for the monorepo
 - [Quick start script](infra/quickstart.md) — one command to run everything
+- [Demo data](infra/demo-data.md) — export and import a dataset whose dates stay relative to the import day
