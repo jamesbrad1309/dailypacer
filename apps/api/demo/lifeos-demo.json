@@ -255,9 +255,7 @@
       "category": "health",
       "payee": "PureGym",
       "note": null,
-      "tags": [
-        "gym"
-      ],
+      "tags": ["gym"],
       "source": "import",
       "status": "CLEARED"
     },
@@ -268,9 +266,7 @@
       "category": "health",
       "payee": "PureGym",
       "note": null,
-      "tags": [
-        "gym"
-      ],
+      "tags": ["gym"],
       "source": "import",
       "status": "CLEARED"
     },
@@ -358,9 +354,7 @@
       "category": "transport",
       "payee": "TfL",
       "note": null,
-      "tags": [
-        "commute"
-      ],
+      "tags": ["commute"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -393,9 +387,7 @@
       "category": "transport",
       "payee": "TfL",
       "note": null,
-      "tags": [
-        "commute"
-      ],
+      "tags": ["commute"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -428,9 +420,7 @@
       "category": "transport",
       "payee": "TfL",
       "note": null,
-      "tags": [
-        "commute"
-      ],
+      "tags": ["commute"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -474,9 +464,7 @@
       "category": "transport",
       "payee": "TfL",
       "note": null,
-      "tags": [
-        "commute"
-      ],
+      "tags": ["commute"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -487,9 +475,7 @@
       "category": "drinks",
       "payee": "Brewdog",
       "note": null,
-      "tags": [
-        "friends"
-      ],
+      "tags": ["friends"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -533,9 +519,7 @@
       "category": "transport",
       "payee": "TfL",
       "note": null,
-      "tags": [
-        "commute"
-      ],
+      "tags": ["commute"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -579,9 +563,7 @@
       "category": "transport",
       "payee": "TfL",
       "note": null,
-      "tags": [
-        "commute"
-      ],
+      "tags": ["commute"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -614,9 +596,7 @@
       "category": "transport",
       "payee": "TfL",
       "note": null,
-      "tags": [
-        "commute"
-      ],
+      "tags": ["commute"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -638,9 +618,7 @@
       "category": "transport",
       "payee": "TfL",
       "note": null,
-      "tags": [
-        "commute"
-      ],
+      "tags": ["commute"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -662,9 +640,7 @@
       "category": "drinks",
       "payee": "Pub",
       "note": null,
-      "tags": [
-        "friends"
-      ],
+      "tags": ["friends"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -675,9 +651,7 @@
       "category": "drinks",
       "payee": "The Crown",
       "note": null,
-      "tags": [
-        "friends"
-      ],
+      "tags": ["friends"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -699,9 +673,7 @@
       "category": "transport",
       "payee": "TfL",
       "note": null,
-      "tags": [
-        "commute"
-      ],
+      "tags": ["commute"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -745,9 +717,7 @@
       "category": "transport",
       "payee": "TfL",
       "note": null,
-      "tags": [
-        "commute"
-      ],
+      "tags": ["commute"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -780,9 +750,7 @@
       "category": "transport",
       "payee": "TfL",
       "note": null,
-      "tags": [
-        "commute"
-      ],
+      "tags": ["commute"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -804,9 +772,7 @@
       "category": "transport",
       "payee": "TfL",
       "note": null,
-      "tags": [
-        "commute"
-      ],
+      "tags": ["commute"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -861,9 +827,7 @@
       "category": "drinks",
       "payee": "Brewdog",
       "note": null,
-      "tags": [
-        "friends"
-      ],
+      "tags": ["friends"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -885,9 +849,7 @@
       "category": "transport",
       "payee": "TfL",
       "note": null,
-      "tags": [
-        "commute"
-      ],
+      "tags": ["commute"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -909,9 +871,7 @@
       "category": "transport",
       "payee": "TfL",
       "note": null,
-      "tags": [
-        "commute"
-      ],
+      "tags": ["commute"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -933,9 +893,7 @@
       "category": "transport",
       "payee": "TfL",
       "note": null,
-      "tags": [
-        "commute"
-      ],
+      "tags": ["commute"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -946,9 +904,7 @@
       "category": "drinks",
       "payee": "Pub",
       "note": null,
-      "tags": [
-        "friends"
-      ],
+      "tags": ["friends"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -970,9 +926,7 @@
       "category": "transport",
       "payee": "TfL",
       "note": null,
-      "tags": [
-        "commute"
-      ],
+      "tags": ["commute"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -1005,9 +959,7 @@
       "category": "transport",
       "payee": "TfL",
       "note": null,
-      "tags": [
-        "commute"
-      ],
+      "tags": ["commute"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -1051,9 +1003,7 @@
       "category": "transport",
       "payee": "TfL",
       "note": null,
-      "tags": [
-        "commute"
-      ],
+      "tags": ["commute"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -1097,9 +1047,7 @@
       "category": "transport",
       "payee": "TfL",
       "note": null,
-      "tags": [
-        "commute"
-      ],
+      "tags": ["commute"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -1121,9 +1069,7 @@
       "category": "drinks",
       "payee": "The Crown",
       "note": null,
-      "tags": [
-        "friends"
-      ],
+      "tags": ["friends"],
       "source": "quick",
       "status": "CLEARED"
     },
@@ -1189,9 +1135,7 @@
       "category": "entertainment",
       "payee": "Everyman Cinema",
       "note": null,
-      "tags": [
-        "date-night"
-      ],
+      "tags": ["date-night"],
       "source": "form",
       "status": "CLEARED"
     },
@@ -1487,9 +1431,7 @@
       "endDay": null,
       "customFields": [],
       "finance": "NO_SPEND",
-      "categories": [
-        "groceries"
-      ],
+      "categories": ["groceries"],
       "pausedDay": null,
       "archived": false,
       "entries": []
@@ -1510,9 +1452,7 @@
       "endDay": null,
       "customFields": [],
       "finance": null,
-      "categories": [
-        "coffee"
-      ],
+      "categories": ["coffee"],
       "pausedDay": null,
       "archived": false,
       "entries": []
@@ -1521,9 +1461,7 @@
       "name": "Read",
       "createdDay": -42,
       "description": "A few pages before bed instead of the phone.",
-      "tags": [
-        "mind"
-      ],
+      "tags": ["mind"],
       "icon": "📖",
       "unit": "pages",
       "targetValue": 20,
@@ -1743,9 +1681,7 @@
       "name": "Meditate",
       "createdDay": -42,
       "description": null,
-      "tags": [
-        "mind"
-      ],
+      "tags": ["mind"],
       "icon": "🧘",
       "unit": "minutes",
       "targetValue": 10,
@@ -1965,9 +1901,7 @@
       "name": "Drink water",
       "createdDay": -42,
       "description": null,
-      "tags": [
-        "health"
-      ],
+      "tags": ["health"],
       "icon": "💧",
       "unit": "glasses",
       "targetValue": 8,
@@ -2235,10 +2169,7 @@
       "name": "Morning run",
       "createdDay": -42,
       "description": null,
-      "tags": [
-        "health",
-        "morning"
-      ],
+      "tags": ["health", "morning"],
       "icon": "🏃",
       "unit": null,
       "targetValue": null,
@@ -2357,9 +2288,7 @@
       "name": "Gym",
       "createdDay": -42,
       "description": "Membership's paid for: make it count.",
-      "tags": [
-        "health"
-      ],
+      "tags": ["health"],
       "icon": "🏋️",
       "unit": null,
       "targetValue": null,
@@ -2372,9 +2301,7 @@
       "endDay": null,
       "customFields": [],
       "finance": null,
-      "categories": [
-        "health"
-      ],
+      "categories": ["health"],
       "pausedDay": null,
       "archived": false,
       "entries": [
@@ -2426,9 +2353,7 @@
       "name": "No sugar",
       "createdDay": -42,
       "description": null,
-      "tags": [
-        "health"
-      ],
+      "tags": ["health"],
       "icon": "🍬",
       "unit": null,
       "targetValue": null,
@@ -2486,9 +2411,7 @@
       "name": "Guitar practice",
       "createdDay": -42,
       "description": null,
-      "tags": [
-        "fun"
-      ],
+      "tags": ["fun"],
       "icon": "🎸",
       "unit": "minutes",
       "targetValue": 15,
@@ -2624,9 +2547,7 @@
       "name": "Cold showers",
       "createdDay": -56,
       "description": null,
-      "tags": [
-        "health"
-      ],
+      "tags": ["health"],
       "icon": "🚿",
       "unit": null,
       "targetValue": null,
