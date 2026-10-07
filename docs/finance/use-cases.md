@@ -14,7 +14,7 @@ the doc that designs each one.
 | Area | ✅ | 🟡 | ⬜ | Top open items (impact) |
 | ---- | :-: | :-: | :-: | ----------------------- |
 | Account setup | 12 | 0 | 0 | — |
-| Quick log | 11 | 0 | 0 | — |
+| Quick log | 12 | 0 | 0 | — |
 | Transactions | 7 | 0 | 0 | — |
 | Categories | 4 | 0 | 0 | — |
 | Budgets | 4 | 0 | 0 | — |
@@ -51,6 +51,7 @@ the doc that designs each one.
 |  | ✅ | **Evening catch-up mode**: several entries in a row with the keypad kept open | 3 | See [quick-log.md](quick-log.md). "Log several (stay open)" shows today's entries under the sheet. |
 |  | ✅ | **"Save as preset?"** suggested after 3 repeats in 30 days | 2 | `QuickLogPayload.suggestPreset` |
 |  | ✅ | **No duplicate logs** from double taps or retries | 2 | `Transaction.clientId` upsert. Verified: 10 identical concurrent requests → 1 transaction. |
+|  | ✅ | **"Split with…"**: log a £60 dinner as your £20, with Sam and Alex each owing you £20 | 3 | Quick log's "Split with…" picks people (IOU accounts, or adds one), and splits evenly or by typed amounts. Your share is the expense; each other share moves from the paying account to that person's IOU. Undo or delete removes the whole bill. See [quick-log.md](quick-log.md#split-with) |
 | **Transactions** | ✅ | **Full transaction form** (payee, note, tags, any date) for when quick log isn't enough | 4 | Amount, date, account, category, payee, note and tags. `createTransaction`, see [graphql-schema.md](graphql-schema.md) |
 |  | ✅ | **Edit or delete a transaction** | 4 | Deleting one leg of a transfer deletes both. Delete is undoable from a toast. |
 |  | ✅ | **Pending transactions**: mark one as not gone through yet, confirm it later | 3 | `Transaction.status` PENDING/CLEARED. Counts in balances and reports; shown with a Pending badge; waits in To review until confirmed. Auto-logged charges start pending |
