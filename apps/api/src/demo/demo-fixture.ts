@@ -60,7 +60,7 @@ export interface DemoBudget {
 export interface DemoTransaction {
   account: string;
   day: number;
-  /** Negative = money out. */
+  /** Negative = money out. With `shares`, the whole bill. */
   amountMinor: number;
   category?: CategoryRef | null;
   payee?: string | null;
@@ -69,8 +69,14 @@ export interface DemoTransaction {
   /** How it was logged; "quick" and "form" tick the log-today habit. */
   source?: "form" | "quick" | "import";
   status?: "CLEARED" | "PENDING";
-  /** Split across categories; the parts add up to `amountMinor`. */
+  /** Split across categories; the parts add up to `amountMinor` (your share, for a shared bill). */
   splits?: { category: CategoryRef; amountMinor: number; note?: string | null }[];
+  /**
+   * "Split with…": other people's shares (IOU account refs), positive. The
+   * bill comes back as one linked group: your share as the expense, theirs
+   * as transfers to their IOUs.
+   */
+  shares?: { account: string; amountMinor: number }[];
 }
 
 export interface DemoTransfer {
