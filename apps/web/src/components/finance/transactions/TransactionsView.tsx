@@ -483,6 +483,11 @@ function TransactionRow({
     : [
         tx.payee && tx.note,
         // The inbox's own picker stands in for "To review"; a pending row shows its category.
+        tx.sharedTotalMinor !== null &&
+          t("finance.splitWith.yourShareOf", {
+            total: formatMoney(tx.sharedTotalMinor, tx.account.currency),
+            names: tx.sharedWith.map((s) => s.account.name).join(", "),
+          }),
         split
           ? splitLabel
           : review

@@ -13,6 +13,7 @@ import type {
 } from "#finance/dto/transaction.dto";
 import { FinanceHabitsService } from "#finance/finance-habits.service";
 import { MonthlyTotalsService } from "#finance/monthly-totals.service";
+import { type Share, myShare } from "#finance/split-with.util";
 import { splitProblem } from "#finance/split.util";
 
 const log = scopedLogger("TransactionsService");
@@ -287,12 +288,7 @@ export class TransactionsService {
     return transaction;
   }
 
-  /**
-   * Both legs of a transfer, created together: out of `from`, into `to`,
-   * sharing a `transferId`. Neither counts as spending or income (see
-   * MonthlyTotalsService.isCounted). Each leg's metadata names the other
-   * account, so a list can say "→ Amex" without a second lookup.
-   */
+  /** A transfer between two accounts, checked first, then both legs together (createTransferIn). */
   async createTransfer(input: CreateTransferInput): Promise<Transaction[]> {
     if (input.clientId) {
       const existing = await this.prisma.transaction.findUnique({
@@ -326,44 +322,16 @@ export class TransactionsService {
       );
     }
 
-    const transferId = randomUUID();
-    const date = fromIsoDate(input.date);
-    const legs = await this.prisma.$transaction(async (tx) => {
-      const out = await tx.transaction.create({
-        data: {
-          accountId: from.id,
-          date,
-          amountMinor: -input.amountMinor,
-          payee: to.name,
-          note: input.note ?? null,
-          transferId,
-          clientId: input.clientId,
-          source: "transfer",
-          metadata: { transferAccountId: to.id },
-        },
-      });
-      const into = await tx.transaction.create({
-        data: {
-          accountId: to.id,
-          date,
-          amountMinor: input.toAmountMinor ?? input.amountMinor,
-          payee: from.name,
-          note: input.note ?? null,
-          transferId,
-          clientId: input.clientId ? `${input.clientId}:in` : undefined,
-          source: "transfer",
-          metadata: { transferAccountId: from.id },
-        },
-      });
-      // No-ops (transfers aren't counted), but every write goes through the totals.
-      await this.totals.apply(tx, [
-        { row: out, sign: 1 },
-        { row: into, sign: 1 },
-      ]);
-      return [out, into];
-    });
+    const legs = await this.prisma.$transaction((tx) =>
+      this.createTransferIn(tx, { ...input, from, to }),
+    );
     log.info(
-      { transferId, fromAccountId: from.id, toAccountId: to.id, amountMinor: input.amountMinor },
+      {
+        transferId: legs[0].transferId,
+        fromAccountId: from.id,
+        toAccountId: to.id,
+        amountMinor: input.amountMinor,
+      },
       "transfer created",
     );
     // Moving money into a goal's account is saving (a savings goal's daily habit).
@@ -371,12 +339,80 @@ export class TransactionsService {
     return legs;
   }
 
-  /** Deleting one leg of a transfer deletes both, so money never half-moves. */
+  /**
+   * "Split with…": `input` is the whole bill; your share is logged as the
+   * expense and each other person's share moves from the paying account to
+   * their IOU account, so they owe you that much more and the paying
+   * account still shows the whole bill gone. All in one database
+   * transaction, linked by `metadata.splitGroupId` (deleting any of them
+   * deletes them all). The caller has checked the shares (shareProblem).
+   */
+  async createSharedExpense(
+    input: CreateTransactionInput,
+    shares: readonly Share[],
+    source: string,
+    clientId?: string,
+  ): Promise<Transaction> {
+    const totalMinor = -input.amountMinor;
+    const paying = await this.assertWritable(input.accountId, input.date);
+    await this.assertCategory(input.categoryId);
+    const people = await Promise.all(
+      shares.map((s) => this.assertWritable(s.accountId, input.date)),
+    );
+    for (const person of people) {
+      if (person.type !== "IOU")
+        throw new BadRequestException(`${person.name} isn't a person (IOU)`);
+      if (person.currency !== paying.currency) {
+        throw new BadRequestException(
+          `${person.name} is in ${person.currency}, the bill in ${paying.currency}`,
+        );
+      }
+    }
+
+    const splitGroupId = randomUUID();
+    const sharedWith = shares.map((s) => ({ accountId: s.accountId, amountMinor: s.amountMinor }));
+    const expense = await this.prisma.$transaction(async (tx) => {
+      const mine = await this.createIn(
+        tx,
+        { ...input, amountMinor: -myShare(totalMinor, shares) },
+        source,
+        clientId,
+        { splitGroupId, sharedTotalMinor: totalMinor, sharedWith },
+      );
+      for (const [i, share] of shares.entries()) {
+        const person = people[i];
+        await this.createTransferIn(tx, {
+          from: paying,
+          to: person,
+          date: input.date,
+          amountMinor: share.amountMinor,
+          note: `${input.payee ?? "Shared bill"}: ${person.name}'s share`,
+          clientId: clientId ? `${clientId}:share:${i}` : undefined,
+          metadata: { splitGroupId },
+        });
+      }
+      return mine;
+    });
+    log.info(
+      { transactionId: expense.id, splitGroupId, people: shares.length, totalMinor },
+      "shared expense created",
+    );
+    await this.financeHabits.syncDays([input.date]);
+    return expense;
+  }
+
+  /**
+   * Deleting one leg of a transfer deletes both, so money never half-moves;
+   * deleting any part of a split bill deletes the whole bill.
+   */
   async remove(id: string): Promise<{ ids: string[] }> {
     const existing = await this.findOne(id);
-    const where = existing.transferId
-      ? Prisma.sql`"transferId" = ${existing.transferId}`
-      : Prisma.sql`"id" = ${id}`;
+    const splitGroupId = (existing.metadata as { splitGroupId?: string }).splitGroupId;
+    const where = splitGroupId
+      ? Prisma.sql`"metadata"->>'splitGroupId' = ${splitGroupId}`
+      : existing.transferId
+        ? Prisma.sql`"transferId" = ${existing.transferId}`
+        : Prisma.sql`"id" = ${id}`;
     const doomed = await this.prisma.$transaction(async (tx) => {
       // Locked, then deleted: a second delete of the same row waits, then
       // finds nothing, so it's only taken out of the totals once.
@@ -413,6 +449,7 @@ export class TransactionsService {
     input: CreateTransactionInput,
     source: string,
     clientId?: string,
+    metadata?: Prisma.InputJsonObject,
   ): Promise<Transaction> {
     const created = await tx.transaction.create({
       data: {
@@ -426,10 +463,67 @@ export class TransactionsService {
         status: input.status ?? "CLEARED",
         source,
         clientId,
+        ...(metadata && { metadata }),
       },
     });
     await this.totals.apply(tx, [{ row: created, sign: 1 }]);
     return created;
+  }
+
+  /**
+   * Both legs of a transfer inside the caller's database transaction: out
+   * of `from`, into `to`, sharing a `transferId`. Neither counts as spending
+   * or income (see MonthlyTotalsService.isCounted). Each leg's metadata
+   * names the other account, so a list can say "→ Amex" without a second
+   * lookup.
+   */
+  private async createTransferIn(
+    tx: Prisma.TransactionClient,
+    t: {
+      from: Account;
+      to: Account;
+      date: string;
+      amountMinor: number;
+      toAmountMinor?: number;
+      note?: string | null;
+      clientId?: string;
+      metadata?: Prisma.InputJsonObject;
+    },
+  ): Promise<Transaction[]> {
+    const transferId = randomUUID();
+    const date = fromIsoDate(t.date);
+    const out = await tx.transaction.create({
+      data: {
+        accountId: t.from.id,
+        date,
+        amountMinor: -t.amountMinor,
+        payee: t.to.name,
+        note: t.note ?? null,
+        transferId,
+        clientId: t.clientId,
+        source: "transfer",
+        metadata: { ...t.metadata, transferAccountId: t.to.id },
+      },
+    });
+    const into = await tx.transaction.create({
+      data: {
+        accountId: t.to.id,
+        date,
+        amountMinor: t.toAmountMinor ?? t.amountMinor,
+        payee: t.from.name,
+        note: t.note ?? null,
+        transferId,
+        clientId: t.clientId ? `${t.clientId}:in` : undefined,
+        source: "transfer",
+        metadata: { ...t.metadata, transferAccountId: t.from.id },
+      },
+    });
+    // No-ops (transfers aren't counted), but every write goes through the totals.
+    await this.totals.apply(tx, [
+      { row: out, sign: 1 },
+      { row: into, sign: 1 },
+    ]);
+    return [out, into];
   }
 
   async assertWritable(accountId: string, date: string): Promise<Account> {

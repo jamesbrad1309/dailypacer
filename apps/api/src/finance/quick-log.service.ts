@@ -16,6 +16,7 @@ import type {
   QuickLogInput,
 } from "#finance/dto/quick-log.dto";
 import { PayeeRulesService } from "#finance/payee-rules.service";
+import { shareProblem } from "#finance/split-with.util";
 import { TransactionsService } from "#finance/transactions.service";
 
 const log = scopedLogger("QuickLogService");
@@ -184,20 +185,27 @@ export class QuickLogService {
     // Left for "To review": a payee rule the user wrote may know where it goes.
     const categoryId = input.categoryId ?? (await this.payeeRules.categoryFor(input.payee));
 
+    const shares = input.splitWith ?? [];
+    if (shares.length > 0) {
+      if (input.isIncome) throw new BadRequestException("Only an expense can be split with others");
+      const problem = shareProblem(input.amountMinor, shares);
+      if (problem) throw new BadRequestException(problem);
+    }
+    const draft = {
+      accountId,
+      categoryId,
+      date,
+      amountMinor,
+      payee: input.payee ?? null,
+      note: input.note ?? null,
+    };
+
     let transaction: Transaction;
     try {
-      transaction = await this.transactions.create(
-        {
-          accountId,
-          categoryId,
-          date,
-          amountMinor,
-          payee: input.payee ?? null,
-          note: input.note ?? null,
-        },
-        "quick",
-        input.clientId,
-      );
+      transaction =
+        shares.length > 0
+          ? await this.transactions.createSharedExpense(draft, shares, "quick", input.clientId)
+          : await this.transactions.create(draft, "quick", input.clientId);
     } catch (err) {
       // Two identical requests raced past the lookup above; the unique
       // clientId let one through. Return that one.

@@ -453,6 +453,10 @@ export interface Transaction {
   category: Category | null;
   /** Split across categories: then `category` is null and these add up to the amount. */
   splits: TransactionSplit[];
+  /** "Split with…": the whole bill, while amountMinor is your share; null otherwise. */
+  sharedTotalMinor: number | null;
+  /** Others' shares, added to what they owe you. */
+  sharedWith: { amountMinor: number; account: Pick<Account, "id" | "name"> }[];
 }
 
 export interface TransactionFilter {

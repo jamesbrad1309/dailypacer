@@ -52,6 +52,8 @@ const tx = (over: Partial<Transaction>): Transaction => ({
   account: { id: "a", name: "Current", currency: "GBP" },
   category: category("Groceries"),
   splits: [],
+  sharedTotalMinor: null,
+  sharedWith: [],
   ...over,
 });
 
