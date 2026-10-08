@@ -21,6 +21,7 @@ import { DASHBOARD_STATS_QUERY, HABITS_QUERY, UPDATE_HABIT_MUTATION } from "#gra
 import type { Habit } from "#graphql/types";
 import {
   cleanCustomFields,
+  fieldIssue,
   type HabitDraft,
   type HabitDraftAction,
   habitDraftFrom,
@@ -172,7 +173,7 @@ export function EditHabitDialog({ habit }: { habit: Habit }) {
           <Button variant="outline" onClick={() => setOpen(false)}>
             {t("common.cancel")}
           </Button>
-          <Button onClick={handleSave} disabled={loading}>
+          <Button onClick={handleSave} disabled={loading || draft.customFields.some(fieldIssue)}>
             {t("common.save")}
           </Button>
         </DialogFooter>

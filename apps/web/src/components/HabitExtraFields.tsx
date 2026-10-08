@@ -1,12 +1,19 @@
 import { Plus, X } from "lucide-react";
-import { useId } from "react";
+import { type ReactNode, useId } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "#components/ui/button";
+import { Checkbox } from "#components/ui/checkbox";
 import { Input } from "#components/ui/input";
 import { Label } from "#components/ui/label";
-import type { HabitPolarity } from "#graphql/types";
+import type { HabitFieldType, HabitPolarity } from "#graphql/types";
 import { addDays, todayIsoDate } from "#lib/dates";
-import { type DraftField, draftField } from "#lib/habit-draft";
+import {
+  changeFieldType,
+  type DraftField,
+  draftField,
+  fieldIssue,
+  parseOptions,
+} from "#lib/habit-draft";
 import { cn } from "#lib/utils";
 
 interface Props {
@@ -37,8 +44,6 @@ export function HabitExtraFields({
 }: Props) {
   const { t } = useTranslation();
   const id = useId();
-  const setField = (index: number, patch: Partial<DraftField>) =>
-    onCustomFields(customFields.map((f, i) => (i === index ? { ...f, ...patch } : f)));
 
   return (
     <>
@@ -117,33 +122,15 @@ export function HabitExtraFields({
       <div className="flex flex-col gap-2">
         <p className="text-sm font-medium">{t("habits.edit.customFields")}</p>
         {customFields.map((field, index) => (
-          <div key={field.key} className="flex gap-1.5">
-            <Input
-              aria-label={t("habits.edit.fieldLabel", { n: index + 1 })}
-              placeholder={t("habits.edit.fieldLabelPlaceholder")}
-              maxLength={50}
-              className="w-36"
-              value={field.label}
-              onChange={(e) => setField(index, { label: e.target.value })}
-            />
-            <Input
-              aria-label={t("habits.edit.fieldValue", { n: index + 1 })}
-              placeholder={t("habits.edit.fieldValuePlaceholder")}
-              maxLength={500}
-              className="min-w-0 flex-1"
-              value={field.value}
-              onChange={(e) => setField(index, { value: e.target.value })}
-            />
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              aria-label={t("habits.edit.removeField", { n: index + 1 })}
-              onClick={() => onCustomFields(customFields.filter((_, i) => i !== index))}
-            >
-              <X className="size-4" />
-            </Button>
-          </div>
+          <CustomFieldRow
+            key={field.key}
+            field={field}
+            n={index + 1}
+            onChange={(next) =>
+              onCustomFields(customFields.map((f, i) => (i === index ? next : f)))
+            }
+            onRemove={() => onCustomFields(customFields.filter((_, i) => i !== index))}
+          />
         ))}
         <Button
           type="button"
@@ -157,5 +144,133 @@ export function HabitExtraFields({
         </Button>
       </div>
     </>
+  );
+}
+
+const FIELD_TYPES: HabitFieldType[] = ["TEXT", "NUMBER", "BOOLEAN", "SELECT", "DATE"];
+
+const selectClass =
+  "h-9 rounded-md border border-input bg-transparent px-2 text-sm shadow-sm outline-none focus-visible:ring-1 focus-visible:ring-ring";
+
+/** One of the user's fields: its name, what it holds, and a value input that fits. */
+function CustomFieldRow({
+  field,
+  n,
+  onChange,
+  onRemove,
+}: {
+  field: DraftField;
+  n: number;
+  onChange: (field: DraftField) => void;
+  onRemove: () => void;
+}) {
+  const { t } = useTranslation();
+  const id = useId();
+  const issue = fieldIssue(field);
+  const set = (patch: Partial<DraftField>) => onChange({ ...field, ...patch });
+  const valueLabel = t("habits.edit.fieldValue", { n });
+
+  let input: ReactNode;
+  switch (field.type) {
+    case "BOOLEAN":
+      input = (
+        <div className="flex h-9 min-w-0 flex-1 items-center gap-2 text-sm">
+          <Checkbox
+            aria-label={valueLabel}
+            checked={field.value === "true"}
+            onCheckedChange={(checked) => set({ value: checked === true ? "true" : "false" })}
+          />
+          <span aria-hidden>
+            {t(field.value === "true" ? "habits.edit.yes" : "habits.edit.no")}
+          </span>
+        </div>
+      );
+      break;
+    case "SELECT":
+      input = (
+        <select
+          aria-label={valueLabel}
+          className={cn(selectClass, "min-w-0 flex-1")}
+          value={parseOptions(field.options).includes(field.value) ? field.value : ""}
+          onChange={(e) => set({ value: e.target.value })}
+        >
+          <option value="">—</option>
+          {parseOptions(field.options).map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      );
+      break;
+    default:
+      input = (
+        <Input
+          aria-label={valueLabel}
+          aria-invalid={issue === "invalidValue" || undefined}
+          aria-describedby={issue ? `${id}-issue` : undefined}
+          type={field.type === "NUMBER" ? "number" : field.type === "DATE" ? "date" : "text"}
+          step={field.type === "NUMBER" ? "any" : undefined}
+          placeholder={field.type === "TEXT" ? t("habits.edit.fieldValuePlaceholder") : undefined}
+          maxLength={500}
+          className="min-w-0 flex-1"
+          value={field.value}
+          onChange={(e) => set({ value: e.target.value })}
+        />
+      );
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5 rounded-md border p-2">
+      <div className="flex flex-wrap gap-1.5">
+        <Input
+          aria-label={t("habits.edit.fieldLabel", { n })}
+          placeholder={t("habits.edit.fieldLabelPlaceholder")}
+          maxLength={50}
+          className="w-36"
+          value={field.label}
+          onChange={(e) => set({ label: e.target.value })}
+        />
+        <select
+          aria-label={t("habits.edit.fieldType", { n })}
+          className={selectClass}
+          value={field.type}
+          onChange={(e) => onChange(changeFieldType(field, e.target.value as HabitFieldType))}
+        >
+          {FIELD_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {t(`habits.edit.fieldTypes.${type}`)}
+            </option>
+          ))}
+        </select>
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          className="ml-auto"
+          aria-label={t("habits.edit.removeField", { n })}
+          onClick={onRemove}
+        >
+          <X className="size-4" />
+        </Button>
+      </div>
+      {field.type === "SELECT" && (
+        <Input
+          aria-label={t("habits.edit.fieldOptions", { n })}
+          aria-invalid={issue === "needsOptions" || undefined}
+          aria-describedby={issue ? `${id}-issue` : undefined}
+          placeholder={t("habits.edit.fieldOptionsPlaceholder")}
+          maxLength={1000}
+          value={field.options}
+          onChange={(e) => set({ options: e.target.value })}
+        />
+      )}
+      <div className="flex">{input}</div>
+      {issue && (
+        <p id={`${id}-issue`} className="text-xs text-destructive">
+          {t(`habits.edit.fieldIssue.${issue}`)}
+        </p>
+      )}
+    </div>
   );
 }

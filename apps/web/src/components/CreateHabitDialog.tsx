@@ -22,6 +22,7 @@ import { onAction } from "#lib/command-palette";
 import {
   BLANK_HABIT_DRAFT,
   cleanCustomFields,
+  fieldIssue,
   type HabitDraft,
   type HabitDraftAction,
   habitDraftReducer,
@@ -74,7 +75,7 @@ export function CreateHabitDialog() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || draft.customFields.some(fieldIssue)) return;
     await createHabit({
       variables: {
         input: {
@@ -231,7 +232,10 @@ export function CreateHabitDialog() {
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               {t("common.cancel")}
             </Button>
-            <Button type="submit" disabled={loading || !name.trim()}>
+            <Button
+              type="submit"
+              disabled={loading || !name.trim() || draft.customFields.some(fieldIssue)}
+            >
               {t("common.add")}
             </Button>
           </DialogFooter>
