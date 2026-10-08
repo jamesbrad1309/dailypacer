@@ -771,3 +771,31 @@ model PayeeRule {
 
   @@map("payee_rules")
 }
+
+/// An inbox item, GitHub style (docs/backend/notifications.md). Made by the
+/// sync from what's true now (a task overdue, a budget crossed, a streak at
+/// risk); the web app words it from `kind` and `params` in the user's language.
+model Notification {
+  id          String    @id @default(uuid())
+  /// What it's about, so a sync never makes it twice: "task-due:<taskId>:<dueOn>".
+  key         String    @unique
+  /// "task.overdue", "money.budget", "habit.streakAtRisk", "achievement.unlocked"…
+  kind        String
+  /// What the message names: a task's title, a category, an amount.
+  params      Json      @default("{}")
+  /// In-app path it opens.
+  link        String?
+  /// When it last changed in a way worth seeing again; a change re-surfaces it as unread.
+  fingerprint String    @default("")
+  /// When it arrived or last re-surfaced: the inbox's order.
+  surfacedAt  DateTime  @default(now())
+  readAt      DateTime?
+  /// Done (out of the inbox): by the user, or by the sync once its condition has passed.
+  doneAt      DateTime?
+  savedAt     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([doneAt, surfacedAt])
+  @@map("notifications")
+}
