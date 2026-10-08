@@ -28,6 +28,7 @@ import {
   CATEGORIES_QUERY,
   DELETE_TRANSACTION_MUTATION,
   TO_REVIEW_COUNT_QUERY,
+  TRANSACTION_TAGS_QUERY,
   TRANSACTIONS_QUERY,
   TRANSACTIONS_REFETCH,
   UPDATE_TRANSACTION_MUTATION,
@@ -62,6 +63,7 @@ export interface TransactionsSearch {
   account?: string;
   category?: string;
   q?: string;
+  tag?: string;
 }
 
 interface Props {
@@ -82,6 +84,7 @@ export function transactionFilter(search: TransactionsSearch): TransactionFilter
     accountId: search.account ?? null,
     categoryId: search.category ?? null,
     search: search.q ?? null,
+    tag: search.tag ?? null,
   };
 }
 
@@ -130,6 +133,11 @@ export function TransactionsView({ search, onSearchChange }: Props) {
   });
   const { data: categoriesData } = useQuery<{ categories: Category[] }>(CATEGORIES_QUERY);
   const { data: accountsData } = useQuery<AccountsData>(ACCOUNTS_QUERY);
+  // Refreshed on each visit: a tag added in the form appears without a reload.
+  const { data: tagsData } = useQuery<{ transactionTags: { tag: string; count: number }[] }>(
+    TRANSACTION_TAGS_QUERY,
+    { fetchPolicy: "cache-and-network" },
+  );
   const categories = categoriesData?.categories ?? [];
   const accounts = accountsData?.accounts ?? [];
 
@@ -205,7 +213,10 @@ export function TransactionsView({ search, onSearchChange }: Props) {
   const toReview = reviewData?.toReviewCount ?? 0;
   const review = search.view === "review";
   const month = search.month ?? currentMonth();
-  const filtered = Boolean(search.account || search.category || search.q);
+  const filtered = Boolean(search.account || search.category || search.q || search.tag);
+  const tags = tagsData?.transactionTags.map((entry) => entry.tag) ?? [];
+  // A tag from a link or an old URL stays pickable even once nothing carries it.
+  if (search.tag && !tags.includes(search.tag)) tags.unshift(search.tag);
 
   // Group by day, keeping the server's newest-first order.
   const days: { date: string; items: Transaction[] }[] = [];
@@ -330,12 +341,32 @@ export function TransactionsView({ search, onSearchChange }: Props) {
               </option>
             ))}
           </select>
+          {tags.length > 0 && (
+            <select
+              aria-label={t("finance.transactions.tag")}
+              className={selectClass}
+              value={search.tag ?? ""}
+              onChange={(e) => onSearchChange({ tag: e.target.value || undefined })}
+            >
+              <option value="">{t("finance.transactions.allTags")}</option>
+              {tags.map((tag) => (
+                <option key={tag} value={tag}>
+                  #{tag}
+                </option>
+              ))}
+            </select>
+          )}
           {filtered && (
             <Button
               variant="ghost"
               size="sm"
               onClick={() =>
-                onSearchChange({ account: undefined, category: undefined, q: undefined })
+                onSearchChange({
+                  account: undefined,
+                  category: undefined,
+                  q: undefined,
+                  tag: undefined,
+                })
               }
             >
               {t("common.clearFilters")}

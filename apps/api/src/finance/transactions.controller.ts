@@ -57,13 +57,19 @@ export class TransactionsController {
   ) {}
 
   /**
-   * `GET /transactions?accountId&categoryId&from&to&search&uncategorised&first&after`:
+   * `GET /transactions?accountId&categoryId&from&to&search&tag&uncategorised&first&after`:
    * newest first, cursor-paginated.
    */
   @Get()
   async list(@Query(new ZodValidationPipe(listTransactionsSchema)) input: ListTransactionsInput) {
     const page = await this.transactions.list(input);
     return { items: page.items.map(toTransactionDto), nextCursor: page.nextCursor };
+  }
+
+  /** `GET /transactions/tags`: every tag in use with how many transactions carry it, most used first. */
+  @Get("tags")
+  tags() {
+    return this.transactions.tagCounts();
   }
 
   /**

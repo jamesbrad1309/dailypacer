@@ -121,6 +121,8 @@ input TransactionFilter {
   from: String
   to: String
   search: String
+  """Only transactions carrying this tag."""
+  tag: String
   includeTransfers: Boolean = true
   """The quick-log "To review" inbox."""
   uncategorisedOnly: Boolean = false
@@ -179,6 +181,8 @@ extend type Query {
   netWorthMinor: Int!
   categories: [Category!]!
   transactions(filter: TransactionFilter, first: Int = 50, after: String): TransactionPage!
+  """Every tag in use with its count, most used first: the tag filter's options."""
+  transactionTags: [TransactionTag!]!
   budget(month: String!): [BudgetLine!]!
   spendByCategory(month: String!): [CategorySpend!]!
   cashFlow(months: Int = 12): [MonthCashFlow!]!
