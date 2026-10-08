@@ -1,0 +1,36 @@
+"""
+Facts for the admin dashboard (apps/admin). Like the rest of the schema
+there's no sign-in yet; see docs/admin/use-cases.md.
+"""
+type AdminOverview {
+  tables: [AdminTableCount!]!
+  database: AdminDatabase!
+  server: AdminServer!
+}
+
+type AdminTableCount {
+  """habits | journal | finance | tasks"""
+  area: String!
+  """The Prisma model name, e.g. Transaction."""
+  table: String!
+  rows: Int!
+}
+
+type AdminDatabase {
+  """Applied Prisma migrations."""
+  migrations: Int!
+  latestMigration: String
+  """ISO timestamp the newest migration finished."""
+  latestAppliedAt: String
+}
+
+"""The API process (apps/api)."""
+type AdminServer {
+  nodeVersion: String!
+  uptimeSeconds: Int!
+  startedAt: String!
+}
+
+extend type Query {
+  adminOverview: AdminOverview!
+}

@@ -84,6 +84,12 @@ export interface ApiDashboardStats {
   activeStreakCount: number;
 }
 
+export interface ApiAdminOverview {
+  tables: { area: string; table: string; rows: number }[];
+  database: { migrations: number; latestMigration: string | null; latestAppliedAt: string | null };
+  server: { nodeVersion: string; uptimeSeconds: number; startedAt: string };
+}
+
 export type ApiJournalEntryKind = "ACTION" | "FEELING" | "EVENT";
 
 export interface ApiJournalEntry {
