@@ -5,5 +5,6 @@ import { TodosService } from "#todos/todos.service";
 @Module({
   controllers: [TodosController],
   providers: [TodosService],
+  exports: [TodosService],
 })
 export class TodosModule {}

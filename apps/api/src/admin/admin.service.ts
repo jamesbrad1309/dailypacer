@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "#common/database/prisma.service";
+import { asSystem } from "#common/database/request-context";
 
 /** One table's row count, grouped by product area for the admin overview. */
 export interface TableCount {
@@ -24,7 +25,15 @@ const startedAt = new Date();
 export class AdminService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async overview(): Promise<AdminOverview> {
+  /**
+   * Row counts across everyone (as the system): totals only, so admins learn
+   * how big the database is without reading anyone's data.
+   */
+  overview(): Promise<AdminOverview> {
+    return asSystem(() => this.counts());
+  }
+
+  private async counts(): Promise<AdminOverview> {
     const db = this.prisma;
     const counts: [TableCount["area"], string, Promise<number>][] = [
       ["habits", "Habit", db.habit.count()],

@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import type { Category } from "@prisma/client";
 import { PrismaService } from "#common/database/prisma.service";
+import { currentUserId } from "#common/database/request-context";
 import { fromIsoDate, toIsoDate } from "#finance/calendar.util";
 import { CurrenciesService } from "#finance/currencies.service";
 import { toMainMinor } from "#finance/currency-math.util";
@@ -269,7 +270,8 @@ export class ReportsService {
       FROM "transactions" t
       JOIN "accounts" a ON a."id" = t."accountId"
       LEFT JOIN "categories" c ON c."id" = t."categoryId"
-      WHERE t."date" BETWEEN ${fromIsoDate(from)} AND ${fromIsoDate(to)}
+      WHERE t."userId" = ${currentUserId()}
+        AND t."date" BETWEEN ${fromIsoDate(from)} AND ${fromIsoDate(to)}
         AND t."transferId" IS NULL AND t."source" <> 'adjustment'
         AND t."payee" IS NOT NULL AND trim(t."payee") <> ''
         AND (c."kind" IS NULL OR c."kind" <> 'income')
@@ -323,7 +325,7 @@ export class ReportsService {
         SELECT "accountId", to_char("date", 'YYYY-MM') AS "month",
                SUM("amountMinor")::int AS "amountMinor"
         FROM "transactions"
-        WHERE "date" <= ${lastDay}
+        WHERE "userId" = ${currentUserId()} AND "date" <= ${lastDay}
         GROUP BY 1, 2`,
     ]);
     const balances = balancesByMonth(

@@ -9,6 +9,7 @@ import type { CreateUserInput, UpdateUserInput } from "#auth/dto/auth.dto";
 import { hashPassword } from "#auth/password";
 import { type Decision, decide, permissionsOn, type Request } from "#auth/policy";
 import { type AuthUser, SessionsService } from "#auth/sessions.service";
+import { UNCLAIMED_EMAIL, UserSetupService } from "#auth/user-setup.service";
 import { PrismaService } from "#common/database/prisma.service";
 import { scopedLogger } from "#common/logger/logger";
 
@@ -26,6 +27,7 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly sessions: SessionsService,
+    private readonly setup: UserSetupService,
   ) {}
 
   private view(subject: AuthUser, user: User) {
@@ -44,7 +46,11 @@ export class UsersService {
 
   /** Pending sign-ups first (they're waiting on someone), then by name. */
   async list(subject: AuthUser) {
-    const users = await this.prisma.user.findMany({ orderBy: [{ name: "asc" }, { email: "asc" }] });
+    // The unclaimed owner isn't a person; it holds data from before accounts until claimed.
+    const users = await this.prisma.user.findMany({
+      where: { email: { not: UNCLAIMED_EMAIL } },
+      orderBy: [{ name: "asc" }, { email: "asc" }],
+    });
     const pendingFirst = [...users].sort(
       (a, b) => Number(b.status === "PENDING") - Number(a.status === "PENDING"),
     );
@@ -68,6 +74,7 @@ export class UsersService {
         status: "ACTIVE",
       },
     });
+    await this.setup.provision(user.id);
     log.info({ by: subject.id, userId: user.id, role: user.role }, "user created");
     return this.view(subject, user);
   }

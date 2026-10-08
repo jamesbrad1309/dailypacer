@@ -1,6 +1,7 @@
 import { writeFileSync } from "node:fs";
 import type { Account, PrismaClient } from "@prisma/client";
 import { PrismaService } from "#common/database/prisma.service";
+import { asUser } from "#common/database/request-context";
 import {
   DEMO_VERSION,
   type DemoAccount,
@@ -10,11 +11,13 @@ import {
   monthOffsetOf,
   offsetOf,
 } from "#demo/demo-fixture";
+import { demoUser } from "#demo/demo-user";
 import { toIsoDate } from "#finance/calendar.util";
 import { LOGGED_TODAY, NO_SPEND, SAVINGS_GOAL } from "#finance/finance-habits.util";
 
 /**
- * `demo:export [file] [--today=YYYY-MM-DD]`: the database as a demo fixture
+ * `demo:export [file] [--today=YYYY-MM-DD] [--user=email]`: one user's data
+ * (the owner by default; see demo-user.ts) as a demo fixture
  * (demo-fixture.ts), every date an offset from `today`. Only what
  * `demo:import` can rebuild is written; anything else is counted on stderr.
  */
@@ -24,11 +27,12 @@ async function main() {
   const file = args.find((a) => !a.startsWith("--"));
   const prisma = new PrismaService();
   try {
-    const fixture = await exportFixture(prisma, today);
+    const user = await demoUser(prisma, args);
+    const fixture = await asUser(user.id, () => exportFixture(prisma, today));
     const json = `${JSON.stringify(fixture, null, 2)}\n`;
     if (file) {
       writeFileSync(file, json);
-      console.error(`Exported to ${file} (dates relative to ${today})`);
+      console.error(`Exported ${user.email} to ${file} (dates relative to ${today})`);
     } else {
       process.stdout.write(json);
     }

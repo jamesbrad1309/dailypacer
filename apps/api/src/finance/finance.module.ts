@@ -80,6 +80,13 @@ import { HabitsModule } from "#habits/habits.module";
     LifeLevelService,
   ],
   // For notifications: card payments due, budgets crossed, goals reached, charges to confirm.
-  exports: [AccountsService, BudgetsService, SavingsGoalsService, SubscriptionsService],
+  exports: [
+    AccountsService,
+    BudgetsService,
+    CategoriesService,
+    CurrenciesService,
+    SavingsGoalsService,
+    SubscriptionsService,
+  ],
 })
 export class FinanceModule {}

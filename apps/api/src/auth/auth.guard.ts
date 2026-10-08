@@ -9,6 +9,7 @@ import { Reflector } from "@nestjs/core";
 import { type AuthedRequest, IS_PUBLIC, REQUIRED_ACTION } from "#auth/decorators";
 import { type Action, decide, type Request } from "#auth/policy";
 import { SessionsService } from "#auth/sessions.service";
+import { setCurrentUser } from "#common/database/request-context";
 
 /**
  * Runs before every route (registered globally in AuthModule): finds the
@@ -34,6 +35,8 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException({ message: "Sign in to continue.", reason: "SIGNED_OUT" });
     req.user = user;
     req.sessionToken = token;
+    // From here on, every query in this request sees only this user's data.
+    setCurrentUser(user.id);
 
     const action =
       this.reflector.getAllAndOverride<Action>(REQUIRED_ACTION, targets) ??

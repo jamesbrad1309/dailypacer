@@ -13,6 +13,8 @@ import {
   type Transaction,
 } from "@prisma/client";
 import { PrismaService } from "#common/database/prisma.service";
+import { currentUserId } from "#common/database/request-context";
+import { clientIdKey } from "#common/database/user-keys";
 import { scopedLogger } from "#common/logger/logger";
 import { fromIsoDate, toIsoDate } from "#finance/calendar.util";
 import { CurrenciesService } from "#finance/currencies.service";
@@ -392,7 +394,8 @@ export class SubscriptionsService {
   private async autoLogOne(id: string, today: string): Promise<string[]> {
     return this.prisma.$transaction(async (tx) => {
       // A concurrent catch-up waits here, then finds autoLoggedThrough already moved.
-      await tx.$queryRaw`SELECT "id" FROM "subscriptions" WHERE "id" = ${id} FOR UPDATE`;
+      await tx.$queryRaw`
+        SELECT "id" FROM "subscriptions" WHERE "id" = ${id} AND "userId" = ${currentUserId()} FOR UPDATE`;
       const sub = await tx.subscription.findUnique({
         where: { id },
         include: { prices: true, account: true, charges: { select: { dueOn: true } } },
@@ -414,7 +417,7 @@ export class SubscriptionsService {
           if (answered.has(dueOn)) continue;
           const clientId = `subscription:${id}:${dueOn}`;
           const transaction =
-            (await tx.transaction.findUnique({ where: { clientId } })) ??
+            (await tx.transaction.findUnique({ where: clientIdKey(clientId) })) ??
             (await this.transactions.createIn(
               tx,
               {
@@ -475,7 +478,7 @@ export class SubscriptionsService {
     // Deterministic, so a retry after a half-finished confirm finds the
     // transaction it already made instead of logging a second one.
     const clientId = `subscription:${id}:${input.dueOn}`;
-    let transaction = await this.prisma.transaction.findUnique({ where: { clientId } });
+    let transaction = await this.prisma.transaction.findUnique({ where: clientIdKey(clientId) });
     if (!transaction) {
       try {
         transaction = await this.transactions.create(

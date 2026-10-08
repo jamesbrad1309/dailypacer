@@ -1,11 +1,7 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-  type OnModuleInit,
-} from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import type { Currency } from "@prisma/client";
 import { PrismaService } from "#common/database/prisma.service";
+import { currencyKey } from "#common/database/user-keys";
 import { scopedLogger } from "#common/logger/logger";
 import { toIsoDate } from "#finance/calendar.util";
 import { type ConversionContext, type RateTable, rateToMain } from "#finance/currency-math.util";
@@ -54,19 +50,20 @@ function isIsoCode(code: string): boolean {
  * know where rates come from.
  */
 @Injectable()
-export class CurrenciesService implements OnModuleInit {
+export class CurrenciesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly rates: ExchangeRatesService,
   ) {}
 
   /** A fresh database gets a main currency; one left without (it shouldn't be) gets one back. */
-  async onModuleInit(): Promise<void> {
+  /** Gives the user a main currency if they have none (UserSetupService). */
+  async ensureMain(): Promise<void> {
     const main = await this.prisma.currency.findFirst({ where: { isMain: true } });
     if (main) return;
     const first = await this.prisma.currency.findFirst({ orderBy: { sortOrder: "asc" } });
     if (first) {
-      await this.prisma.currency.update({ where: { code: first.code }, data: { isMain: true } });
+      await this.prisma.currency.update({ where: currencyKey(first.code), data: { isMain: true } });
     } else {
       await this.prisma.currency.create({ data: { code: DEFAULT_MAIN, isMain: true } });
     }
@@ -79,7 +76,7 @@ export class CurrenciesService implements OnModuleInit {
   }
 
   async assertInUse(code: string): Promise<void> {
-    const found = await this.prisma.currency.findUnique({ where: { code } });
+    const found = await this.prisma.currency.findUnique({ where: currencyKey(code) });
     if (!found) throw new BadRequestException(`${code} isn't one of your currencies; add it first`);
   }
 
@@ -140,7 +137,7 @@ export class CurrenciesService implements OnModuleInit {
     if (!isIsoCode(code)) throw new BadRequestException(`${code} isn't an ISO 4217 currency code`);
     const last = await this.prisma.currency.aggregate({ _max: { sortOrder: true } });
     await this.prisma.currency.upsert({
-      where: { code },
+      where: currencyKey(code),
       create: { code, sortOrder: (last._max.sortOrder ?? -1) + 1 },
       update: {},
     });
@@ -148,7 +145,7 @@ export class CurrenciesService implements OnModuleInit {
   }
 
   async remove(code: string): Promise<void> {
-    const currency = await this.prisma.currency.findUnique({ where: { code } });
+    const currency = await this.prisma.currency.findUnique({ where: currencyKey(code) });
     if (!currency) throw new NotFoundException(`${code} isn't one of your currencies`);
     if (currency.isMain)
       throw new BadRequestException(
@@ -156,7 +153,7 @@ export class CurrenciesService implements OnModuleInit {
       );
     const inUse = await this.prisma.account.count({ where: { currency: code } });
     if (inUse > 0) throw new BadRequestException(`${inUse} account(s) use ${code}`);
-    await this.prisma.currency.delete({ where: { code } });
+    await this.prisma.currency.delete({ where: currencyKey(code) });
     log.info({ code }, "currency removed");
   }
 
@@ -169,16 +166,19 @@ export class CurrenciesService implements OnModuleInit {
     await this.prisma.$transaction(async (tx) => {
       await tx.currency.updateMany({ where: { isMain: true }, data: { isMain: false } });
       await tx.currency.updateMany({ data: { overrideToMain: null } });
-      await tx.currency.update({ where: { code }, data: { isMain: true } });
+      await tx.currency.update({ where: currencyKey(code), data: { isMain: true } });
     });
     log.info({ code }, "main currency changed");
   }
 
   async setOverride(code: string, rateToMain: number | null): Promise<void> {
-    const currency = await this.prisma.currency.findUnique({ where: { code } });
+    const currency = await this.prisma.currency.findUnique({ where: currencyKey(code) });
     if (!currency) throw new NotFoundException(`${code} isn't one of your currencies`);
     if (currency.isMain) throw new BadRequestException("The main currency's rate is always 1");
-    await this.prisma.currency.update({ where: { code }, data: { overrideToMain: rateToMain } });
+    await this.prisma.currency.update({
+      where: currencyKey(code),
+      data: { overrideToMain: rateToMain },
+    });
     log.info({ code, overridden: rateToMain !== null }, "exchange rate override set");
   }
 }

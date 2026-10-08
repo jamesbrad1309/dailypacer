@@ -1,6 +1,7 @@
 import { Injectable, type OnModuleInit } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "#common/database/prisma.service";
+import { currentUserId } from "#common/database/request-context";
 import { scopedLogger } from "#common/logger/logger";
 import { toIsoDate } from "#finance/calendar.util";
 
@@ -156,31 +157,36 @@ export class MonthlyTotalsService implements OnModuleInit {
   }
 
   /**
-   * Recounts every total from `transactions` and replaces the table, in one
-   * transaction. For recovery if the totals ever drift (a CHECK constraint
-   * refusing a write is the symptom), and to prove they haven't.
+   * Recounts the signed-in user's totals from their transactions and
+   * replaces them, in one transaction. For recovery if the totals ever drift
+   * (a CHECK constraint refusing a write is the symptom), and to prove they
+   * haven't.
    */
   async rebuild(): Promise<RebuildResult> {
+    const userId = currentUserId();
+    const fresh = freshTotals(userId);
+    // The user's buckets: monthly_totals has no owner column, its account does.
+    const own = Prisma.sql`"accountId" IN (SELECT "id" FROM "accounts" WHERE "userId" = ${userId})`;
     const result = await this.prisma.$transaction(async (tx) => {
       // Readers keep seeing the old totals until the new ones commit.
       await tx.$executeRaw`LOCK TABLE "monthly_totals" IN EXCLUSIVE MODE`;
       const [{ drifted }] = await tx.$queryRaw<{ drifted: number }[]>`
-        WITH fresh AS (${FRESH_TOTALS})
+        WITH fresh AS (${fresh}), mine AS (SELECT * FROM "monthly_totals" WHERE ${own})
         SELECT COUNT(*)::int AS drifted
-        FROM fresh FULL OUTER JOIN "monthly_totals" t
+        FROM fresh FULL OUTER JOIN mine t
           ON t."month" = fresh."month" AND t."accountId" = fresh."accountId"
          AND t."categoryId" IS NOT DISTINCT FROM fresh."categoryId"
         WHERE t."id" IS NULL OR fresh."month" IS NULL
            OR t."outflowMinor" <> fresh."outflowMinor"
            OR t."inflowMinor" <> fresh."inflowMinor"
            OR t."transactionCount" <> fresh."transactionCount"`;
-      await tx.$executeRaw`DELETE FROM "monthly_totals"`;
+      await tx.$executeRaw`DELETE FROM "monthly_totals" WHERE ${own}`;
       const rows = await tx.$executeRaw`
         INSERT INTO "monthly_totals"
           ("id", "month", "accountId", "categoryId", "outflowMinor", "inflowMinor", "transactionCount", "updatedAt")
         SELECT gen_random_uuid()::text, "month", "accountId", "categoryId",
                "outflowMinor", "inflowMinor", "transactionCount", now()
-        FROM (${FRESH_TOTALS}) fresh`;
+        FROM (${fresh}) fresh`;
       return { rows, drifted };
     });
     const level = result.drifted > 0 ? "warn" : "info";
@@ -194,7 +200,7 @@ export class MonthlyTotalsService implements OnModuleInit {
  * `isCounted` and `collectDeltas`): unsplit transactions in their own
  * category, split ones as one entry per part.
  */
-const FRESH_TOTALS = Prisma.sql`
+const freshTotals = (userId: string) => Prisma.sql`
   SELECT date_trunc('month', "date")::date AS "month",
          "accountId",
          "categoryId",
@@ -204,12 +210,12 @@ const FRESH_TOTALS = Prisma.sql`
   FROM (
     SELECT t."date", t."accountId", t."categoryId", t."amountMinor"
     FROM "transactions" t
-    WHERE t."transferId" IS NULL AND t."source" <> 'adjustment'
+    WHERE t."userId" = ${userId} AND t."transferId" IS NULL AND t."source" <> 'adjustment'
       AND NOT EXISTS (SELECT 1 FROM "transaction_splits" s WHERE s."transactionId" = t."id")
     UNION ALL
     SELECT t."date", t."accountId", s."categoryId", s."amountMinor"
     FROM "transaction_splits" s
     JOIN "transactions" t ON t."id" = s."transactionId"
-    WHERE t."transferId" IS NULL AND t."source" <> 'adjustment'
+    WHERE t."userId" = ${userId} AND t."transferId" IS NULL AND t."source" <> 'adjustment'
   ) counted
   GROUP BY 1, 2, 3`;

@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { type Category, Prisma, type QuickPreset, type Transaction } from "@prisma/client";
 import { PrismaService } from "#common/database/prisma.service";
+import { clientIdKey } from "#common/database/user-keys";
 import { scopedLogger } from "#common/logger/logger";
 import type { BudgetAlert } from "#finance/budget-math.util";
 import { BudgetsService } from "#finance/budgets.service";
@@ -173,7 +174,7 @@ export class QuickLogService {
    */
   async quickLog(input: QuickLogInput): Promise<QuickLogResult> {
     const existing = await this.prisma.transaction.findUnique({
-      where: { clientId: input.clientId },
+      where: clientIdKey(input.clientId),
     });
     if (existing) {
       return { transaction: existing, suggestPreset: false, presetKey: null, budgetAlert: null };
@@ -211,7 +212,7 @@ export class QuickLogService {
       // clientId let one through. Return that one.
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
         const winner = await this.prisma.transaction.findUniqueOrThrow({
-          where: { clientId: input.clientId },
+          where: clientIdKey(input.clientId),
         });
         return { transaction: winner, suggestPreset: false, presetKey: null, budgetAlert: null };
       }

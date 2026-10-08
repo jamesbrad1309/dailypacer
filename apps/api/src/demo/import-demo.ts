@@ -1,7 +1,10 @@
 import { readFileSync } from "node:fs";
 import { NestFactory } from "@nestjs/core";
+import { UserSetupService } from "#auth/user-setup.service";
 import { PrismaService } from "#common/database/prisma.service";
+import { asUser } from "#common/database/request-context";
 import { DEMO_VERSION, type DemoFixture, dayAt, localToday, monthAt } from "#demo/demo-fixture";
+import { demoUser } from "#demo/demo-user";
 import { AccountsService } from "#finance/accounts.service";
 import { BudgetsService } from "#finance/budgets.service";
 import { CategoriesService } from "#finance/categories.service";
@@ -22,8 +25,9 @@ import { TodosService } from "#todos/todos.service";
 import { AppModule } from "../app.module";
 
 /**
- * `demo:import [file] [--today=YYYY-MM-DD]`: loads a demo fixture
- * (demo-fixture.ts) into an empty database, every day offset counted from
+ * `demo:import [file] [--today=YYYY-MM-DD] [--user=email]`: loads a demo
+ * fixture (demo-fixture.ts) as one user's data (the owner by default; see
+ * demo-user.ts), who must have none yet, every day offset counted from
  * `today` (the local day by default). It goes through the app's services,
  * so balances, monthly totals and finance-ticked habits come out exactly as
  * if it had all been typed in; then it backdates what services stamp with
@@ -41,8 +45,10 @@ async function main() {
 
   const app = await NestFactory.createApplicationContext(AppModule, { logger: ["error", "warn"] });
   try {
-    await importFixture(app, fixture, today);
-    console.log(`Imported ${file}, with day 0 = ${today}`);
+    const user = await demoUser(app.get(PrismaService), args);
+    await app.get(UserSetupService).provision(user.id);
+    await asUser(user.id, () => importFixture(app, fixture, today));
+    console.log(`Imported ${file} for ${user.email}, with day 0 = ${today}`);
   } finally {
     await app.close();
   }
@@ -297,7 +303,7 @@ async function categoryIds(prisma: PrismaService): Promise<Map<string, string>> 
   return map;
 }
 
-/** An import adds to nothing: mixing demo data with real data can't be undone cleanly. */
+/** An import adds to nothing: mixing demo data with the user's own can't be undone cleanly. */
 async function assertEmpty(prisma: PrismaService) {
   const counts = {
     accounts: await prisma.account.count(),
@@ -309,7 +315,7 @@ async function assertEmpty(prisma: PrismaService) {
   const found = Object.entries(counts).filter(([, n]) => n > 0);
   if (found.length > 0) {
     throw new Error(
-      `demo:import needs an empty database; found ${found.map(([what, n]) => `${n} ${what}`).join(", ")}. Start from a fresh one (docker compose down -v, then up) and run it again.`,
+      `demo:import needs a user with no data yet; found ${found.map(([what, n]) => `${n} ${what}`).join(", ")}. Pick another with --user=email, or start from a fresh database (docker compose down -v, then up).`,
     );
   }
 }

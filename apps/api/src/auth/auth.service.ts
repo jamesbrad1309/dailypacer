@@ -14,6 +14,7 @@ import { DUMMY_HASH, hashPassword, verifyPassword } from "#auth/password";
 import { abilitiesOf } from "#auth/policy";
 import { type AuthUser, SessionsService, toAuthUser } from "#auth/sessions.service";
 import { SignInThrottle } from "#auth/sign-in-throttle";
+import { UNCLAIMED_EMAIL, UserSetupService } from "#auth/user-setup.service";
 import type { Env } from "#common/config/env";
 import { PrismaService } from "#common/database/prisma.service";
 import { scopedLogger } from "#common/logger/logger";
@@ -35,35 +36,48 @@ export class AuthService implements OnModuleInit {
     private readonly prisma: PrismaService,
     private readonly sessions: SessionsService,
     private readonly config: ConfigService<Env, true>,
+    private readonly setup: UserSetupService,
   ) {}
 
   /**
-   * First run: with OWNER_EMAIL and OWNER_PASSWORD set and no owner yet,
-   * create that owner, so a fresh deployment can be signed into.
+   * First run: with OWNER_EMAIL and OWNER_PASSWORD set and no active owner
+   * yet, make that owner, so a fresh deployment can be signed into. Data
+   * from before accounts existed belongs to the unclaimed owner the
+   * migration made; this claims it.
    */
   async onModuleInit() {
     const email = this.config.get("OWNER_EMAIL", { infer: true });
     const password = this.config.get("OWNER_PASSWORD", { infer: true });
     if (!email || !password) return;
-    if (await this.prisma.user.count({ where: { role: "OWNER" } })) return;
+    if (await this.prisma.user.count({ where: { role: "OWNER", status: "ACTIVE" } })) return;
     const parsedEmail = emailSchema.safeParse(email);
     const parsedPassword = passwordSchema.safeParse(password);
     if (!parsedEmail.success || !parsedPassword.success) {
       log.error("OWNER_EMAIL or OWNER_PASSWORD is invalid; no owner created");
       return;
     }
-    await this.prisma.user.upsert({
-      where: { email: parsedEmail.data },
-      update: { role: "OWNER", status: "ACTIVE" },
-      create: {
-        email: parsedEmail.data,
-        name: this.config.get("OWNER_NAME", { infer: true }) ?? "Owner",
-        passwordHash: await hashPassword(parsedPassword.data),
-        role: "OWNER",
-        status: "ACTIVE",
-      },
-    });
-    log.info({ email: parsedEmail.data }, "owner created from OWNER_EMAIL");
+    const owner = {
+      email: parsedEmail.data,
+      name: this.config.get("OWNER_NAME", { infer: true }) ?? "Owner",
+      passwordHash: await hashPassword(parsedPassword.data),
+      role: "OWNER" as const,
+      status: "ACTIVE" as const,
+    };
+    const existing = await this.prisma.user.findUnique({ where: { email: owner.email } });
+    const unclaimed = await this.prisma.user.findUnique({ where: { email: UNCLAIMED_EMAIL } });
+    const user = existing
+      ? await this.prisma.user.update({
+          where: { id: existing.id },
+          data: { role: "OWNER", status: "ACTIVE" },
+        })
+      : unclaimed
+        ? await this.prisma.user.update({ where: { id: unclaimed.id }, data: owner })
+        : await this.prisma.user.create({ data: owner });
+    await this.setup.provision(user.id);
+    log.info(
+      { email: owner.email, claimed: !existing && Boolean(unclaimed) },
+      "owner set from OWNER_EMAIL",
+    );
   }
 
   async signIn(input: SignInInput) {
@@ -99,6 +113,8 @@ export class AuthService implements OnModuleInit {
         reason: "ACCOUNT_DISABLED",
       });
     }
+    // Accounts made before per-user data get their starting categories and Inbox here.
+    await this.setup.provision(user.id);
     const session = await this.sessions.create(user.id, input.userAgent);
     await this.prisma.user.update({ where: { id: user.id }, data: { lastSignInAt: new Date() } });
     log.info({ userId: user.id }, "signed in");
@@ -106,9 +122,10 @@ export class AuthService implements OnModuleInit {
   }
 
   /**
-   * Anyone can sign up; the account waits for an admin's approval (it would
-   * otherwise see everyone's shared data). Exception: the very first user of
-   * an empty database becomes its owner, signed straight in.
+   * Anyone can sign up; the account waits for an admin's approval. The
+   * first person to sign up becomes the owner, signed straight in: they
+   * claim the unclaimed owner (and the data from before accounts) if the
+   * database has one.
    */
   async signUp(input: SignUpInput) {
     const passwordHash = await hashPassword(input.password);
@@ -119,17 +136,16 @@ export class AuthService implements OnModuleInit {
           reason: "EMAIL_TAKEN",
         });
       }
-      const first = (await tx.user.count()) === 0;
-      return tx.user.create({
-        data: {
-          email: input.email,
-          name: input.name,
-          passwordHash,
-          role: first ? "OWNER" : "VIEWER",
-          status: first ? "ACTIVE" : "PENDING",
-        },
-      });
+      const first = (await tx.user.count({ where: { email: { not: UNCLAIMED_EMAIL } } })) === 0;
+      const data = { email: input.email, name: input.name, passwordHash };
+      if (!first) return tx.user.create({ data: { ...data, role: "VIEWER", status: "PENDING" } });
+      const unclaimed = await tx.user.findUnique({ where: { email: UNCLAIMED_EMAIL } });
+      const owner = { ...data, role: "OWNER" as const, status: "ACTIVE" as const };
+      return unclaimed
+        ? tx.user.update({ where: { id: unclaimed.id }, data: owner })
+        : tx.user.create({ data: owner });
     });
+    await this.setup.provision(created.id);
     log.info({ userId: created.id, role: created.role, status: created.status }, "signed up");
     if (created.status !== "ACTIVE")
       return { user: describeMe(toAuthUser(created)), session: null };
