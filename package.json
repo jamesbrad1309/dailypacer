@@ -8,11 +8,12 @@
   "scripts": {
     "dev": "pnpm --parallel --filter './apps/*' dev",
     "dev:web": "pnpm --filter web dev",
+    "dev:admin": "pnpm --filter admin dev",
     "dev:bff": "pnpm --filter bff dev",
     "dev:api": "pnpm --filter api dev",
     "build": "pnpm --filter './apps/*' build",
     "lint": "oxlint . && biome lint .",
-    "test": "pnpm --filter web --filter api test",
+    "test": "pnpm --filter web --filter admin --filter api test",
     "format": "biome format --write .",
     "check": "biome check --write .",
     "quickstart": "bash scripts/quickstart.sh",
