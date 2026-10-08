@@ -86,6 +86,8 @@ describe("decide: admin and users", () => {
       decide(owner, { action: "user:change-status", target: self, status: "DISABLED" }).allowed,
     ).toBe(false);
     expect(decide(viewer, { action: "self:change-password" }).allowed).toBe(true);
+    expect(decide(viewer, { action: "self:update" }).allowed).toBe(true);
+    expect(decide(user("MEMBER", "m", "DISABLED"), { action: "self:update" }).allowed).toBe(false);
   });
 });
 

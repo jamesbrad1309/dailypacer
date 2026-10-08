@@ -11,6 +11,8 @@ export interface AuthUser {
   name: string;
   role: Role;
   status: Status;
+  /** Where they are in the set-up steps (onboarding.ts); `completedAt` null until finished. */
+  onboarding: { step: string | null; completedAt: Date | null };
 }
 
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -20,7 +22,14 @@ const TOUCH_EVERY_MS = 60 * 60 * 1000;
 const CACHE_MS = 30 * 1000;
 
 export function toAuthUser(user: User): AuthUser {
-  return { id: user.id, email: user.email, name: user.name, role: user.role, status: user.status };
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    status: user.status,
+    onboarding: { step: user.onboardingStep, completedAt: user.onboardedAt },
+  };
 }
 
 const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");

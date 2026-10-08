@@ -9,6 +9,7 @@ import {
   signInSchema,
   signUpSchema,
 } from "#auth/dto/auth.dto";
+import { type OnboardingInput, onboardingSchema } from "#auth/onboarding";
 import { type AuthUser, SessionsService } from "#auth/sessions.service";
 import { ZodValidationPipe } from "#common/http/zod-validation.pipe";
 
@@ -27,7 +28,7 @@ export class AuthController {
     return this.auth.signIn(input);
   }
 
-  /** `POST /auth/sign-up { email, name, password }` → `{ user, session }`; `session` is null while pending. */
+  /** `POST /auth/sign-up { email, name, password }` → `{ user, session }`: signed straight in. */
   @Public()
   @Post("sign-up")
   signUp(@Body(new ZodValidationPipe(signUpSchema)) input: SignUpInput) {
@@ -57,5 +58,16 @@ export class AuthController {
     @Body(new ZodValidationPipe(changePasswordSchema)) input: ChangePasswordInput,
   ) {
     await this.auth.changePassword(user, token, input);
+  }
+
+  /** `POST /auth/onboarding { step }` saves progress; `{ done: true }` finishes. Returns `me`. */
+  @Authorize("self:update")
+  @Post("onboarding")
+  @HttpCode(200)
+  updateOnboarding(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(onboardingSchema)) input: OnboardingInput,
+  ) {
+    return this.auth.updateOnboarding(user, input);
   }
 }

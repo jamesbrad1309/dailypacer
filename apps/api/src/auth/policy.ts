@@ -42,7 +42,9 @@ export type Request =
   /** Set someone else's password (an admin reset). */
   | { action: "user:reset-password"; target: UserResource }
   /** Change your own password (knowing the current one). */
-  | { action: "self:change-password" };
+  | { action: "self:change-password" }
+  /** Your own settings and onboarding progress. */
+  | { action: "self:update" };
 
 export type Action = Request["action"];
 
@@ -90,6 +92,7 @@ export function decide(subject: Subject, request: Request): Decision {
   switch (request.action) {
     case "app:read":
     case "self:change-password":
+    case "self:update":
       return ALLOW;
     case "app:write":
       return WRITERS.includes(subject.role)

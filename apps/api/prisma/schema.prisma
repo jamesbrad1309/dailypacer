@@ -922,6 +922,10 @@ model User {
   role           UserRole       @default(VIEWER)
   status         UserStatus     @default(PENDING)
   lastSignInAt   DateTime?
+  /// The onboarding step they're on ("preferences", "accounts", "habits"), so it resumes where they left it.
+  onboardingStep String?
+  /// When they finished (or skipped through) onboarding; null shows it on their next visit.
+  onboardedAt    DateTime?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   sessions       Session[]

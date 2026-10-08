@@ -10,6 +10,7 @@ import {
 import { ConfigService } from "@nestjs/config";
 import type { ChangePasswordInput, SignInInput, SignUpInput } from "#auth/dto/auth.dto";
 import { emailSchema, passwordSchema } from "#auth/dto/auth.dto";
+import type { OnboardingInput } from "#auth/onboarding";
 import { DUMMY_HASH, hashPassword, verifyPassword } from "#auth/password";
 import { abilitiesOf } from "#auth/policy";
 import { type AuthUser, SessionsService, toAuthUser } from "#auth/sessions.service";
@@ -71,7 +72,11 @@ export class AuthService implements OnModuleInit {
           data: { role: "OWNER", status: "ACTIVE" },
         })
       : unclaimed
-        ? await this.prisma.user.update({ where: { id: unclaimed.id }, data: owner })
+        ? // Taking over data from before accounts: nothing to set up.
+          await this.prisma.user.update({
+            where: { id: unclaimed.id },
+            data: { ...owner, onboardedAt: new Date() },
+          })
         : await this.prisma.user.create({ data: owner });
     await this.setup.provision(user.id);
     log.info(
@@ -122,10 +127,10 @@ export class AuthService implements OnModuleInit {
   }
 
   /**
-   * Anyone can sign up; the account waits for an admin's approval. The
-   * first person to sign up becomes the owner, signed straight in: they
-   * claim the unclaimed owner (and the data from before accounts) if the
-   * database has one.
+   * Anyone can sign up and is signed straight in, as a member with their
+   * own empty data (and the defaults every user starts with). They go on to
+   * onboarding. The first person to sign up becomes the owner, claiming the
+   * unclaimed owner (and the data from before accounts) if there is one.
    */
   async signUp(input: SignUpInput) {
     const passwordHash = await hashPassword(input.password);
@@ -137,20 +142,38 @@ export class AuthService implements OnModuleInit {
         });
       }
       const first = (await tx.user.count({ where: { email: { not: UNCLAIMED_EMAIL } } })) === 0;
-      const data = { email: input.email, name: input.name, passwordHash };
-      if (!first) return tx.user.create({ data: { ...data, role: "VIEWER", status: "PENDING" } });
+      const data = {
+        email: input.email,
+        name: input.name,
+        passwordHash,
+        status: "ACTIVE" as const,
+      };
+      if (!first) return tx.user.create({ data: { ...data, role: "MEMBER" } });
       const unclaimed = await tx.user.findUnique({ where: { email: UNCLAIMED_EMAIL } });
-      const owner = { ...data, role: "OWNER" as const, status: "ACTIVE" as const };
-      return unclaimed
-        ? tx.user.update({ where: { id: unclaimed.id }, data: owner })
-        : tx.user.create({ data: owner });
+      if (!unclaimed) return tx.user.create({ data: { ...data, role: "OWNER" } });
+      // Taking over data from before accounts: there's nothing to set up.
+      return tx.user.update({
+        where: { id: unclaimed.id },
+        data: { ...data, role: "OWNER", onboardedAt: new Date() },
+      });
     });
     await this.setup.provision(created.id);
-    log.info({ userId: created.id, role: created.role, status: created.status }, "signed up");
-    if (created.status !== "ACTIVE")
-      return { user: describeMe(toAuthUser(created)), session: null };
+    log.info({ userId: created.id, role: created.role }, "signed up");
     const session = await this.sessions.create(created.id, input.userAgent);
     return { user: describeMe(toAuthUser(created)), session };
+  }
+
+  /** Saves where they are in onboarding, or finishes it. */
+  async updateOnboarding(user: AuthUser, input: OnboardingInput) {
+    const updated = await this.prisma.user.update({
+      where: { id: user.id },
+      data: input.done
+        ? { onboardingStep: null, onboardedAt: new Date() }
+        : { onboardingStep: input.step },
+    });
+    // Sessions cache the user; the next request should see the new step.
+    this.sessions.forget(user.id);
+    return describeMe(toAuthUser(updated));
   }
 
   /** Keeps this session, ends every other one. */
