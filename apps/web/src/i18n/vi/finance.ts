@@ -250,6 +250,8 @@ export const finance: typeof en = {
     all: "Tất cả",
     add: "Thêm",
     searchPlaceholder: "Tìm người nhận hoặc ghi chú",
+    tag: "Thẻ",
+    allTags: "Tất cả thẻ",
     account: "Tài khoản",
     category: "Danh mục",
     nothingToReview: "Không có gì cần xem lại",

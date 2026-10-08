@@ -250,6 +250,8 @@ export const finance = {
     all: "All",
     add: "Add",
     searchPlaceholder: "Search payee or note",
+    tag: "Tag",
+    allTags: "All tags",
     account: "Account",
     category: "Category",
     nothingToReview: "Nothing to review",

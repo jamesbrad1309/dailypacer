@@ -465,6 +465,8 @@ export interface TransactionFilter {
   from?: string | null;
   to?: string | null;
   search?: string | null;
+  /** Only transactions carrying this tag. */
+  tag?: string | null;
   includeTransfers?: boolean;
   uncategorisedOnly?: boolean;
   /** The whole "To review" inbox: uncategorised or pending. */
