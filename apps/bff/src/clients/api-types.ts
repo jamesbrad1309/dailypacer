@@ -105,6 +105,7 @@ export interface ApiMe {
     manageUsers: boolean;
     assignableRoles: ApiUserRole[];
   };
+  onboarding: { step: string | null; completedAt: string | null };
 }
 
 export interface ApiSession {

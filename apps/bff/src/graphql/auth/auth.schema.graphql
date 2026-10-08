@@ -40,13 +40,24 @@ type Me {
   role: UserRole!
   status: UserStatus!
   abilities: Abilities!
+  onboarding: Onboarding!
 }
 
-type SignUpPayload {
-  """Signed in: the first user of an empty database, who becomes its owner."""
-  me: Me
-  """PENDING for everyone else, until an admin approves them."""
-  status: UserStatus!
+"""
+The set-up steps after signing up: preferences (language, main currency),
+accounts, habits. Each can be skipped; `step` is where they left off.
+"""
+type Onboarding {
+  """PREFERENCES, ACCOUNTS or HABITS; null before the first step is saved or once done."""
+  step: OnboardingStep
+  """ISO timestamp; null until finished, which shows onboarding on their next visit."""
+  completedAt: String
+}
+
+enum OnboardingStep {
+  PREFERENCES
+  ACCOUNTS
+  HABITS
 }
 
 """What the signed-in user may do to this user."""
@@ -100,7 +111,10 @@ extend type Query {
 extend type Mutation {
   """Sets the session cookie."""
   signIn(email: String!, password: String!): Me!
-  signUp(input: SignUpInput!): SignUpPayload!
+  """Signs up and in: everyone gets their own empty data and goes to onboarding."""
+  signUp(input: SignUpInput!): Me!
+  """Saves the onboarding step they're on, or finishes it with done: true."""
+  updateOnboarding(step: OnboardingStep, done: Boolean): Me!
   """Ends the session and clears the cookie."""
   signOut: Boolean!
   """Signs out your other sessions."""

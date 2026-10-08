@@ -8,6 +8,9 @@ function userAgent(ctx: GraphQLContext): string | undefined {
 }
 
 export default {
+  Onboarding: {
+    step: (onboarding: ApiMe["onboarding"]) => onboarding.step?.toUpperCase() ?? null,
+  },
   Query: {
     me: async (_: unknown, __: unknown, ctx: GraphQLContext): Promise<ApiMe | null> => {
       if (!ctx.sessionToken) return null;
@@ -38,14 +41,22 @@ export default {
       args: { input: { email: string; name: string; password: string } },
       ctx: GraphQLContext,
     ) => {
-      const result = await ctx.api.post<{
-        user: ApiMe;
-        session: Omit<ApiSession, "user"> | null;
-      }>("/auth/sign-up", { ...args.input, userAgent: userAgent(ctx) });
-      if (result.session)
-        setSessionCookie(ctx.req, ctx.res, result.session.token, result.session.expiresAt);
-      return { me: result.session ? result.user : null, status: result.user.status };
+      const result = await ctx.api.post<{ user: ApiMe; session: Omit<ApiSession, "user"> }>(
+        "/auth/sign-up",
+        { ...args.input, userAgent: userAgent(ctx) },
+      );
+      setSessionCookie(ctx.req, ctx.res, result.session.token, result.session.expiresAt);
+      return result.user;
     },
+    updateOnboarding: (
+      _: unknown,
+      args: { step?: string | null; done?: boolean | null },
+      ctx: GraphQLContext,
+    ) =>
+      ctx.api.post<ApiMe>("/auth/onboarding", {
+        ...(args.step ? { step: args.step.toLowerCase() } : {}),
+        ...(args.done ? { done: true } : {}),
+      }),
     signOut: async (_: unknown, __: unknown, ctx: GraphQLContext) => {
       if (ctx.sessionToken) {
         // Clear the cookie even if the API call fails: the browser should end up signed out.
