@@ -16,7 +16,7 @@ export const auth: typeof en = {
   },
   signUp: {
     title: "Tạo tài khoản",
-    subtitle: "Quản trị viên duyệt tài khoản mới trước khi có thể đăng nhập.",
+    subtitle: "Miễn phí, và dữ liệu là của riêng bạn. Chỉ mất một phút.",
     name: "Tên",
     email: "Email",
     password: "Mật khẩu",
@@ -25,10 +25,7 @@ export const auth: typeof en = {
     submitting: "Đang đăng ký…",
     haveAccount: "Đã có tài khoản?",
     signInLink: "Đăng nhập",
-    pendingTitle: "Cảm ơn, {{name}}",
-    pendingBody:
-      "Tài khoản của bạn đang chờ quản trị viên duyệt. Bạn có thể đăng nhập sau khi được duyệt.",
-    backToSignIn: "Quay lại đăng nhập",
+    terms: "Thói quen, tiền và ghi chú của bạn chỉ thuộc về tài khoản của bạn.",
   },
   errors: {
     WRONG_CREDENTIALS: "Email và mật khẩu không khớp.",
@@ -64,4 +61,6 @@ export const auth: typeof en = {
     signingOut: "Đang đăng xuất…",
   },
   readOnly: "Bạn là người xem: bạn có thể xem mọi thứ nhưng không thay đổi được.",
+  showPassword: "Hiện mật khẩu",
+  hidePassword: "Ẩn mật khẩu",
 };

@@ -12,6 +12,7 @@ import { AppShell } from "#components/layout/AppShell";
 import { RouteNotFound } from "#components/layout/RouteStatus";
 import { ME_QUERY } from "#graphql/auth";
 import type { Me } from "#graphql/types";
+import { needsOnboarding, putOffThisVisit } from "#lib/onboarding";
 import { safeRedirect } from "#lib/session";
 import type { RouterContext } from "../router";
 
@@ -35,6 +36,10 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     if (me && signedOutPage) {
       const target = (location.search as { redirect?: unknown }).redirect;
       throw redirect({ href: safeRedirect(target), replace: true });
+    }
+    // New accounts set up first; "Finish later" puts it off until the next visit.
+    if (me && location.pathname !== "/welcome" && needsOnboarding(me, putOffThisVisit())) {
+      throw redirect({ to: "/welcome", replace: true });
     }
     return { me };
   },

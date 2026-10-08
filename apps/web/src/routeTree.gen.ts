@@ -15,6 +15,7 @@ import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
+import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as FinanceIndexRouteImport } from './routes/finance/index'
 import { Route as FinanceAccountsRouteImport } from './routes/finance/accounts'
 import { Route as FinanceBudgetsRouteImport } from './routes/finance/budgets'
@@ -67,6 +68,11 @@ const SignInRoute = SignInRouteImport.update({
 const SignUpRoute = SignUpRouteImport.update({
   id: '/sign-up',
   path: '/sign-up',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WelcomeRoute = WelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FinanceIndexRoute = FinanceIndexRouteImport.update({
@@ -192,6 +198,7 @@ export interface FileRoutesByFullPath {
   '/progress': typeof ProgressRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/welcome': typeof WelcomeRoute
   '/finance/accounts': typeof FinanceAccountsRoute
   '/finance/budgets': typeof FinanceBudgetsRoute
   '/finance/categories': typeof FinanceCategoriesRoute
@@ -223,6 +230,7 @@ export interface FileRoutesByTo {
   '/progress': typeof ProgressRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/welcome': typeof WelcomeRoute
   '/finance/accounts': typeof FinanceAccountsRoute
   '/finance/budgets': typeof FinanceBudgetsRoute
   '/finance/categories': typeof FinanceCategoriesRoute
@@ -255,6 +263,7 @@ export interface FileRoutesById {
   '/progress': typeof ProgressRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/welcome': typeof WelcomeRoute
   '/finance/accounts': typeof FinanceAccountsRoute
   '/finance/budgets': typeof FinanceBudgetsRoute
   '/finance/categories': typeof FinanceCategoriesRoute
@@ -288,6 +297,7 @@ export interface FileRouteTypes {
     | '/progress'
     | '/sign-in'
     | '/sign-up'
+    | '/welcome'
     | '/finance/accounts'
     | '/finance/budgets'
     | '/finance/categories'
@@ -319,6 +329,7 @@ export interface FileRouteTypes {
     | '/progress'
     | '/sign-in'
     | '/sign-up'
+    | '/welcome'
     | '/finance/accounts'
     | '/finance/budgets'
     | '/finance/categories'
@@ -350,6 +361,7 @@ export interface FileRouteTypes {
     | '/progress'
     | '/sign-in'
     | '/sign-up'
+    | '/welcome'
     | '/finance/accounts'
     | '/finance/budgets'
     | '/finance/categories'
@@ -382,6 +394,7 @@ export interface RootRouteChildren {
   ProgressRoute: typeof ProgressRoute
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
+  WelcomeRoute: typeof WelcomeRoute
   FinanceAccountsRoute: typeof FinanceAccountsRoute
   FinanceBudgetsRoute: typeof FinanceBudgetsRoute
   FinanceCategoriesRoute: typeof FinanceCategoriesRoute
@@ -449,6 +462,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-up'
       fullPath: '/sign-up'
       preLoaderRoute: typeof SignUpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/finance/': {
@@ -622,6 +642,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProgressRoute: ProgressRoute,
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
+  WelcomeRoute: WelcomeRoute,
   FinanceAccountsRoute: FinanceAccountsRoute,
   FinanceBudgetsRoute: FinanceBudgetsRoute,
   FinanceCategoriesRoute: FinanceCategoriesRoute,

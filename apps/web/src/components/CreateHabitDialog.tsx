@@ -23,14 +23,14 @@ import { CREATE_HABIT_MUTATION, DASHBOARD_STATS_QUERY, HABITS_QUERY } from "#gra
 import { onAction } from "#lib/command-palette";
 import {
   BLANK_HABIT_DRAFT,
-  cleanCustomFields,
+  createHabitInput,
   fieldIssue,
   type HabitDraft,
   type HabitDraftAction,
   habitDraftReducer,
+  templateDraft,
 } from "#lib/habit-draft";
 import { HABIT_TEMPLATES, type HabitTemplate } from "#lib/habit-templates";
-import { formatTags, parseTags } from "#lib/tags";
 
 export function CreateHabitDialog() {
   const { t } = useTranslation();
@@ -47,26 +47,7 @@ export function CreateHabitDialog() {
   });
 
   function applyTemplate(template: HabitTemplate) {
-    const words = `habits.templates.${template.id}` as const;
-    dispatch({
-      type: "reset",
-      draft: {
-        name: t(`${words}.name`),
-        icon: template.emoji,
-        color: null,
-        description: t(`${words}.description`),
-        unit: t(`${words}.unit`),
-        targetValue: template.target?.toString() ?? "",
-        startTime: template.startTime ?? "",
-        schedule: template.schedule,
-        tags: formatTags(template.tags),
-        polarity: template.financeSource === "NO_SPEND" ? "AVOID" : "BUILD",
-        endDate: "",
-        customFields: [],
-        financeSource: template.financeSource ?? null,
-        financeCategoryIds: [],
-      },
-    });
+    dispatch({ type: "reset", draft: templateDraft(template, t) });
   }
 
   function handleOpenChange(next: boolean) {
@@ -80,27 +61,7 @@ export function CreateHabitDialog() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!name.trim() || draft.customFields.some(fieldIssue)) return;
-    await createHabit({
-      variables: {
-        input: {
-          name: name.trim(),
-          icon: draft.icon.trim() || undefined,
-          color: draft.color ?? undefined,
-          description: description.trim() || undefined,
-          tags: parseTags(tags),
-          unit: unit.trim() || undefined,
-          targetValue: targetValue.trim() === "" ? undefined : Number(targetValue),
-          startTime: startTime === "" ? undefined : startTime,
-          schedule,
-          polarity: draft.polarity,
-          endDate: draft.endDate || undefined,
-          customFields: cleanCustomFields(draft.customFields),
-          financeSource: draft.financeSource ?? undefined,
-          financeCategoryIds:
-            draft.financeCategoryIds.length > 0 ? draft.financeCategoryIds : undefined,
-        },
-      },
-    });
+    await createHabit({ variables: { input: createHabitInput(draft) } });
     setOpen(false);
   }
 

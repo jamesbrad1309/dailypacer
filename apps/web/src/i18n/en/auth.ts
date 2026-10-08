@@ -14,7 +14,7 @@ export const auth = {
   },
   signUp: {
     title: "Create an account",
-    subtitle: "An admin approves new accounts before they can sign in.",
+    subtitle: "Free, and your data is yours alone. Takes a minute.",
     name: "Name",
     email: "Email",
     password: "Password",
@@ -23,10 +23,7 @@ export const auth = {
     submitting: "Signing up…",
     haveAccount: "Already have an account?",
     signInLink: "Sign in",
-    pendingTitle: "Thanks, {{name}}",
-    pendingBody:
-      "Your account is waiting for an admin to approve it. You can sign in once they have.",
-    backToSignIn: "Back to sign in",
+    terms: "Your habits, money and notes are private to your account.",
   },
   /** Keyed by the API's `reason` codes (apps/api/src/auth). */
   errors: {
@@ -63,4 +60,6 @@ export const auth = {
     signingOut: "Signing out…",
   },
   readOnly: "You're a viewer: you can see everything but not change it.",
+  showPassword: "Show password",
+  hidePassword: "Hide password",
 };

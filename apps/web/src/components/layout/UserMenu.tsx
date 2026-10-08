@@ -1,6 +1,6 @@
 import { useMutation } from "@apollo/client/react";
 import { useRouter } from "@tanstack/react-router";
-import { LogOut } from "lucide-react";
+import { Compass, LogOut } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Field, FormError } from "#components/auth/AuthLayout";
@@ -32,6 +32,7 @@ function initials(name: string): string {
 export function UserMenu() {
   const { t } = useTranslation();
   const me = useMe();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   if (!me) return null;
   return (
@@ -58,6 +59,17 @@ export function UserMenu() {
             <Badge variant="secondary">{t(`auth.roles.${me.role}`)}</Badge>
           </p>
           {open && <ChangePasswordForm />}
+          <Button
+            variant="ghost"
+            className="justify-start"
+            onClick={() => {
+              setOpen(false);
+              void router.navigate({ to: "/welcome" });
+            }}
+          >
+            <Compass className="size-4" aria-hidden />
+            {t("onboarding.menu")}
+          </Button>
           <SignOutButton />
         </DialogContent>
       </Dialog>

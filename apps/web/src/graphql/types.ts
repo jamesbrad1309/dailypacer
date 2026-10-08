@@ -1001,4 +1001,7 @@ export interface Me {
     manageUsers: boolean;
     assignableRoles: UserRole[];
   };
+  onboarding: { step: OnboardingStep | null; completedAt: string | null };
 }
+
+export type OnboardingStep = "PREFERENCES" | "ACCOUNTS" | "HABITS";

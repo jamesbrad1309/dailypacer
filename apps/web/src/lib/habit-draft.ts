@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import type {
   Habit,
   HabitCustomField,
@@ -7,7 +8,8 @@ import type {
   HabitPolarity,
   HabitSchedule,
 } from "#graphql/types";
-import { formatTags } from "#lib/tags";
+import type { HabitTemplate } from "#lib/habit-templates";
+import { formatTags, parseTags } from "#lib/tags";
 
 /** A habit's fields as the create and edit forms hold them: text, as typed. */
 export interface HabitDraft {
@@ -150,4 +152,48 @@ export function cleanCustomFields(fields: DraftField[]): HabitCustomFieldInput[]
       value: f.value.trim(),
       ...(f.type === "SELECT" && { options: parseOptions(f.options) }),
     }));
+}
+
+/**
+ * A template's starting draft, in the reader's language (`habits.templates.<id>.*`).
+ * `t` is i18next's, passed in so this stays a plain function.
+ */
+export function templateDraft(template: HabitTemplate, t: TFunction): HabitDraft {
+  const words = `habits.templates.${template.id}` as const;
+  return {
+    name: t(`${words}.name`),
+    icon: template.emoji,
+    color: null,
+    description: t(`${words}.description`),
+    unit: t(`${words}.unit`),
+    targetValue: template.target?.toString() ?? "",
+    startTime: template.startTime ?? "",
+    schedule: template.schedule,
+    tags: formatTags(template.tags),
+    polarity: template.financeSource === "NO_SPEND" ? "AVOID" : "BUILD",
+    endDate: "",
+    customFields: [],
+    financeSource: template.financeSource ?? null,
+    financeCategoryIds: [],
+  };
+}
+
+/** What `createHabit` takes, from a filled-in draft. */
+export function createHabitInput(draft: HabitDraft) {
+  return {
+    name: draft.name.trim(),
+    icon: draft.icon.trim() || undefined,
+    color: draft.color ?? undefined,
+    description: draft.description.trim() || undefined,
+    tags: parseTags(draft.tags),
+    unit: draft.unit.trim() || undefined,
+    targetValue: draft.targetValue.trim() === "" ? undefined : Number(draft.targetValue),
+    startTime: draft.startTime === "" ? undefined : draft.startTime,
+    schedule: draft.schedule,
+    polarity: draft.polarity,
+    endDate: draft.endDate || undefined,
+    customFields: cleanCustomFields(draft.customFields),
+    financeSource: draft.financeSource ?? undefined,
+    financeCategoryIds: draft.financeCategoryIds.length > 0 ? draft.financeCategoryIds : undefined,
+  };
 }

@@ -1,4 +1,5 @@
-import { type ReactNode, useEffect } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { type ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitch } from "#components/layout/AppShell";
 
@@ -39,12 +40,16 @@ export function AuthLayout({
   );
 }
 
-/** A labelled input with its own error line, wired up for screen readers. */
+/**
+ * A labelled input with its own error line, wired up for screen readers.
+ * Password fields get a show/hide button.
+ */
 export function Field({
   id,
   label,
   error,
   hint,
+  type,
   ...input
 }: {
   id: string;
@@ -52,20 +57,41 @@ export function Field({
   error?: string | null;
   hint?: string;
 } & React.ComponentProps<"input">) {
+  const { t } = useTranslation();
+  const [shown, setShown] = useState(false);
+  const isPassword = type === "password";
   const described = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
   return (
     <div className="grid gap-1.5">
       <label htmlFor={id} className="text-sm font-medium">
         {label}
       </label>
-      <input
-        id={id}
-        name={id}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={described}
-        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none aria-invalid:border-destructive"
-        {...input}
-      />
+      <div className="relative">
+        <input
+          id={id}
+          name={id}
+          type={isPassword && shown ? "text" : type}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={described}
+          className={`flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none aria-invalid:border-destructive ${isPassword ? "pr-9" : ""}`}
+          {...input}
+        />
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setShown(!shown)}
+            aria-label={shown ? t("auth.hidePassword") : t("auth.showPassword")}
+            aria-pressed={shown}
+            className="absolute inset-y-0 right-0 flex w-9 items-center justify-center text-muted-foreground hover:text-foreground"
+          >
+            {shown ? (
+              <EyeOff className="size-4" aria-hidden />
+            ) : (
+              <Eye className="size-4" aria-hidden />
+            )}
+          </button>
+        )}
+      </div>
       {error ? (
         <p id={`${id}-error`} className="text-sm text-destructive">
           {error}

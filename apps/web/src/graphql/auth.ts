@@ -13,6 +13,10 @@ const ME_FIELDS = gql`
       manageUsers
       assignableRoles
     }
+    onboarding {
+      step
+      completedAt
+    }
   }
 `;
 
@@ -38,10 +42,7 @@ export const SIGN_UP_MUTATION = gql`
   ${ME_FIELDS}
   mutation SignUp($input: SignUpInput!) {
     signUp(input: $input) {
-      status
-      me {
-        ...MeFields
-      }
+      ...MeFields
     }
   }
 `;
@@ -55,5 +56,14 @@ export const SIGN_OUT_MUTATION = gql`
 export const CHANGE_PASSWORD_MUTATION = gql`
   mutation ChangePassword($currentPassword: String!, $newPassword: String!) {
     changePassword(currentPassword: $currentPassword, newPassword: $newPassword)
+  }
+`;
+
+export const UPDATE_ONBOARDING_MUTATION = gql`
+  ${ME_FIELDS}
+  mutation UpdateOnboarding($step: OnboardingStep, $done: Boolean) {
+    updateOnboarding(step: $step, done: $done) {
+      ...MeFields
+    }
   }
 `;
