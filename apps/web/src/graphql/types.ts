@@ -32,10 +32,20 @@ export interface HeatmapDay {
 
 export type HabitPolarity = "BUILD" | "AVOID";
 
+/** What a habit's own field holds; its value is always a string in that shape. */
+export type HabitFieldType = "TEXT" | "NUMBER" | "BOOLEAN" | "SELECT" | "DATE";
+
 export interface HabitCustomField {
   label: string;
+  type: HabitFieldType;
+  /** "" when not filled in; "true"/"false" for BOOLEAN, "YYYY-MM-DD" for DATE. */
   value: string;
+  /** SELECT only: the choices, in order. */
+  options: string[];
 }
+
+/** HabitCustomField as sent: `options` only for a SELECT. */
+export type HabitCustomFieldInput = Omit<HabitCustomField, "options"> & { options?: string[] };
 
 /**
  * NO_SPEND: an avoid habit, slipped on any day money went out.

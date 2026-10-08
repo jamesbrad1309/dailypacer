@@ -17,10 +17,63 @@ export const habitTagsSchema = z
   .max(20)
   .transform((tags) => [...new Set(tags)]);
 
-/** The user's own fields on a habit, in order: [{ label: "Coach", value: "Sam" }]. */
-export const customFieldsSchema = z
-  .array(z.object({ label: z.string().trim().min(1).max(50), value: z.string().trim().max(500) }))
-  .max(20);
+export const CUSTOM_FIELD_TYPES = ["text", "number", "boolean", "select", "date"] as const;
+export type CustomFieldType = (typeof CUSTOM_FIELD_TYPES)[number];
+
+/**
+ * One of the user's own fields on a habit. `value` is always a string, so
+ * fields saved before types existed (no `type`) read as text: a number as
+ * "12.5", yes/no as "true"/"false", a date as "YYYY-MM-DD", a select as one
+ * of its `options`. "" means not filled in, for every type.
+ */
+export const customFieldSchema = z
+  .object({
+    label: z.string().trim().min(1).max(50),
+    type: z.enum(CUSTOM_FIELD_TYPES).default("text"),
+    value: z.string().trim().max(500),
+    /** A select's choices, in order; dropped for every other type. */
+    options: z.array(z.string().trim().min(1).max(50)).max(20).optional(),
+  })
+  .transform(({ options, ...field }) =>
+    field.type === "select" ? { ...field, options: [...new Set(options ?? [])] } : field,
+  )
+  .superRefine((field, ctx) => {
+    const problem = customFieldProblem(field);
+    if (problem) ctx.addIssue({ code: "custom", path: ["value"], message: problem });
+  });
+
+export type CustomField = z.infer<typeof customFieldSchema>;
+
+/** Why a field's value doesn't fit its type, or null when it does. */
+export function customFieldProblem(field: {
+  type: CustomFieldType;
+  value: string;
+  options?: string[];
+}): string | null {
+  if (field.type === "select" && (field.options?.length ?? 0) === 0) {
+    return "a select field needs at least one option";
+  }
+  if (field.value === "") return null;
+  switch (field.type) {
+    case "text":
+      return null;
+    case "number":
+      return Number.isFinite(Number(field.value)) ? null : "must be a number";
+    case "boolean":
+      return field.value === "true" || field.value === "false" ? null : 'must be "true" or "false"';
+    case "date": {
+      const ok =
+        /^\d{4}-\d{2}-\d{2}$/.test(field.value) &&
+        new Date(`${field.value}T00:00:00Z`).toISOString().startsWith(field.value);
+      return ok ? null : "must be a real date, YYYY-MM-DD";
+    }
+    case "select":
+      return field.options?.includes(field.value) ? null : "must be one of the options";
+  }
+}
+
+/** The user's own fields on a habit, in order: [{ label: "Coach", type: "text", value: "Sam" }]. */
+export const customFieldsSchema = z.array(customFieldSchema).max(20);
 
 /** "#rrggbb", lowercased: a swatch from the web app's palette (lib/colors.ts). */
 export const hexColorSchema = z

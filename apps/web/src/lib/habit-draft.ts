@@ -1,6 +1,8 @@
 import type {
   Habit,
   HabitCustomField,
+  HabitCustomFieldInput,
+  HabitFieldType,
   HabitFinanceSource,
   HabitPolarity,
   HabitSchedule,
@@ -32,12 +34,59 @@ export interface HabitDraft {
   financeCategoryIds: string[];
 }
 
-/** A custom field row as edited, with a stable key so rows keep focus when one is removed. */
-export type DraftField = HabitCustomField & { key: number };
+/**
+ * A custom field row as edited, with a stable key so rows keep focus when
+ * one is removed. A select's options are held as typed ("great, ok, bad").
+ */
+export type DraftField = Omit<HabitCustomField, "options"> & { key: number; options: string };
 
 let nextFieldKey = 1;
-export function draftField(label = "", value = ""): DraftField {
-  return { key: nextFieldKey++, label, value };
+export function draftField(field?: HabitCustomField): DraftField {
+  return {
+    key: nextFieldKey++,
+    label: field?.label ?? "",
+    type: field?.type ?? "TEXT",
+    value: field?.value ?? "",
+    options: field?.options.join(", ") ?? "",
+  };
+}
+
+/** A select's choices from what was typed: comma-separated, trimmed, no blanks or repeats. */
+export function parseOptions(text: string): string[] {
+  return [
+    ...new Set(
+      text
+        .split(",")
+        .map((option) => option.trim())
+        .filter(Boolean),
+    ),
+  ];
+}
+
+/** The row with another type: a value that doesn't fit the new type is cleared. */
+export function changeFieldType(field: DraftField, type: HabitFieldType): DraftField {
+  const changed = { ...field, type };
+  return fieldIssue(changed) === "invalidValue" ? { ...changed, value: "" } : changed;
+}
+
+/** What stops a row being saved; rows without a label are dropped, so they never block. */
+export function fieldIssue(field: DraftField): "needsOptions" | "invalidValue" | null {
+  if (field.label.trim() === "") return null;
+  const value = field.value.trim();
+  if (field.type === "SELECT" && parseOptions(field.options).length === 0) return "needsOptions";
+  if (value === "") return null;
+  switch (field.type) {
+    case "NUMBER":
+      return Number.isFinite(Number(value)) ? null : "invalidValue";
+    case "BOOLEAN":
+      return value === "true" || value === "false" ? null : "invalidValue";
+    case "DATE":
+      return /^\d{4}-\d{2}-\d{2}$/.test(value) ? null : "invalidValue";
+    case "SELECT":
+      return parseOptions(field.options).includes(value) ? null : "invalidValue";
+    case "TEXT":
+      return null;
+  }
 }
 
 export type HabitDraftAction =
@@ -85,15 +134,20 @@ export function habitDraftFrom(habit: Habit): HabitDraft {
     schedule: habit.schedule,
     polarity: habit.polarity,
     endDate: habit.endDate ?? "",
-    customFields: habit.customFields.map(({ label, value }) => draftField(label, value)),
+    customFields: habit.customFields.map((field) => draftField(field)),
     financeSource: habit.financeSource,
     financeCategoryIds: habit.financeCategoryIds,
   };
 }
 
-/** Fields worth saving: a label is required; blank rows are dropped. */
-export function cleanCustomFields(fields: DraftField[]): HabitCustomField[] {
+/** Fields worth saving: a label is required; blank rows are dropped. Check fieldIssue first. */
+export function cleanCustomFields(fields: DraftField[]): HabitCustomFieldInput[] {
   return fields
-    .map((f) => ({ label: f.label.trim(), value: f.value.trim() }))
-    .filter((f) => f.label !== "");
+    .filter((f) => f.label.trim() !== "")
+    .map((f) => ({
+      label: f.label.trim(),
+      type: f.type,
+      value: f.value.trim(),
+      ...(f.type === "SELECT" && { options: parseOptions(f.options) }),
+    }));
 }

@@ -16,7 +16,9 @@ const HABIT_FIELDS = gql`
     endDate
     customFields {
       label
+      type
       value
+      options
     }
     financeSource
     financeCategoryIds

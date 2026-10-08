@@ -44,7 +44,7 @@ improves UX · `2` edge case / power-user · `1` speculative.
 |  | ✅ | **Unarchive / view archived habits** | 2 | Collapsible "Archived habits" list under the dashboard (`archivedHabits`, fetched only when opened), Restore calls `unarchiveHabit` |
 |  | ✅ | **Describe a habit**: a short "why / how" shown under its name | 3 | `Habit.description` (≤500 chars), set in the create/edit dialogs, 2 lines on the card |
 |  | ✅ | **Tag habits and filter the dashboard by tag** ("health", "morning") | 3 | `Habit.tags` (lowercased, de-duplicated, ≤20); chips above the habit list, and a card's `#tag` filters to it. Filter is not kept in the URL |
-|  | ✅ | **Attach arbitrary custom fields to a habit** | 1 | Labelled fields ("Coach: Sam") in the create/edit dialogs, stored in `Habit.metadata.fields` in order, shown on the habit's page |
+|  | ✅ | **Attach typed custom fields to a habit** | 1 | Fields with a type in the create/edit dialogs: text, number, yes/no, a choice from a list ("Mood: great, ok, bad") or a date, each with a matching input. Stored in `Habit.metadata.fields` in order, checked per type by the API (`customFieldSchema`), and shown formatted on the habit's page. Values belong to the habit, not to each check-in |
 | **Daily tracking** | ✅ | **See which habits are due today** | 5 | `Query.todayHabits`; day view applies the same `isDueOn` filter client-side |
 |  | ✅ | **Check a habit off for today** | 5 | `Mutation.upsertHabitEntry` (`completed: true`) |
 |  | ✅ | **Log a quantitative value for today** | 4 | `Mutation.upsertHabitEntry` (`value: 5`) |
@@ -120,5 +120,5 @@ prefix `TASK`, catches tasks added without one) and has a key
 - Multi-user auth/accounts — every habit is implicitly single-user for now
   (no `User` entity, no login).
 - Reminders/notifications.
-- A UI for defining typed custom fields (the EAV model in the data-model
-  doc) — `metadata` JSON covers the same need with less machinery.
+- Per-check-in custom fields (the EAV model in the data-model doc): typed
+  fields hold one value per habit, in `metadata` JSON.

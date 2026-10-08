@@ -1,5 +1,5 @@
 import { GraphQLError } from "graphql";
-import type { ApiHabit, ApiHabitRecordsPage } from "#clients/api-types";
+import type { ApiCustomField, ApiHabit, ApiHabitRecordsPage } from "#clients/api-types";
 import type { GraphQLContext } from "#graphql/context";
 
 const habitPath = (id: string) => `/habits/${encodeURIComponent(id)}`;
@@ -9,6 +9,9 @@ type HabitInput = Record<string, unknown> & {
   metadata?: Record<string, unknown> | null;
   financeSource?: keyof typeof FINANCE_SOURCES | null;
   financeCategoryIds?: string[] | null;
+  customFields?:
+    | { label: string; type?: string | null; value: string; options?: string[] | null }[]
+    | null;
 };
 
 /** The GraphQL enum as the `metadata.source` the API's finance module reads. */
@@ -28,7 +31,20 @@ const financeSourceOf = (habit: ApiHabit) =>
  * finance link as metadata. A no-spend habit is always an avoid habit:
  * its days are clean unless money went out.
  */
-function toApiHabitInput({ polarity, financeSource, financeCategoryIds, ...input }: HabitInput) {
+function toApiHabitInput({
+  polarity,
+  financeSource,
+  financeCategoryIds,
+  customFields,
+  ...input
+}: HabitInput) {
+  if (customFields) {
+    input.customFields = customFields.map(({ type, options, ...field }) => ({
+      ...field,
+      type: (type ?? "TEXT").toLowerCase(),
+      ...(options && { options }),
+    }));
+  }
   if (financeSource === "SAVINGS_GOAL") {
     throw new GraphQLError("A savings habit is started from its goal (dailyHabitMinor)", {
       extensions: { code: "BAD_USER_INPUT" },
@@ -124,7 +140,13 @@ export default {
   },
   Habit: {
     polarity: (habit: ApiHabit) => habit.polarity.toUpperCase(),
-    customFields: (habit: ApiHabit) => habit.metadata?.fields ?? [],
+    customFields: (habit: ApiHabit) =>
+      (habit.metadata?.fields ?? []).map((field: ApiCustomField) => ({
+        label: field.label,
+        type: (field.type ?? "text").toUpperCase(),
+        value: field.value,
+        options: field.options ?? [],
+      })),
     financeSource: financeSourceOf,
     savingsGoalId: (habit: ApiHabit) =>
       typeof habit.metadata?.goalId === "string" ? habit.metadata.goalId : null,
