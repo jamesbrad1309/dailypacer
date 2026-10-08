@@ -3,8 +3,11 @@
  * attributes of the subject (role, status), the resource (the user being
  * managed: their role, whether it's the subject themself) and the change
  * asked for (the new role or status). Pure, so the whole rulebook is tested
- * in one place (policy.test.ts). Everyone shares one dataset for now, so app
- * data has no owner attribute yet; see docs/backend/auth.md.
+ * in one place (policy.test.ts). The role is one attribute among these, a
+ * bundle of what someone may do. Whose data a row is (its owner) is the
+ * other attribute, enforced in the data layer, not here: every query only
+ * sees the current user's rows (common/database/ownership.ts). See
+ * docs/backend/auth.md.
  */
 
 export const ROLES = ["OWNER", "ADMIN", "MEMBER", "VIEWER"] as const;

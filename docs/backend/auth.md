@@ -41,6 +41,15 @@ admin) only decide where to send people; the API enforces everything.
 | `status`: ACTIVE, PENDING, DISABLED | subject | only ACTIVE accounts can do anything |
 | `id` | subject vs target | nobody changes their own access |
 | new `role` | the request | admins may only give MEMBER or VIEWER |
+| `userId` (owner) | the data | everyone sees and changes only their own rows, whatever their role |
+
+Roles don't replace the attributes; a role is one of them, a named bundle of
+what someone may do, simpler to give a person than separate permissions.
+Rules that depend on more than the role (nobody changes their own access,
+admins manage only members and viewers, a disabled owner can do nothing)
+sit in `decide`. Ownership isn't checked there: it's enforced in the data
+layer for every query (see [Per-user data](#per-user-data)), so even an
+owner never sees another user's habits or money.
 
 | Action | Owner | Admin | Member | Viewer |
 | ------ | :---: | :---: | :----: | :----: |
