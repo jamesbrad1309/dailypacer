@@ -35,7 +35,7 @@ improves UX · `2` edge case / power-user · `1` speculative.
 
 | Category | Status | Use case | Impact | Notes |
 | -------- | :----: | -------- | :----: | ----- |
-| **Habit management** | ✅ | **Create a custom habit** (name, icon/color, unit, target, schedule) | 5 | `Mutation.createHabit` via `CreateHabitDialog`, a modal behind the dashboard's "Add habit" button (name, unit, target, start time, schedule; icon/color have no UI yet) |
+| **Habit management** | ✅ | **Create a custom habit** (name, icon/color, unit, target, schedule) | 5 | `Mutation.createHabit` via `CreateHabitDialog`, a modal behind the dashboard's "Add habit" button (name, emoji icon with one-tap suggestions, colour from the shared swatch palette, unit, target, start time, schedule). The colour is the card's left accent and the heatmap's fill; the icon shows before the name on the card and the day calendar |
 |  | ✅ | **Edit a habit's definition** (name/unit/target/schedule/start time) | 4 | `Mutation.updateHabit` + `EditHabitDialog` |
 |  | ✅ | **Configure a schedule preset** (daily / weekdays / weekends / custom days / N×week / every N days) | 4 | `ScheduleEditor`; presets are just `weekly` with specific `daysOfWeek`, no extra schema |
 |  | ✅ | **Set a start time** for the day-calendar view | 3 | `Habit.startTime` ("HH:mm") |
