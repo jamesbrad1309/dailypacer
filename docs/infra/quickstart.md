@@ -48,10 +48,11 @@ pnpm quickstart
 
 ## First sign-in
 
-The app needs an account. On a fresh database, either set `OWNER_EMAIL` and
-`OWNER_PASSWORD` in `.env` (the API creates that owner on start), or open
-the app and sign up: the first account becomes the owner. Everyone after
-that waits for approval. See [auth.md](../backend/auth.md).
+The app needs an account. Either set `OWNER_EMAIL` and `OWNER_PASSWORD` in
+`.env` (the API makes that owner on start), or open the app and sign up:
+the first person becomes the owner, and takes over any data from before
+accounts existed. Everyone after that waits for approval and starts with
+their own empty data. See [auth.md](../backend/auth.md).
 
 ## `.env.example`
 

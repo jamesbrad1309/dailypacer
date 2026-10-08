@@ -30,7 +30,7 @@ improves UX · `2` edge case / power-user · `1` speculative.
 | Cross-module (habits × finance) | 5 | 0 | — |
 | **To-do lists** | 13 | 0 | — |
 | **Notifications** | 4 | 0 | — |
-| **Accounts & access** | 6 | 2 | Per-user data (5) |
+| **Accounts & access** | 7 | 1 | Forgot password by email (3) |
 | **Finance** (separate doc) | 60 | 0 | — (habits integration built), see [finance/use-cases.md](../finance/use-cases.md) |
 
 ## Use cases
@@ -143,14 +143,13 @@ People and approvals are managed in the admin
 | ✅ | **Sign out**, and **change my password** (signs out my other devices) | 4 | The account menu in the app bar |
 | ✅ | **A session that ends mid-use** sends me to sign in, then back | 3 | Expired, signed out elsewhere, or turned off by an admin |
 | ✅ | **Signing in and up in Vietnamese** | 2 | `auth` dictionary; API errors carry a `reason` code the app translates |
-| ⬜ | **Per-user data**: each person sees only their own | 5 | Phase 2 of the [multi-user plan](../admin/multi-user-plan.md) |
+| ✅ | **My own data**: I see and change only mine | 5 | Every query is scoped to the signed-in user ([auth.md](../backend/auth.md#per-user-data)); new accounts start with the default categories, GBP and an Inbox |
 | ⬜ | **Forgot password** by email | 3 | Needs email ([email-and-notifications.md](../backend/email-and-notifications.md)); today an admin resets it |
 
 ## Explicitly out of scope for v1
 
-- Per-user data: people sign in with their own accounts and roles
-  ([auth.md](../backend/auth.md)), but everyone shares one dataset; giving
-  each their own is phase 2 of the [multi-user plan](../admin/multi-user-plan.md).
+- Sharing data between people (a household budget, a shared list): each
+  person's data is their own ([auth.md](../backend/auth.md)).
 - Email and push reminders. In-app notifications are built, see
   [Notifications inbox](../backend/notifications.md).
 - Per-check-in custom fields (the EAV model in the data-model doc): typed

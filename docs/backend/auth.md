@@ -1,9 +1,9 @@
 # Sign-in and Access Rules
 
-Email and password sign-in, server-side sessions, and attribute-based access
-control (ABAC) for the web app, the admin dashboard and the API. **Everyone
-signed in shares the one dataset for now**; giving each person their own
-data is phase 2 of the [multi-user plan](../admin/multi-user-plan.md).
+Email and password sign-in, server-side sessions, attribute-based access
+control (ABAC) for the web app, the admin dashboard and the API, and
+**per-user data**: each person sees and changes only their own habits,
+money, tasks and journal ([below](#per-user-data)).
 
 ## How a request is checked
 
@@ -44,7 +44,7 @@ admin) only decide where to send people; the API enforces everything.
 
 | Action | Owner | Admin | Member | Viewer |
 | ------ | :---: | :---: | :----: | :----: |
-| `app:read`: see habits, money, tasks, journal, notifications | ✅ | ✅ | ✅ | ✅ |
+| `app:read`: see your own habits, money, tasks, journal, notifications | ✅ | ✅ | ✅ | ✅ |
 | `app:write`: change them | ✅ | ✅ | ✅ | — |
 | `admin:open`, `users:list` | ✅ | ✅ | — | — |
 | `users:create` | any role | member, viewer | — | — |
@@ -66,12 +66,18 @@ Notes:
 
 - **Sign-up** (`/sign-up` in the web app) creates a **pending viewer**, who
   can't sign in until an owner or admin approves them on the admin's Users
-  page. Anything else would let anyone who can reach the app read
-  everyone's data. **Exception:** the first account in an empty database
-  becomes its owner and is signed straight in.
+  page. **Exception:** the first person to sign up becomes the owner and is
+  signed straight in.
 - **First owner from the environment:** with `OWNER_EMAIL` and
-  `OWNER_PASSWORD` set, the API creates that owner on start if there's no
-  owner yet (or promotes the existing account with that email).
+  `OWNER_PASSWORD` set, the API makes that owner on start if there's no
+  active owner yet (or promotes the existing account with that email).
+- **The unclaimed owner:** data from before accounts existed belongs to a
+  placeholder owner (`owner@unclaimed.invalid`, can't sign in, hidden from
+  the Users page) made by the per-user migration. The first sign-up, or
+  `OWNER_EMAIL`, claims it, data and all.
+- **Every new user starts with** the default categories, GBP as main
+  currency and an Inbox list (`UserSetupService`); sign-in also fills in
+  anything missing for older accounts.
 - **Admins add people** from the admin's Users page with a role and a
   password; they're active at once.
 - **Approve / decline / turn off / turn on** set the status. Turning
@@ -79,6 +85,45 @@ Notes:
 - **Reset password** (admin) sets a new one and ends all their sessions.
   **Change password** (yourself, from the web app's account menu) needs
   the current one and ends your other sessions.
+
+## Per-user data
+
+Every top-level table (habits, routines, rewards, points spends, journal
+entries, accounts, categories, transactions, quick presets, budgets,
+currencies, subscriptions, lists, tasks, savings goals, payee rules,
+notifications) has a `userId`. Rows below them (habit entries, freezes,
+challenges, pauses, routine habits, splits, subscription prices and charges,
+board columns, task dependencies, goal contributions, monthly totals) belong
+to their parent's owner. Exchange rates and logos are shared.
+
+It's enforced in one place, `src/common/database/ownership.ts`, a Prisma
+extension every query goes through:
+
+- **Request context.** A middleware opens an AsyncLocalStorage context per
+  request; `AuthGuard` puts the user in it (`request-context.ts`). Scripts
+  run `asUser(id, …)`; the admin's row counts run `asSystem(…)`. A query on
+  an owned model with no user fails rather than returning everyone's rows.
+- **Reads, updates, deletes** get `AND userId = me` (or `AND parent.userId =
+  me` for child rows), so another user's id behaves exactly like a missing
+  one: 404, never 403.
+- **Creates** get the user as owner. The column's database default reads a
+  setting that's never set, so an insert that skipped the extension fails
+  instead of making a row nobody owns.
+- **Links between rows** (a transaction's category, a task's dependency,
+  nested creates) are checked: pointing at another user's row is a 404.
+- **Raw SQL** can't be seen by the extension, so it adds
+  `currentUserId()` itself (reports, life level, tags, locks, the monthly
+  totals rebuild).
+- **Keys that were global are per user:** list prefixes (two people can both
+  have `HOME-1`), currencies and the main currency, quick-log client ids,
+  notification keys, the default account, top-level category names.
+- **CSV uploads** sit in a folder per user.
+- **Adding a model:** start-up fails until it's listed in `OWNED_BY_COLUMN`,
+  `OWNED_VIA` or `SHARED`.
+
+Owners and admins manage people but don't see anyone else's data. The
+admin's Overview counts rows across everyone (numbers only); its Accounts
+page shows the signed-in person's own accounts.
 
 ## Passwords and sessions
 
@@ -132,9 +177,8 @@ banner. The admin shows a 403 page to signed-in members and viewers.
 
 ## Not yet
 
-- Per-user data (each person sees only their own): the multi-user plan's
-  phase 2–3.
 - Email: verification, "forgot password" links, notifying admins of a
   pending sign-up (with [email-and-notifications.md](email-and-notifications.md)).
 - Two-factor sign-in, passkeys, "sign out other devices" as a button.
 - An audit log of admin actions.
+- Deleting a user (their data would go with them: every `userId` cascades).

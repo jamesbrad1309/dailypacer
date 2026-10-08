@@ -31,8 +31,8 @@ removed (2026-10-08) to keep the focus; the web app still manages those.
 
 | Category | Status | Use case | Impact | Notes |
 | -------- | :----: | -------- | :----: | ----- |
-| **System** | ✅ | **Overview**: rows per table, migrations, API uptime | 4 | `/` page. `Query.adminOverview` → `GET /admin/overview` (`apps/api/src/admin`): `count()` per main table grouped by area, the newest applied Prisma migration, the API's Node version and uptime |
-| **Accounts** | ✅ | **List accounts**: active and archived, with type, institution, balance, start date | 5 | `/accounts`, tabs in `?view=` (an unknown value falls back to Active). Reuses `accounts` and `archivedAccounts` |
+| **System** | ✅ | **Overview**: rows per table across everyone (counts only), migrations, API uptime | 4 | `/` page. `Query.adminOverview` → `GET /admin/overview` (`apps/api/src/admin`): `count()` per main table grouped by area, the newest applied Prisma migration, the API's Node version and uptime |
+| **Accounts** | ✅ | **List my accounts**: active and archived, with type, institution, balance, start date | 5 | Data is per user, so these are the signed-in person's own. `/accounts`, tabs in `?view=` (an unknown value falls back to Active). Reuses `accounts` and `archivedAccounts` |
 |  | ✅ | **Archive / restore** an account | 4 | `archiveAccount`, `unarchiveAccount`. Archiving the default hands "default" to another spendable account (the API does this) |
 |  | ✅ | **Make an account the default** for quick log | 3 | `setDefaultAccount`. Offered only for spendable types (current, savings, credit card, cash), the same rule as the API's `SPENDABLE_TYPES` |
 |  | ⬜ | **Account details page** (`/accounts/$id`): every field, balance history, recent transactions | 5 | Next. A loader that gets `NOT_FOUND` throws `notFound()`, so a bad id shows the 404 page |
@@ -55,7 +55,7 @@ removed (2026-10-08) to keep the focus; the web app still manages those.
 |  | ✅ | **Change someone's role** | 4 | A select per row, listing only roles you may give |
 |  | ✅ | **Reset someone's password** (signs them out everywhere) | 3 | `resetUserPassword` |
 |  | ✅ | **Only what the rules allow is offered** | 3 | `User.permissions` from the API's policy: no controls on your own row, admins can't touch owners or admins |
-|  | ⬜ | **Delete a user** | 2 | With shared data there's nothing of theirs to delete yet; turning off covers it |
+|  | ⬜ | **Delete a user** with all their data | 2 | Every `userId` cascades, so it's one delete; needs a typed confirmation. Turning off covers most needs |
 |  | ⬜ | **Audit log** of admin actions | 3 | Who changed what, when; today only the API's logs |
 | **Admin app itself** | ✅ | **Shell**: sidebar, signed-in user with sign out, loading skeletons | 3 | [dashboard.md](dashboard.md) |
 |  | ✅ | **Sign-in and a role check** before any admin page | 5 | `/sign-in`; members and viewers get a 403 page (`abilities.openAdmin`) |

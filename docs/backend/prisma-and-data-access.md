@@ -64,6 +64,24 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 parameter — no per-module `TypeOrmModule.forFeature([...])`-style wiring
 needed.
 
+The constructor returns the client wrapped in the **ownership extension**
+(`ownership.ts`): every query is scoped to the signed-in user from the
+request context, creates are stamped with them, and links to another user's
+rows are refused. Services write plain queries (`account.findMany()`), and
+they come back with only the user's rows. Consequences when writing code:
+
+- Code outside a request (a script, a timer) must say whose data it works
+  on: `asUser(userId, …)`, or `asSystem(…)` for counts across everyone.
+  Without either, a query on an owned model throws.
+- Unique keys that are per user use compound names:
+  `currency.findUnique({ where: currencyKey(code) })` (`user-keys.ts`).
+- Raw SQL is invisible to the extension: add
+  `"userId" = ${currentUserId()}` yourself.
+- A new model must be classified in `ownership.ts` (`OWNED_BY_COLUMN`,
+  `OWNED_VIA` or `SHARED`) or the API won't start.
+
+See [auth.md](auth.md#per-user-data).
+
 ## Migrations
 
 Two different commands for two different situations:

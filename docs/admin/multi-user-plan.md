@@ -1,9 +1,8 @@
 # Multi-user Plan
 
-**Status: phase 1 built (users, sign-in, roles), phases 2–5 planned.**
-People sign in with their own accounts and roles ([auth.md](../backend/auth.md)),
-but every habit, account and task still belongs to one shared dataset. This
-is the plan for the rest: giving each person their own data.
+**Status: phases 1–3 built (users, sign-in, roles, per-user data); 4–5
+planned.** People sign in with their own accounts and roles and see only
+their own data; see [auth.md](../backend/auth.md).
 
 ## Goals
 
@@ -23,7 +22,7 @@ budgets), organisations/teams, billing.
 | Where the session lives | httpOnly cookie set by the BFF · bearer token in the SPA | **Decided: cookie** (built). The SPA never holds a token |
 | How the API learns who's calling | Trust an `x-user-id` header from the BFF on the internal network · BFF forwards a signed token the API verifies | **Decided: the BFF forwards the session token**, which the API looks up (built), so a stray request to the API can't pick a user |
 | Who can sign up | Admins only · open · both | **Decided: both**, with self sign-ups waiting for approval while data is shared |
-| Scoping in the API | Pass `userId` through every service call · request-scoped context (AsyncLocalStorage) plus a Prisma client extension that adds `where: { userId }` | Context + extension, with explicit `userId` in raw SQL |
+| Scoping in the API | Pass `userId` through every service call · request-scoped context (AsyncLocalStorage) plus a Prisma client extension that adds `where: { userId }` | **Decided: context + extension** (built, `ownership.ts`), with explicit `userId` in raw SQL |
 | Per-user or shared | Exchange rates and service logos | Shared (market data and a cache); everything else per user |
 
 ## Phases
@@ -41,10 +40,10 @@ budgets), organisations/teams, billing.
 - The first owner comes from `OWNER_EMAIL`/`OWNER_PASSWORD`, or is the first
   person to sign up in an empty database.
 - Admin: Users list, add, approve, turn off, change role, reset password.
-- Still one dataset: everyone signed in sees the same data, which is why
-  sign-ups wait for approval and viewers are read-only.
+- (Until phase 3 everyone shared one dataset, which is why sign-ups wait for
+  approval; they still do.)
 
-### 2. Ownership columns
+### 2. Ownership columns ✅ built
 
 Add `userId` (FK to `User`, indexed) to every table a person owns directly,
 nullable at first, backfilled to the owner, then `NOT NULL`:
@@ -57,6 +56,11 @@ nullable at first, backfilled to the owner, then `NOT NULL`:
   currencies (see below)
 - **Tasks:** `TodoList`, `Task` (denormalised, for search across lists)
 - **Notifications:** `Notification` (after PR #21)
+
+Built as migration `20261010120000_per_user_data`: today's rows go to the
+oldest owner, or to an unclaimed owner the first sign-up claims. As planned,
+except `MonthlyTotal` is owned through its account rather than its own
+column (its raw `INSERT … ON CONFLICT` stays as it was).
 
 Rows that hang off one of those (`HabitEntry`, `StreakFreeze`, `HabitPause`,
 `HabitChallenge`, `RoutineHabit`, `TransactionSplit`, `SubscriptionPrice`,
@@ -73,9 +77,9 @@ Constraints that are global today and must become per user:
 | `Transaction.clientId` `@unique` (quick-log idempotency) | `@@unique([userId, clientId])` |
 | `Category @@unique([parentId, name])` | add `userId` to it; top-level names are only unique per user |
 | `Notification.key` `@unique` | `@@unique([userId, key])` |
-| Seeded categories and the Inbox list | created per user at sign-up, not by a migration |
+| Seeded categories and the Inbox list | created per user (`UserSetupService`), not by a migration |
 
-### 3. Scope every read and write
+### 3. Scope every read and write ✅ built
 
 - The guard already knows the user (`req.user`); a request context carries
   its `userId`; a Prisma client
@@ -86,8 +90,11 @@ Constraints that are global today and must become per user:
   `life-level.service`.
 - Another user's id behaves like a missing row: 404, never 403, so ids
   can't be probed.
-- Tests: a two-user fixture, and for each controller a check that user B
-  can't read or change user A's rows.
+- Tested: unit tests for the extension's rewriting (`ownership.test.ts`), and
+  a two-user run through the BFF: reads, filters, updates, links to the other
+  user's rows (accounts, categories, tasks, dependencies, budgets, payee
+  rules, journal triggers), reports, tags, list prefixes and the totals
+  rebuild all stay inside each user's data.
 
 ### 4. Per-user settings
 
@@ -97,7 +104,7 @@ client-driven.
 
 ### 5. Tools and admin
 
-- Demo import and export per user (`--user=email`).
+- ✅ Demo import and export per user (`--user=email`).
 - Admin: delete a user with all their data, audit log of admin actions,
   then the Docker image and gateway route for the admin.
 - The policy gains an ownership attribute: `app:read`/`app:write` check the

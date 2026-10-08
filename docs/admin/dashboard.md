@@ -1,8 +1,9 @@
 # Admin Dashboard
 
 `apps/admin` is an internal dashboard for looking after DailyPacer's data.
-For now it covers an overview of the database and **managing money
-accounts**; account details come next.
+For now it covers an overview of the database, **the signed-in person's
+money accounts** (data is per user) and **people**; account details come
+next.
 What it does and what's next: [use-cases.md](use-cases.md).
 
 **Owners and admins only.** It shares the web app's sign-in (the BFF's
