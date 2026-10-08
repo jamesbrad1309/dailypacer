@@ -48,17 +48,17 @@ export function useNotificationText(): (n: AppNotification) => NotificationText 
       case "task.inbox":
         return {
           title: t("notifications.kinds.taskInbox", { count: num("count") }),
-          detail: t("notifications.kinds.taskInboxDetail"),
+          detail: t("notifications.kinds.taskInboxDetail", { count: num("count") }),
         };
       case "money.toReview":
         return {
           title: t("notifications.kinds.moneyToReview", { count: num("count") }),
-          detail: t("notifications.kinds.moneyToReviewDetail"),
+          detail: t("notifications.kinds.moneyToReviewDetail", { count: num("count") }),
         };
       case "money.pendingCharges":
         return {
           title: t("notifications.kinds.moneyPendingCharges", { count: num("count") }),
-          detail: t("notifications.kinds.moneyPendingChargesDetail"),
+          detail: t("notifications.kinds.moneyPendingChargesDetail", { count: num("count") }),
         };
       case "money.budget": {
         const category = p.category as Pick<Category, "name" | "key"> & { icon?: string | null };
