@@ -2,6 +2,8 @@ import { useMutation } from "@apollo/client/react";
 import { Plus } from "lucide-react";
 import { type FormEvent, useEffect, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ColorPicker } from "#components/ColorPicker";
+import { EmojiField } from "#components/EmojiField";
 import { HabitCategories } from "#components/HabitCategories";
 import { HabitExtraFields } from "#components/HabitExtraFields";
 import { ScheduleEditor } from "#components/ScheduleEditor";
@@ -22,6 +24,7 @@ import { onAction } from "#lib/command-palette";
 import {
   BLANK_HABIT_DRAFT,
   cleanCustomFields,
+  fieldIssue,
   type HabitDraft,
   type HabitDraftAction,
   habitDraftReducer,
@@ -49,6 +52,8 @@ export function CreateHabitDialog() {
       type: "reset",
       draft: {
         name: t(`${words}.name`),
+        icon: template.emoji,
+        color: null,
         description: t(`${words}.description`),
         unit: t(`${words}.unit`),
         targetValue: template.target?.toString() ?? "",
@@ -74,11 +79,13 @@ export function CreateHabitDialog() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || draft.customFields.some(fieldIssue)) return;
     await createHabit({
       variables: {
         input: {
           name: name.trim(),
+          icon: draft.icon.trim() || undefined,
+          color: draft.color ?? undefined,
           description: description.trim() || undefined,
           tags: parseTags(tags),
           unit: unit.trim() || undefined,
@@ -154,6 +161,9 @@ export function CreateHabitDialog() {
               onChange={(e) => set("name", e.target.value)}
             />
           </div>
+
+          <EmojiField value={draft.icon} onChange={(value) => set("icon", value)} />
+          <ColorPicker value={draft.color} onChange={(value) => set("color", value)} />
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="create-description">{t("habits.edit.description")}</Label>
@@ -231,7 +241,10 @@ export function CreateHabitDialog() {
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               {t("common.cancel")}
             </Button>
-            <Button type="submit" disabled={loading || !name.trim()}>
+            <Button
+              type="submit"
+              disabled={loading || !name.trim() || draft.customFields.some(fieldIssue)}
+            >
               {t("common.add")}
             </Button>
           </DialogFooter>

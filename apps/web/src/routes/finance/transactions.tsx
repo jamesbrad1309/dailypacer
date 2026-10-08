@@ -18,6 +18,7 @@ const searchSchema = z.object({
   category: z.string().uuid().optional().catch(undefined),
   // Coerced: the router JSON-parses search values, so "?q=12" arrives as a number.
   q: z.coerce.string().max(100).optional().catch(undefined),
+  tag: z.coerce.string().max(50).optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/finance/transactions")({

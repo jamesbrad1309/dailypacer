@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { HabitDayStatus, HeatmapDay } from "#graphql/types";
+import { withAlpha } from "#lib/colors";
 import { formatShortDate } from "#lib/dates";
 import { moodBand } from "#lib/mood";
 import { cn } from "#lib/utils";
@@ -19,6 +20,14 @@ function cellClass(day: HeatmapDay | undefined): string {
   if (day.completed) return STATUS_CLASS.DONE as string;
   if (day.value != null) return STATUS_CLASS.PARTIAL as string;
   return "bg-muted";
+}
+
+/** The habit's own colour for done and partly done days; the status classes stay as the fallback. */
+function cellStyle(day: HeatmapDay, color: string | null | undefined) {
+  if (!color) return undefined;
+  if (day.status === "DONE" || (day.completed && !day.status)) return { backgroundColor: color };
+  if (day.status === "PARTIAL") return { backgroundColor: withAlpha(color, 0.45) };
+  return undefined;
 }
 
 /** A day's mood as a fill: teal pleasant, orange unpleasant, grey mixed (lib/mood.ts). */
@@ -54,9 +63,11 @@ interface Props {
    * dot on the days the habit was done, to see the two together.
    */
   mood?: ReadonlyMap<string, number>;
+  /** The habit's colour (a hex), used for done days instead of the default green. */
+  color?: string | null;
 }
 
-export function HeatmapGrid({ days, size = "sm", mood }: Props) {
+export function HeatmapGrid({ days, size = "sm", mood, color }: Props) {
   const { gap, cell, dot } = SIZES[size];
   const { t } = useTranslation();
   if (days.length === 0) return null;
@@ -90,6 +101,7 @@ export function HeatmapGrid({ days, size = "sm", mood }: Props) {
             <div
               key={day?.date ?? `blank-${weekIdx}-${dayIdx}`}
               title={day ? title(day) : undefined}
+              style={day && !mood ? cellStyle(day, color) : undefined}
               className={cn(
                 cell,
                 "flex items-center justify-center",

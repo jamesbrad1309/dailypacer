@@ -246,6 +246,15 @@ export const TODAY_LOGS_QUERY = gql`
 `;
 
 /** Uncategorised transactions plus subscription charges waiting to be confirmed. */
+export const TRANSACTION_TAGS_QUERY = gql`
+  query TransactionTags {
+    transactionTags {
+      tag
+      count
+    }
+  }
+`;
+
 export const TO_REVIEW_COUNT_QUERY = gql`
   query ToReviewCount($today: String) {
     toReviewCount(today: $today)

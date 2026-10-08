@@ -7,6 +7,7 @@ const HABIT_FIELDS = gql`
     description
     tags
     icon
+    color
     unit
     targetValue
     startTime
@@ -15,7 +16,9 @@ const HABIT_FIELDS = gql`
     endDate
     customFields {
       label
+      type
       value
+      options
     }
     financeSource
     financeCategoryIds

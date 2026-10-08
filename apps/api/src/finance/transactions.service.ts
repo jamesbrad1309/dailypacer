@@ -125,6 +125,7 @@ export class TransactionsService {
         ],
       });
     }
+    if (input.tag) where.push({ tags: { has: input.tag } });
     if (input.after) where.push(afterCursor(decodeCursor(input.after)));
 
     // One extra row tells us whether there's another page.
@@ -149,6 +150,16 @@ export class TransactionsService {
   }
 
   /** The "To review" inbox: uncategorised (non-transfer) or pending transactions. */
+  /** Every tag in use, most used first, for the tag filter. */
+  async tagCounts(): Promise<{ tag: string; count: number }[]> {
+    const rows = await this.prisma.$queryRaw<{ tag: string; count: bigint }[]>`
+      SELECT tag, count(*) AS count
+      FROM "transactions", unnest("tags") AS tag
+      GROUP BY tag
+      ORDER BY count DESC, tag`;
+    return rows.map((row) => ({ tag: row.tag, count: Number(row.count) }));
+  }
+
   toReviewCount(): Promise<number> {
     return this.prisma.transaction.count({ where: TO_REVIEW });
   }

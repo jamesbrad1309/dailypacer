@@ -32,10 +32,20 @@ export interface HeatmapDay {
 
 export type HabitPolarity = "BUILD" | "AVOID";
 
+/** What a habit's own field holds; its value is always a string in that shape. */
+export type HabitFieldType = "TEXT" | "NUMBER" | "BOOLEAN" | "SELECT" | "DATE";
+
 export interface HabitCustomField {
   label: string;
+  type: HabitFieldType;
+  /** "" when not filled in; "true"/"false" for BOOLEAN, "YYYY-MM-DD" for DATE. */
   value: string;
+  /** SELECT only: the choices, in order. */
+  options: string[];
 }
+
+/** HabitCustomField as sent: `options` only for a SELECT. */
+export type HabitCustomFieldInput = Omit<HabitCustomField, "options"> & { options?: string[] };
 
 /**
  * NO_SPEND: an avoid habit, slipped on any day money went out.
@@ -51,6 +61,8 @@ export interface Habit {
   /** Lowercased labels, see lib/tags.ts. */
   tags: string[];
   icon: string | null;
+  /** A hex from lib/colors.ts: the card's accent and the heatmap's fill. */
+  color: string | null;
   unit: string | null;
   targetValue: number | null;
   /** "HH:mm" (24h), or null for "anytime today" — see components/DayCalendar.tsx. */
@@ -465,6 +477,8 @@ export interface TransactionFilter {
   from?: string | null;
   to?: string | null;
   search?: string | null;
+  /** Only transactions carrying this tag. */
+  tag?: string | null;
   includeTransfers?: boolean;
   uncategorisedOnly?: boolean;
   /** The whole "To review" inbox: uncategorised or pending. */

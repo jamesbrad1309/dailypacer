@@ -49,6 +49,8 @@ export const listTransactionsSchema = z.object({
   from: isoDate.optional(),
   to: isoDate.optional(),
   search: z.string().trim().max(100).optional(),
+  /** Only transactions carrying this tag (tags are stored lowercased). */
+  tag: z.string().trim().toLowerCase().min(1).max(50).optional(),
   /** No category, not a transfer. */
   uncategorised: flag,
   /** The whole "To review" inbox: uncategorised or pending. */

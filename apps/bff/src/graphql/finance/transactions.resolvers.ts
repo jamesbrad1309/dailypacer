@@ -15,6 +15,7 @@ interface TransactionFilter {
   from?: string | null;
   to?: string | null;
   search?: string | null;
+  tag?: string | null;
   includeTransfers?: boolean | null;
   uncategorisedOnly?: boolean | null;
   toReviewOnly?: boolean | null;
@@ -43,6 +44,7 @@ export default {
           from: f.from,
           to: f.to,
           search: f.search || null,
+          tag: f.tag || null,
           includeTransfers: f.includeTransfers,
           uncategorised: f.uncategorisedOnly,
           toReview: f.toReviewOnly,
@@ -51,6 +53,8 @@ export default {
         })}`,
       );
     },
+    transactionTags: (_: unknown, __: unknown, ctx: GraphQLContext) =>
+      ctx.api.get<{ tag: string; count: number }[]>("/transactions/tags"),
     toReviewCount: async (_: unknown, args: { today?: string | null }, ctx: GraphQLContext) =>
       (
         await ctx.api.get<{ count: number }>(

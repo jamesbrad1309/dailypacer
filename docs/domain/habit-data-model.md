@@ -114,7 +114,7 @@ rows instead of a summed `value`).
 | **Challenges** | `HabitChallenge(habitId, startDate, endDate, target, multiplier)` | Met (target check-ins in the range), its check-ins earn (multiplier − 1) × 10 extra points, in the habit's points and the wallet (`challenge.util.ts`). One at a time per habit, 31 days at most |
 | **Routines** | `Routine` + `RoutineHabit(routineId, habitId, position)` | Ordered habits done together; a habit is in one routine at most (`habitId` is unique) |
 | **Points wallet** | `Reward`, `PointsSpend` | Earned = 10 per check-in ever (archived habits too) + challenge bonuses, derived; spent = the ledger (rewards redeemed, freezes); balance = earned − spent. Separate from the level, which stays on the 120-day window, so spending never lowers it |
-| **Custom fields** | `Habit.metadata.fields: [{ label, value }]` | The JSONB option below, edited in the habit dialogs |
+| **Custom fields** | `Habit.metadata.fields: [{ label, type, value, options? }]` | The JSONB option below, typed, edited in the habit dialogs; see "Typed fields" below |
 
 **Not-due ranges.** `HabitsService.pausesFor` returns, per habit, its pause
 stretches, each frozen day, and everything after a time-boxed habit's end,
@@ -152,6 +152,32 @@ Start with (1). It satisfies "track all the information" for a personal
 tool immediately; migrate specific popular custom fields into first-class
 columns as patterns emerge, and only build (2) if you actually want a
 user-facing "add a custom field" builder UI.
+
+### Typed fields (built)
+
+The field builder uses option (1) with a type on each field, since the
+values belong to the habit ("Coach: Sam", "Outdoor: yes"), not to each
+check-in:
+
+```json
+{ "fields": [
+  { "label": "Coach", "type": "text", "value": "Sam" },
+  { "label": "Budget", "type": "number", "value": "40" },
+  { "label": "Outdoor", "type": "boolean", "value": "true" },
+  { "label": "Gear", "type": "select", "value": "road", "options": ["road", "trail"] },
+  { "label": "Race day", "type": "date", "value": "2026-11-15" }
+] }
+```
+
+`value` is always a string, "" when not filled in, so a field saved before
+types existed (no `type`) reads as text. `customFieldSchema`
+(`habits/dto/create-habit.dto.ts`) checks each value against its type, keeps
+`options` only on a select (de-duplicated) and requires at least one. GraphQL
+exposes `type` as the `HabitFieldType` enum and `options` as `[]` for the
+other types. The web form (`HabitExtraFields`) shows a matching input per
+type and won't save a row whose value doesn't fit (`fieldIssue` in
+`lib/habit-draft.ts`). Changing a field's type keeps a value that still fits.
+Values per check-in would still need option (2).
 
 ## Derived data (computed, not stored)
 

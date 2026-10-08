@@ -24,6 +24,7 @@ import {
 import { JOURNAL_FEELINGS_QUERY } from "#graphql/journal";
 import type {
   HabitCorrelation,
+  HabitCustomField,
   HabitDetailData,
   HabitRecordsData,
   HabitSchedule,
@@ -31,6 +32,7 @@ import type {
   JournalFeeling,
 } from "#graphql/types";
 import { useLexicon } from "#hooks/useLexicon";
+import { getLocale } from "#i18n/locale";
 import { formatShortDate, formatWeekday, fromIsoDate, todayIsoDate } from "#lib/dates";
 import { moodByDay } from "#lib/habit-mood";
 import { cn } from "#lib/utils";
@@ -122,7 +124,7 @@ export function HabitDetail({ habitId }: { habitId: string }) {
               {habit.customFields.map((field) => (
                 <div key={field.label} className="contents">
                   <dt className="text-muted-foreground">{field.label}</dt>
-                  <dd>{field.value}</dd>
+                  <dd>{formatFieldValue(field, t)}</dd>
                 </div>
               ))}
             </dl>
@@ -175,7 +177,7 @@ export function HabitDetail({ habitId }: { habitId: string }) {
             </Button>
           </div>
           <div className="flex flex-1 items-center justify-center">
-            <HeatmapGrid days={habit.heatmap} size="lg" mood={mood} />
+            <HeatmapGrid days={habit.heatmap} size="lg" mood={mood} color={habit.color} />
           </div>
           {mood ? (
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
@@ -257,6 +259,21 @@ const same = (a: number[], b: number[]) =>
   a.length === b.length && [...a].sort().every((day, i) => day === [...b].sort()[i]);
 
 /** "Every day", "Weekdays (Mon–Fri)", "Mon, Wed, Fri", "3 times a week", "Every 2 days". */
+/** A field's value as read: "Yes", "8 Oct", "12.5"; "—" when it's not filled in. */
+function formatFieldValue(field: HabitCustomField, t: TFunction): string {
+  if (field.value === "") return "—";
+  switch (field.type) {
+    case "BOOLEAN":
+      return t(field.value === "true" ? "habits.edit.yes" : "habits.edit.no");
+    case "DATE":
+      return formatShortDate(field.value);
+    case "NUMBER":
+      return Number(field.value).toLocaleString(getLocale());
+    default:
+      return field.value;
+  }
+}
+
 function describeSchedule(schedule: HabitSchedule, t: TFunction): string {
   switch (schedule.type) {
     case "daily":
