@@ -280,6 +280,12 @@ type TransactionPage {
   nextCursor: String
 }
 
+"""A tag and how many transactions carry it."""
+type TransactionTag {
+  tag: String!
+  count: Int!
+}
+
 input TransactionFilter {
   accountId: ID
   categoryId: ID
@@ -289,6 +295,8 @@ input TransactionFilter {
   to: String
   """Matches payee or note, case-insensitively."""
   search: String
+  """Only transactions carrying this tag."""
+  tag: String
   includeTransfers: Boolean = true
   """Uncategorised (non-transfer) only."""
   uncategorisedOnly: Boolean = false
@@ -519,6 +527,8 @@ extend type Query {
   payeeRuleMatchCount(pattern: String!): Int!
   """Newest first."""
   transactions(filter: TransactionFilter, first: Int = 50, after: String): TransactionPage!
+  """Every tag in use, most used first."""
+  transactionTags: [TransactionTag!]!
   """The "To review" inbox: uncategorised transactions plus subscription charges to confirm. `today` is the user's YYYY-MM-DD."""
   toReviewCount(today: String): Int!
   """hour (0–23), dayOfWeek (0 = Sunday) and utcOffsetMinutes (Date.getTimezoneOffset()) are the user's local time."""
