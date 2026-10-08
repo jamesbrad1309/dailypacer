@@ -73,8 +73,8 @@ function UsersPage() {
         title="Users"
         description={
           waiting
-            ? `${waiting} ${waiting === 1 ? "person is" : "people are"} waiting for approval. Everyone signed in shares the same data.`
-            : "Everyone signed in shares the same data; roles decide what each person may do."
+            ? `${waiting} ${waiting === 1 ? "person is" : "people are"} waiting for approval.`
+            : "Each person has their own data; roles decide what they may do and whom they manage."
         }
         actions={
           me.abilities.manageUsers && (

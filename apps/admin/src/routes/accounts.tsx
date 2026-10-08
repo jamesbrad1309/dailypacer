@@ -82,7 +82,7 @@ function AccountsPage() {
     <>
       <PageHeader
         title="Accounts"
-        description="Money accounts. Archiving hides one from quick log and totals but keeps its history."
+        description="Your money accounts. Archiving hides one from quick log and totals but keeps its history."
       />
       <ViewTabs
         label="Accounts"

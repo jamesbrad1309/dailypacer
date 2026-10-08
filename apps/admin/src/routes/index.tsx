@@ -37,7 +37,10 @@ function OverviewPage() {
   const { tables, database, server } = data.adminOverview;
   return (
     <>
-      <PageHeader title="Overview" description="What's in the database, and the API serving it." />
+      <PageHeader
+        title="Overview"
+        description="How much is in the database across everyone (counts only), and the API serving it."
+      />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {AREAS.map(({ area, label }) => {
           const rows = tables.filter((t) => t.area === area);
