@@ -22,6 +22,12 @@ export const customFieldsSchema = z
   .array(z.object({ label: z.string().trim().min(1).max(50), value: z.string().trim().max(500) }))
   .max(20);
 
+/** "#rrggbb", lowercased: a swatch from the web app's palette (lib/colors.ts). */
+export const hexColorSchema = z
+  .string()
+  .regex(/^#[0-9a-fA-F]{6}$/, "color must be #rrggbb")
+  .transform((hex) => hex.toLowerCase());
+
 export const polaritySchema = z.enum(["build", "avoid"]);
 export const endDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "endDate must be YYYY-MM-DD");
 
@@ -30,7 +36,7 @@ export const createHabitSchema = z.object({
   description: z.string().trim().max(500).optional(),
   tags: habitTagsSchema.optional(),
   icon: z.string().max(50).optional(),
-  color: z.string().max(20).optional(),
+  color: hexColorSchema.optional(),
   unit: z.string().max(50).optional(),
   targetValue: z.number().positive().optional(),
   startTime: startTimeSchema.optional(),
