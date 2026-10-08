@@ -1,8 +1,8 @@
 # Admin Dashboard
 
-`apps/admin` is an internal dashboard for looking after DailyPacer's data:
-what's in the database, and the setup records (accounts, categories,
-currencies, habits, task lists) the app leaves hard to see in one place.
+`apps/admin` is an internal dashboard for looking after DailyPacer's data.
+For now it covers an overview of the database and **managing money
+accounts**; account details come next.
 What it does and what's next: [use-cases.md](use-cases.md).
 
 **There's no sign-in yet** (nor anywhere in DailyPacer). The admin is local
@@ -34,6 +34,8 @@ The web app's stack ([frontend/stack.md](../frontend/stack.md)), trimmed:
   `:4000`). Pages reuse the web app's queries and mutations; only the
   overview needed something new.
 
+Pages: `/` (overview) and `/accounts` (`?view=archived` for the archived tab).
+
 ```
 browser :5174 ──/graphql──▶ bff :4000 ──REST──▶ api :3000 ──▶ postgres
 ```
@@ -54,8 +56,34 @@ browser :5174 ──/graphql──▶ bff :4000 ──REST──▶ api :3000 �
   "no sign-in" banner.
 - `useAction` (`lib/use-action.ts`) runs one mutation at a time: only the
   clicked button shows "Working…", and a failure is shown above the table
-  until the next action.
-- `PromptDialog` asks before anything destructive or wide-reaching (delete a
-  list, change the main currency) and takes the one value some actions need
-  (a new name, a rate).
+  until the next action or Dismiss.
 - English only, formatted as `en-GB` (`lib/format.ts`).
+
+## Errors and 404
+
+Every failure goes through `describeError` (`lib/errors.ts`), which sorts it
+into a case someone can act on, using the BFF's `extensions.code`
+(`apps/bff/src/clients/api-client.ts`) and the transport error:
+
+| What failed | How it shows up | Says |
+| ----------- | --------------- | ---- |
+| Browser offline | `navigator.onLine` false | You're offline (plus a banner) |
+| Admin's Vite server | `fetch` rejects (`TypeError`) | Start it with `pnpm dev:admin` |
+| BFF | the proxy answers 502/503/504 | Start it with `pnpm dev:bff`, or set `BFF_URL` |
+| API | `UPSTREAM_UNAVAILABLE` | Start it with `pnpm dev:api` |
+| BFF older than the admin | `GRAPHQL_VALIDATION_FAILED` | Rebuild and restart the BFF |
+| Record deleted elsewhere | `NOT_FOUND` | Refreshes the list |
+| Bad input / clash | `BAD_USER_INPUT` / `CONFLICT` | The API's own message |
+| Server bug | `UPSTREAM_ERROR`, other 5xx | Try again; see the logs |
+| Code-split chunk | "dynamically imported module" | Reload |
+
+Where it's shown:
+
+- **A page couldn't load**: `RouteError` (the router's default error
+  component) inside the shell, with Try again (re-runs the loader) and a
+  link to the overview. Pages also rethrow a failed refetch to it.
+- **An action failed**: `ActionError` above the table; the data stays.
+- **Unknown URL**: `RouteNotFound`, for unmatched paths and loaders that
+  throw `notFound()`.
+- **The shell crashed**: the root route's `AppCrash`; anything outside the
+  router (Apollo, the router itself) hits `AppErrorBoundary`.
