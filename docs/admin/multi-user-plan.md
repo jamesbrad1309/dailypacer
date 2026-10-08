@@ -1,11 +1,9 @@
 # Multi-user Plan
 
-**Status: planned, nothing built.** DailyPacer is single-user today: there's
-no `User` table, no sign-in, and every habit, account and task belongs to one
-implicit person. This is the plan for turning it into a multi-user app, written
-before any code so the order and the open decisions are agreed first. It
-unblocks the ⏸ rows in the [admin use cases](use-cases.md) and replaces the
-admin's temporary "no sign-in" bypass.
+**Status: phase 1 built (users, sign-in, roles), phases 2–5 planned.**
+People sign in with their own accounts and roles ([auth.md](../backend/auth.md)),
+but every habit, account and task still belongs to one shared dataset. This
+is the plan for the rest: giving each person their own data.
 
 ## Goals
 
@@ -21,24 +19,30 @@ budgets), organisations/teams, billing.
 
 | Decision | Options | Leaning |
 | -------- | ------- | ------- |
-| How people sign in | Email magic link · passkeys · password · external OIDC (Auth0, Clerk, Keycloak) | Magic link first (fits the planned email setup, [email-and-notifications.md](../backend/email-and-notifications.md)); passkeys later |
-| Where the session lives | httpOnly cookie set by the BFF · bearer token in the SPA | Cookie: the SPA never holds a token |
-| How the API learns who's calling | Trust an `x-user-id` header from the BFF on the internal network · BFF forwards a signed token the API verifies | Signed token (short-lived, BFF-signed), so a stray request to the API can't pick a user |
+| How people sign in | Email magic link · passkeys · password · external OIDC (Auth0, Clerk, Keycloak) | **Decided: email and password** (built). Magic links and passkeys can come later |
+| Where the session lives | httpOnly cookie set by the BFF · bearer token in the SPA | **Decided: cookie** (built). The SPA never holds a token |
+| How the API learns who's calling | Trust an `x-user-id` header from the BFF on the internal network · BFF forwards a signed token the API verifies | **Decided: the BFF forwards the session token**, which the API looks up (built), so a stray request to the API can't pick a user |
+| Who can sign up | Admins only · open · both | **Decided: both**, with self sign-ups waiting for approval while data is shared |
 | Scoping in the API | Pass `userId` through every service call · request-scoped context (AsyncLocalStorage) plus a Prisma client extension that adds `where: { userId }` | Context + extension, with explicit `userId` in raw SQL |
 | Per-user or shared | Exchange rates and service logos | Shared (market data and a cache); everything else per user |
 
 ## Phases
 
-### 1. Users and sign-in (no scoping yet)
+### 1. Users and sign-in (no scoping yet) ✅ built
 
-- `User` (id, email unique, name, role `owner | admin | member`, status
-  `active | disabled`, createdAt, lastSeenAt) and `Session`.
-- Sign-in and sign-out in the BFF; `Query.me`. The web app and the admin get
-  a sign-in page; the admin also checks `role`.
-- A migration creates the owner from an env var (`OWNER_EMAIL`).
-- Admin: Users list, invite, disable, change role (the ⏸ rows).
-- Still one dataset: everyone signed in sees the owner's data, so only the
-  owner should be invited until phase 3 lands.
+- `User` (email, name, scrypt password hash, role `OWNER | ADMIN | MEMBER |
+  VIEWER`, status `ACTIVE | PENDING | DISABLED`, lastSignInAt) and `Session`
+  (hashed token, sliding 30-day expiry).
+- Sign-in, sign-up (pending until approved), sign-out and change password;
+  `Query.me` with the user's abilities. Sign-in pages in the web app and the
+  admin; the admin is owners and admins only.
+- The access rules are an ABAC policy in the API (`src/auth/policy.ts`),
+  enforced on every route by a global guard.
+- The first owner comes from `OWNER_EMAIL`/`OWNER_PASSWORD`, or is the first
+  person to sign up in an empty database.
+- Admin: Users list, add, approve, turn off, change role, reset password.
+- Still one dataset: everyone signed in sees the same data, which is why
+  sign-ups wait for approval and viewers are read-only.
 
 ### 2. Ownership columns
 
@@ -73,7 +77,8 @@ Constraints that are global today and must become per user:
 
 ### 3. Scope every read and write
 
-- A request context carries `userId` from the BFF's token; a Prisma client
+- The guard already knows the user (`req.user`); a request context carries
+  its `userId`; a Prisma client
   extension adds it to every query on an owned model and refuses one without
   it.
 - Raw SQL needs it by hand: `transactions.service` (tag counts),
@@ -95,6 +100,9 @@ client-driven.
 - Demo import and export per user (`--user=email`).
 - Admin: delete a user with all their data, audit log of admin actions,
   then the Docker image and gateway route for the admin.
+- The policy gains an ownership attribute: `app:read`/`app:write` check the
+  resource's `userId` against the subject (owners and admins may still
+  manage people, not read their data, unless decided otherwise).
 
 ## Risks
 

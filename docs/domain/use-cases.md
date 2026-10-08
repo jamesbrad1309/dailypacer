@@ -30,6 +30,7 @@ improves UX · `2` edge case / power-user · `1` speculative.
 | Cross-module (habits × finance) | 5 | 0 | — |
 | **To-do lists** | 13 | 0 | — |
 | **Notifications** | 4 | 0 | — |
+| **Accounts & access** | 6 | 2 | Per-user data (5) |
 | **Finance** (separate doc) | 60 | 0 | — (habits integration built), see [finance/use-cases.md](../finance/use-cases.md) |
 
 ## Use cases
@@ -128,10 +129,28 @@ A GitHub-style inbox across the whole app; see
 | ✅ | **Filter by what it's about** | 3 | Tasks, Money, Habits, Achievements, each with its unread count |
 | ✅ | **Stale notifications clear themselves** | 3 | Ongoing ones (task overdue, money to review…) are marked done once no longer true; a change (due today → overdue, more to review) brings one back unread |
 
+## Accounts & access
+
+Signing in, and what each person may do; see [auth.md](../backend/auth.md).
+People and approvals are managed in the admin
+([admin/use-cases.md](../admin/use-cases.md)).
+
+| Status | Use case | Impact | Notes |
+| :----: | -------- | :----: | ----- |
+| ✅ | **Sign in with email and password**, and come back to the page I was on | 5 | `/sign-in?redirect=`; httpOnly cookie session for 30 days, sliding. Wrong passwords are throttled |
+| ✅ | **Sign up**, then wait for an admin's approval | 4 | `/sign-up` creates a pending viewer. The first account of an empty database becomes the owner instead |
+| ✅ | **Roles decide what I may do**: owner, admin, member, viewer | 5 | The ABAC policy in the API; viewers get a read-only banner and a toast saying why a change was refused |
+| ✅ | **Sign out**, and **change my password** (signs out my other devices) | 4 | The account menu in the app bar |
+| ✅ | **A session that ends mid-use** sends me to sign in, then back | 3 | Expired, signed out elsewhere, or turned off by an admin |
+| ✅ | **Signing in and up in Vietnamese** | 2 | `auth` dictionary; API errors carry a `reason` code the app translates |
+| ⬜ | **Per-user data**: each person sees only their own | 5 | Phase 2 of the [multi-user plan](../admin/multi-user-plan.md) |
+| ⬜ | **Forgot password** by email | 3 | Needs email ([email-and-notifications.md](../backend/email-and-notifications.md)); today an admin resets it |
+
 ## Explicitly out of scope for v1
 
-- Multi-user auth/accounts — every habit is implicitly single-user for now
-  (no `User` entity, no login).
+- Per-user data: people sign in with their own accounts and roles
+  ([auth.md](../backend/auth.md)), but everyone shares one dataset; giving
+  each their own is phase 2 of the [multi-user plan](../admin/multi-user-plan.md).
 - Email and push reminders. In-app notifications are built, see
   [Notifications inbox](../backend/notifications.md).
 - Per-check-in custom fields (the EAV model in the data-model doc): typed

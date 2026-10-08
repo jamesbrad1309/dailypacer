@@ -71,3 +71,7 @@ everything else on stderr:
 - streak freezes, challenges, routines and rewards
 - payee rules and quick-log presets
 - task dependencies and custom board columns
+
+People and sessions: the fixture holds no accounts or passwords. After an
+import, sign up (the first account of the database becomes its owner) or
+set `OWNER_EMAIL`/`OWNER_PASSWORD` ([auth.md](../backend/auth.md)).

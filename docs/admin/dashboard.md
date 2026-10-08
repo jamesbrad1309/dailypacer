@@ -5,9 +5,11 @@ For now it covers an overview of the database and **managing money
 accounts**; account details come next.
 What it does and what's next: [use-cases.md](use-cases.md).
 
-**There's no sign-in yet** (nor anywhere in DailyPacer). The admin is local
-only: Vite binds `127.0.0.1:5174`, and there's no Docker image or gateway
-route for it. Sign-in comes with the [multi-user plan](multi-user-plan.md).
+**Owners and admins only.** It shares the web app's sign-in (the BFF's
+session cookie, so signing in on one signs you in on the other on the same
+host). Members and viewers get a 403 page, and the API refuses their admin
+calls anyway; see [auth.md](../backend/auth.md). There's no Docker image or
+gateway route for it yet.
 
 ## Running it
 
@@ -34,7 +36,8 @@ The web app's stack ([frontend/stack.md](../frontend/stack.md)), trimmed:
   `:4000`). Pages reuse the web app's queries and mutations; only the
   overview needed something new.
 
-Pages: `/` (overview) and `/accounts` (`?view=archived` for the archived tab).
+Pages: `/` (overview), `/accounts` (`?view=archived` for the archived tab),
+`/users` (people, roles, approvals) and `/sign-in`.
 
 ```
 browser :5174 ──/graphql──▶ bff :4000 ──REST──▶ api :3000 ──▶ postgres
@@ -52,8 +55,12 @@ browser :5174 ──/graphql──▶ bff :4000 ──REST──▶ api :3000 �
 
 ### In the app
 
-- `AdminShell`: the sidebar (a scrolling row of links on phones) and the
-  "no sign-in" banner.
+- `AdminShell`: the sidebar (a scrolling row of links on phones) with the
+  signed-in user and Sign out.
+- The root route's `beforeLoad` loads `me`: signed out → `/sign-in` (and back
+  afterwards); signed in without `abilities.openAdmin` → `NoAccess` (403).
+- The Users page only offers what `User.permissions` allows, which the API
+  computes from the same policy that enforces it.
 - `useAction` (`lib/use-action.ts`) runs one mutation at a time: only the
   clicked button shows "Working…", and a failure is shown above the table
   until the next action or Dismiss.
@@ -71,6 +78,9 @@ into a case someone can act on, using the BFF's `extensions.code`
 | Admin's Vite server | `fetch` rejects (`TypeError`) | Start it with `pnpm dev:admin` |
 | BFF | the proxy answers 502/503/504 | Start it with `pnpm dev:bff`, or set `BFF_URL` |
 | API | `UPSTREAM_UNAVAILABLE` | Start it with `pnpm dev:api` |
+| Session ended | `UNAUTHENTICATED` | Goes to sign-in, then back |
+| Access rules said no | `FORBIDDEN` | The API's reason ("Only an owner can…") |
+| Too many wrong passwords | `TOO_MANY_REQUESTS` | Wait 15 minutes |
 | BFF older than the admin | `GRAPHQL_VALIDATION_FAILED` | Rebuild and restart the BFF |
 | Record deleted elsewhere | `NOT_FOUND` | Refreshes the list |
 | Bad input / clash | `BAD_USER_INPUT` / `CONFLICT` | The API's own message |

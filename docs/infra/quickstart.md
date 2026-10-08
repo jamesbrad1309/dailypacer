@@ -46,6 +46,13 @@ Make it executable and add a root script alias:
 pnpm quickstart
 ```
 
+## First sign-in
+
+The app needs an account. On a fresh database, either set `OWNER_EMAIL` and
+`OWNER_PASSWORD` in `.env` (the API creates that owner on start), or open
+the app and sign up: the first account becomes the owner. Everyone after
+that waits for approval. See [auth.md](../backend/auth.md).
+
 ## `.env.example`
 
 ```

@@ -6,13 +6,10 @@ needs to do. Same conventions as the product's
 ⏸ planned, waiting on another piece of work. **Impact** 1–5, how much an
 operator suffers without it.
 
-> **Authentication is bypassed for now.** There's no sign-in anywhere in
-> DailyPacer yet: the admin talks to the same unauthenticated BFF as the web
-> app, and anyone who can reach port 5174 can change the data. It's kept to
-> `127.0.0.1` and has no Docker image, so it only runs on a developer's
-> machine. Sign-in and roles arrive with the
-> [multi-user plan](multi-user-plan.md); until then every row below is
-> "local only".
+> **Sign-in required.** Owners and admins only: members and viewers who
+> sign in get a 403 page, and the API refuses their admin calls anyway
+> ([auth.md](../backend/auth.md)). The admin still has no Docker image,
+> so it runs on a developer's machine.
 
 ## Scope
 
@@ -27,8 +24,8 @@ removed (2026-10-08) to keep the focus; the web app still manages those.
 | System | 1 | 0 | — |
 | **Accounts** | 3 | 6 | Account details page (5) |
 | Errors & 404 | 7 | 0 | — |
-| **Users & access** | 0 | 6 | Users list (5), waiting on [multi-user](multi-user-plan.md) |
-| Admin app itself | 1 | 3 | Sign-in and a role check (5) |
+| **Users & access** | 7 | 2 | Audit log (3) |
+| Admin app itself | 2 | 2 | Docker image and gateway route (4) |
 
 ## Use cases
 
@@ -51,13 +48,16 @@ removed (2026-10-08) to keep the focus; the web app still manages those.
 |  | ✅ | **Offline** | 3 | Banner while the browser is offline; failures while offline say so instead of blaming a server |
 |  | ✅ | **Code couldn't load** (rebuilt or stopped admin) | 2 | A failed code-split chunk asks for a reload |
 |  | ✅ | **The shell itself crashed** | 2 | Root `errorComponent` and `AppErrorBoundary` show a full-page `AppCrash` with Try again / Reload |
-| **Users & access** | ⏸ | **Users list**: everyone with an account, last seen, status | 5 | Waiting on [multi-user](multi-user-plan.md): there's no `User` table yet; every row belongs to one implicit user |
-|  | ⏸ | **Invite or create a user** | 4 | Phase 1 of the plan |
-|  | ⏸ | **Disable / re-enable a user** (blocks sign-in, keeps data) | 4 | |
-|  | ⏸ | **Roles**: `owner`, `admin`, `member` | 4 | Who may open the admin at all |
-|  | ⏸ | **Delete a user and all their data** | 3 | Per-user cascade, after a typed confirmation |
-|  | ⏸ | **Audit log** of admin actions | 3 | Who changed what, when |
-| **Admin app itself** | ✅ | **Shell**: sidebar, "no sign-in" banner, loading skeletons | 3 | [dashboard.md](dashboard.md) |
-|  | ⬜ | **Sign-in and a role check** before any admin page | 5 | Replaces the bypass above; phase 1 of the multi-user plan |
-|  | ⬜ | **Docker image and gateway route** (`/admin`) | 4 | Only after sign-in exists, so it's never exposed without it |
+| **Users & access** | ✅ | **Users list**: name, email, role, status, last sign-in; pending sign-ups first | 5 | `/users`. `Query.users` → `GET /users` (`users:list`) |
+|  | ✅ | **Add a user** with a role and a password; active at once | 4 | `createUser`. Admins can give member or viewer, owners any role |
+|  | ✅ | **Approve or decline** a sign-up | 4 | `updateUser(status)`. Sign-ups wait as pending viewers |
+|  | ✅ | **Turn a user off / on** (blocks sign-in, ends their sessions, keeps data) | 4 | `updateUser(status: DISABLED)` |
+|  | ✅ | **Change someone's role** | 4 | A select per row, listing only roles you may give |
+|  | ✅ | **Reset someone's password** (signs them out everywhere) | 3 | `resetUserPassword` |
+|  | ✅ | **Only what the rules allow is offered** | 3 | `User.permissions` from the API's policy: no controls on your own row, admins can't touch owners or admins |
+|  | ⬜ | **Delete a user** | 2 | With shared data there's nothing of theirs to delete yet; turning off covers it |
+|  | ⬜ | **Audit log** of admin actions | 3 | Who changed what, when; today only the API's logs |
+| **Admin app itself** | ✅ | **Shell**: sidebar, signed-in user with sign out, loading skeletons | 3 | [dashboard.md](dashboard.md) |
+|  | ✅ | **Sign-in and a role check** before any admin page | 5 | `/sign-in`; members and viewers get a 403 page (`abilities.openAdmin`) |
+|  | ⬜ | **Docker image and gateway route** (`/admin`) | 4 | Now possible: sign-in exists |
 |  | ⬜ | **Vietnamese** | 1 | English only for now; the web app's i18n setup ([i18n.md](../frontend/i18n.md)) would carry over |

@@ -57,6 +57,7 @@ Each file below is a short, standalone read.
 - [Prisma & data access](backend/prisma-and-data-access.md) — schema, migrations, `PrismaService`, JSON/Date gotchas
 - [Logging](backend/logging.md) — pino (Node's zap), HTTP/GraphQL/service-level logs, the `name` field gotcha
 - [Notifications inbox](backend/notifications.md) — GitHub-style in-app inbox: what makes a notification, the sync, read/done/saved
+- [Sign-in & access rules](backend/auth.md) — email/password, cookie sessions, roles and the ABAC policy, what each role may do
 - [Email & notifications](backend/email-and-notifications.md) — planned: Resend + pg-boss queue, provider comparison, deliverability
 
 **Cross-cutting**
@@ -65,9 +66,9 @@ Each file below is a short, standalone read.
 - [pnpm workspace config](tooling/pnpm-workspace.md)
 
 **Admin**
-- [Admin dashboard](admin/dashboard.md) — `apps/admin`: the web app's stack on the same BFF, local only, no sign-in yet
+- [Admin dashboard](admin/dashboard.md) — `apps/admin`: the web app's stack on the same BFF, owners and admins only
 - [Admin use cases](admin/use-cases.md) — what the admin does and what's next, with build status + impact score
-- [Multi-user plan](admin/multi-user-plan.md) — planned: users, sign-in, per-user data, in phases
+- [Multi-user plan](admin/multi-user-plan.md) — users and sign-in built; per-user data planned, in phases
 
 **Infra**
 - [Docker setup](infra/docker.md) — multi-stage builds for the monorepo
