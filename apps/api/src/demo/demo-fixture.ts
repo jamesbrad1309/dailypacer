@@ -108,7 +108,8 @@ export interface DemoHabit {
   schedule: unknown;
   polarity?: "build" | "avoid";
   endDay?: number | null;
-  customFields?: { label: string; value: string }[];
+  /** `type` and `options` as in habits/dto/create-habit.dto.ts; no type reads as text. */
+  customFields?: { label: string; type?: string; value: string; options?: string[] }[];
   /** Ticked from transactions; such a habit's entries aren't stored, they're re-derived. */
   finance?: "NO_SPEND" | "LOGGED_TODAY" | null;
   /** Linked spending: its cost, and for no-spend what counts. */
