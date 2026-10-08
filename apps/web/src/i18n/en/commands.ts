@@ -32,6 +32,7 @@ export const commands = {
     general: "General",
     goTo: "Go to (press g, then…)",
     journal: "On the journal page",
+    notifications: "On a notification",
     palette: "In the palette",
   },
   shortcuts: {
@@ -46,6 +47,10 @@ export const commands = {
     journalHappened: "New “happened” entry",
     journalDays: "Previous / next day",
     journalToday: "Back to today",
+    notificationDone: "Mark done (or move back to the inbox)",
+    notificationRead: "Mark as read",
+    notificationUnread: "Mark as unread",
+    notificationSave: "Save or unsave",
   },
   help: {
     title: "Keyboard shortcuts",

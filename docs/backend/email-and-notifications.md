@@ -41,8 +41,9 @@ export interface EmailSender {
 
 ## Notifications are more than email
 
-Reminders like "habit due" or "task overdue" will probably want push or
-in-app delivery too, plus per-user preferences and quiet hours. Two options
+The in-app channel is built: see [Notifications inbox](notifications.md),
+which already decides when "habit due" or "task overdue" is worth saying.
+Reminders like those will probably want push delivery too, plus per-user preferences and quiet hours. Two options
 when that happens:
 
 - **Novu** (open source, can run in `docker-compose.yml`): one API for

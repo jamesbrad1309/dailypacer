@@ -12,6 +12,7 @@ export const shell: typeof en = {
       comingSoon: "Sắp ra mắt",
     },
     progress: "Tiến bộ",
+    notifications: "Thông báo",
     tasksToday: "Hôm nay",
     tasksLists: "Danh sách",
     dashboard: "Tổng quan",
@@ -36,6 +37,10 @@ export const shell: typeof en = {
     mainLabel: "Chính",
   },
   pages: {
+    notifications: {
+      title: "Thông báo",
+      subtitle: "Những gì cần bạn trong việc cần làm, tiền và thói quen.",
+    },
     progress: {
       title: "Tiến bộ",
       subtitle: "Thói quen, công việc và tâm trạng của bạn đang thế nào.",

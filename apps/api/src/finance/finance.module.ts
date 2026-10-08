@@ -79,5 +79,7 @@ import { HabitsModule } from "#habits/habits.module";
     FinanceHabitsService,
     LifeLevelService,
   ],
+  // For notifications: card payments due, budgets crossed, goals reached, charges to confirm.
+  exports: [AccountsService, BudgetsService, SavingsGoalsService, SubscriptionsService],
 })
 export class FinanceModule {}

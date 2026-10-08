@@ -24,6 +24,13 @@ import { RoutinesService } from "#habits/routines.service";
     RoutinesService,
   ],
   // HabitStatsService: finance's DailyPacer level adds its XP to habit points.
-  exports: [HabitsService, HabitStatsService],
+  // The rest: notifications read today's statuses, badges and challenges.
+  exports: [
+    HabitsService,
+    HabitStatsService,
+    HabitHistoryService,
+    HabitReviewService,
+    PointsService,
+  ],
 })
 export class HabitsModule {}

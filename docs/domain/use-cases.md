@@ -29,6 +29,7 @@ improves UX · `2` edge case / power-user · `1` speculative.
 | Journaling & mood | 13 | 0 | — |
 | Cross-module (habits × finance) | 5 | 0 | — |
 | **To-do lists** | 13 | 0 | — |
+| **Notifications** | 4 | 0 | — |
 | **Finance** (separate doc) | 60 | 0 | — (habits integration built), see [finance/use-cases.md](../finance/use-cases.md) |
 
 ## Use cases
@@ -113,12 +114,25 @@ prefix `TASK`, catches tasks added without one) and has a key
 | ✅ | **Confirm before deleting** a task or list | 3 | Inline prompt in the dialog naming what goes and what it affects (tasks that stop being blocked, a list's task count); focus starts on Cancel |
 | ✅ | **Find a task by its key**: typing `GRO-12` opens it | 2 | "Go to a task by key" on the Lists page (`Query.taskByKey`), using each list's current prefix |
 | ✅ | **Custom kanban columns** per list (e.g. "Waiting on someone") | 2 | `TodoColumn(listId, name, status, position)`: each column counts as a status, so done, Today and "blocked" work whatever columns are called. Edit columns: add (10 at most), rename, move ←/→, change what it counts as, delete (its tasks move to a column you pick). Every list keeps one column per status. See [todos.md](todos.md#columns) |
-| ✅ | **Due dates and reminders** separate from the planned day | 2 | `Task.dueOn` next to `plannedFor` ("due Friday, doing it Thursday"). Due badges (overdue, today, soon) on every task, and a **Due soon** section on Today for open tasks due within 3 days that aren't planned. Reminders are in-app only: email and push wait for [email-and-notifications.md](../backend/email-and-notifications.md) |
+| ✅ | **Due dates and reminders** separate from the planned day | 2 | `Task.dueOn` next to `plannedFor` ("due Friday, doing it Thursday"). Due badges (overdue, today, soon) on every task, and a **Due soon** section on Today for open tasks due within 3 days that aren't planned. Overdue and due-today tasks also land in the [notifications inbox](../backend/notifications.md). Email and push wait for [email-and-notifications.md](../backend/email-and-notifications.md) |
+
+## Notifications
+
+A GitHub-style inbox across the whole app; see
+[notifications.md](../backend/notifications.md).
+
+| Status | Use case | Impact | Notes |
+| :----: | -------- | :----: | ----- |
+| ✅ | **See what needs me** in one inbox, with an unread count on a bell | 4 | Tasks due or overdue, Inbox tasks, money to categorise, charges to confirm, budgets crossed, card payments due, goals reached, habits past their start time, streaks at risk, milestones, badges, level ups, challenges won. Synced against the user's clock every minute |
+| ✅ | **Mark read, unread, done or saved**, one at a time or several | 4 | Inbox / Unread / Saved / Done views, select all, mark all as read, Undo after done; `E`, `S`, `Shift+I`, `Shift+U` on a row |
+| ✅ | **Filter by what it's about** | 3 | Tasks, Money, Habits, Achievements, each with its unread count |
+| ✅ | **Stale notifications clear themselves** | 3 | Ongoing ones (task overdue, money to review…) are marked done once no longer true; a change (due today → overdue, more to review) brings one back unread |
 
 ## Explicitly out of scope for v1
 
 - Multi-user auth/accounts — every habit is implicitly single-user for now
   (no `User` entity, no login).
-- Reminders/notifications.
+- Email and push reminders. In-app notifications are built, see
+  [Notifications inbox](../backend/notifications.md).
 - Per-check-in custom fields (the EAV model in the data-model doc): typed
   fields hold one value per habit, in `metadata` JSON.

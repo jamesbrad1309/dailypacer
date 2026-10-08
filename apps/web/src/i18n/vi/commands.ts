@@ -33,6 +33,7 @@ export const commands: typeof en = {
     general: "Chung",
     goTo: "Đi tới (nhấn g, rồi…)",
     journal: "Trên trang nhật ký",
+    notifications: "Trên một thông báo",
     palette: "Trong bảng lệnh",
   },
   shortcuts: {
@@ -47,6 +48,10 @@ export const commands: typeof en = {
     journalHappened: "Mục “đã xảy ra” mới",
     journalDays: "Ngày trước / ngày sau",
     journalToday: "Về hôm nay",
+    notificationDone: "Đánh dấu xong (hoặc chuyển về hộp thư)",
+    notificationRead: "Đánh dấu đã đọc",
+    notificationUnread: "Đánh dấu chưa đọc",
+    notificationSave: "Lưu hoặc bỏ lưu",
   },
   help: {
     title: "Phím tắt",

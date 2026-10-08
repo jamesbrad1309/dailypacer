@@ -11,7 +11,7 @@ import {
 import { getOverlay, setOverlay, subscribeOverlay } from "#lib/command-palette";
 import { displayKeys, SHORTCUTS, type ShortcutGroup } from "#lib/shortcuts";
 
-const ORDER: ShortcutGroup[] = ["general", "goTo", "journal", "palette"];
+const ORDER: ShortcutGroup[] = ["general", "goTo", "journal", "notifications", "palette"];
 
 /** The `?` cheat sheet: every shortcut, from the same table the bindings use. */
 export function ShortcutsHelp() {

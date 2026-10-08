@@ -5,7 +5,8 @@ import { useTranslation } from "react-i18next";
 import { Progress } from "#components/ui/progress";
 import { TO_REVIEW_COUNT_QUERY } from "#graphql/finance";
 import { LIFE_LEVEL_QUERY } from "#graphql/habits";
-import type { LifeLevel } from "#graphql/types";
+import { NOTIFICATION_COUNTS_QUERY } from "#graphql/notifications";
+import type { LifeLevel, NotificationCounts } from "#graphql/types";
 import { todayIsoDate } from "#lib/dates";
 import { levelTitle } from "#lib/levels";
 import { COMING_SOON, NAV_GROUPS } from "#lib/navigation";
@@ -71,6 +72,7 @@ export function Sidebar({ collapsed = false, onNavigate }: Props) {
                   t(`shell.nav.${item.label}`)
                 )}
                 {item.badge === "toReview" && <ToReviewBadge collapsed={collapsed} />}
+                {item.badge === "notifications" && <UnreadBadge collapsed={collapsed} />}
               </Link>
             ))}
           </div>
@@ -137,6 +139,29 @@ function ToReviewBadge({ collapsed }: { collapsed: boolean }) {
     <span className="ml-auto rounded-full bg-amber-500/15 px-1.5 text-xs font-medium text-amber-700 tabular-nums dark:text-amber-400">
       <span aria-hidden>{count}</span>
       <span className="sr-only">{t("shell.nav.toReview", { count })}</span>
+    </span>
+  );
+}
+
+/** Unread notifications, read from the bell's counts (it does the syncing); hidden at zero. */
+function UnreadBadge({ collapsed }: { collapsed: boolean }) {
+  const { t } = useTranslation();
+  const { data } = useQuery<{ notificationCounts: NotificationCounts }>(NOTIFICATION_COUNTS_QUERY, {
+    fetchPolicy: "cache-only",
+  });
+  const count = data?.notificationCounts.unread ?? 0;
+  if (count === 0) return null;
+  if (collapsed) {
+    return (
+      <span className="absolute top-1.5 right-2.5 size-2 rounded-full bg-sky-500">
+        <span className="sr-only">, {t("notifications.bell", { count })}</span>
+      </span>
+    );
+  }
+  return (
+    <span className="ml-auto rounded-full bg-sky-500/15 px-1.5 text-xs font-medium text-sky-700 tabular-nums dark:text-sky-400">
+      <span aria-hidden>{count}</span>
+      <span className="sr-only">{t("notifications.bell", { count })}</span>
     </span>
   );
 }
