@@ -3,6 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "imports": {
+    "#auth/*": {
+      "types": "./src/auth/*.ts",
+      "default": "./dist/auth/*.js"
+    },
     "#admin/*": {
       "types": "./src/admin/*.ts",
       "default": "./dist/admin/*.js"

@@ -799,3 +799,60 @@ model Notification {
   @@index([doneAt, surfacedAt])
   @@map("notifications")
 }
+
+/// What someone may do, together with their status and the resource being
+/// acted on (see src/auth/policy.ts, the ABAC rules).
+enum UserRole {
+  /// Everything, including managing admins and other owners.
+  OWNER
+  /// Manages members and viewers, opens the admin dashboard.
+  ADMIN
+  /// Full use of the app.
+  MEMBER
+  /// Read-only in the app.
+  VIEWER
+}
+
+enum UserStatus {
+  ACTIVE
+  /// Signed up on their own; can't sign in until an admin approves them.
+  PENDING
+  /// Turned off by an admin: can't sign in, sessions ended, data kept.
+  DISABLED
+}
+
+/// Someone who can sign in. Everyone signed in shares the one dataset for
+/// now; per-user data is phase 2 of docs/admin/multi-user-plan.md.
+model User {
+  id           String     @id @default(uuid())
+  /// Lowercased and trimmed; what people sign in with.
+  email        String     @unique
+  name         String
+  /// scrypt, with its parameters and salt: "scrypt$N$r$p$salt$hash" (src/auth/password.ts).
+  passwordHash String
+  role         UserRole   @default(VIEWER)
+  status       UserStatus @default(PENDING)
+  lastSignInAt DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  sessions     Session[]
+
+  @@map("users")
+}
+
+/// A signed-in browser. The cookie holds a random token; only its SHA-256
+/// is stored, so a database leak doesn't hand out live sessions.
+model Session {
+  id         String   @id @default(uuid())
+  tokenHash  String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime
+  /// Updated at most hourly; expiry slides forward with it.
+  lastSeenAt DateTime @default(now())
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@map("sessions")
+}

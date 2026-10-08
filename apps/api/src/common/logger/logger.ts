@@ -20,7 +20,15 @@ export const logger = pino({
         options: { colorize: true, singleLine: true, translateTime: "HH:MM:ss" },
       },
   redact: {
-    paths: ["req.headers.authorization", "req.headers.cookie", "*.password", "*.token"],
+    paths: [
+      "req.headers.authorization",
+      "req.headers.cookie",
+      'res.headers["set-cookie"]',
+      "*.password",
+      "*.currentPassword",
+      "*.newPassword",
+      "*.token",
+    ],
     censor: "[redacted]",
   },
 });

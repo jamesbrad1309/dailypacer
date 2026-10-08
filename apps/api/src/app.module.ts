@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { AdminModule } from "#admin/admin.module";
+import { AuthModule } from "#auth/auth.module";
 import { validateEnv } from "#common/config/env";
 import { DatabaseModule } from "#common/database/database.module";
 import { HealthController } from "#common/health/health.controller";
@@ -21,6 +22,7 @@ import { TodosModule } from "#todos/todos.module";
       envFilePath: ["../../.env", ".env"],
     }),
     DatabaseModule,
+    AuthModule,
     HabitsModule,
     HabitEntriesModule,
     JournalModule,

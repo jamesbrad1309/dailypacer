@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Post, Query } from "@nestjs/common";
+import { Authorize } from "#auth/decorators";
 import { ZodValidationPipe } from "#common/http/zod-validation.pipe";
 import {
   type ListNotificationsInput,
@@ -32,6 +33,8 @@ export class NotificationsController {
    * `POST /notifications/sync { today, time }`: bring the inbox up to date
    * with what's true now, in the user's day and time. Cheap to call often.
    */
+  // Derives the inbox from what's true now, so a viewer reading it may run it too.
+  @Authorize("app:read")
   @Post("sync")
   sync(@Body(new ZodValidationPipe(syncNotificationsSchema)) input: SyncNotificationsInput) {
     return this.notifications.sync(input);
