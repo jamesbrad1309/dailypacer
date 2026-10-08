@@ -8,6 +8,8 @@ type Method = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
 interface ApiErrorBody {
   message?: string | string[];
   issues?: unknown;
+  /** A stable code for why (auth and policy errors: "READ_ONLY", "ACCOUNT_PENDING"…), for clients to translate. */
+  reason?: string;
 }
 
 /**
@@ -22,6 +24,8 @@ export class ApiClient {
   constructor(
     private readonly requestId: string,
     private readonly log: Logger,
+    /** The signed-in browser's session token (from its cookie), forwarded to the API. */
+    private readonly sessionToken?: string,
     private readonly baseUrl: string = env.API_URL,
   ) {}
 
@@ -55,6 +59,7 @@ export class ApiClient {
         headers: {
           "content-type": "application/json",
           "x-request-id": this.requestId,
+          ...(this.sessionToken ? { authorization: `Bearer ${this.sessionToken}` } : {}),
         },
         body: body === undefined ? undefined : JSON.stringify(body),
         signal: AbortSignal.timeout(env.API_TIMEOUT_MS),
@@ -90,18 +95,38 @@ export class ApiClient {
 
 function toGraphQLError(status: number, body: ApiErrorBody): GraphQLError {
   const message = Array.isArray(body.message) ? body.message.join("; ") : body.message;
+  const reason = body.reason ? { reason: body.reason } : {};
 
   if (status === 400) {
     return new GraphQLError(message ?? "Invalid input", {
-      extensions: { code: "BAD_USER_INPUT", issues: body.issues },
+      extensions: { code: "BAD_USER_INPUT", issues: body.issues, ...reason },
+    });
+  }
+  // Not signed in (or the session expired): clients send the person to sign-in.
+  if (status === 401) {
+    return new GraphQLError(message ?? "Sign in to continue.", {
+      extensions: { code: "UNAUTHENTICATED", ...reason },
+    });
+  }
+  // Signed in, but the access rules say no; the message says why.
+  if (status === 403) {
+    return new GraphQLError(message ?? "You don't have permission to do that.", {
+      extensions: { code: "FORBIDDEN", ...reason },
+    });
+  }
+  if (status === 429) {
+    return new GraphQLError(message ?? "Too many attempts. Try again later.", {
+      extensions: { code: "TOO_MANY_REQUESTS", ...reason },
     });
   }
   if (status === 404) {
-    return new GraphQLError(message ?? "Not found", { extensions: { code: "NOT_FOUND" } });
+    return new GraphQLError(message ?? "Not found", {
+      extensions: { code: "NOT_FOUND", ...reason },
+    });
   }
   // A clash the user can fix, such as a list prefix that's already taken.
   if (status === 409) {
-    return new GraphQLError(message ?? "Conflict", { extensions: { code: "CONFLICT" } });
+    return new GraphQLError(message ?? "Conflict", { extensions: { code: "CONFLICT", ...reason } });
   }
   // 5xx and anything unexpected: don't pass internal API messages to the client.
   return new GraphQLError("Upstream API error", {

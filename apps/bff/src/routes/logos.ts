@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { env } from "#common/config/env";
+import { authHeaders } from "#common/session-cookie";
 
 /**
  * `GET /logos/netflix.com`: a subscription's logo. The API fetches each
@@ -11,7 +12,7 @@ export async function serviceLogo(req: Request, res: Response): Promise<void> {
   const domain = String(req.params.domain ?? "");
   try {
     const upstream = await fetch(`${env.API_URL}/logos/${encodeURIComponent(domain)}`, {
-      headers: { "x-request-id": String(req.id ?? "") },
+      headers: { "x-request-id": String(req.id ?? ""), ...authHeaders(req) },
       signal: AbortSignal.timeout(env.API_TIMEOUT_MS),
     });
     if (!upstream.ok) {

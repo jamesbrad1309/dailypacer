@@ -13,6 +13,8 @@ const envSchema = z.object({
   /** Per-call timeout for API requests, so one hung upstream call can't hang a GraphQL request forever. */
   API_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  /** The session cookie's Secure flag: "auto" sets it when the request came over HTTPS. */
+  SESSION_COOKIE_SECURE: z.enum(["auto", "true", "false"]).default("auto"),
 });
 
 export type Env = z.infer<typeof envSchema>;

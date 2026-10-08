@@ -45,7 +45,7 @@ async function bootstrap() {
   app.use(
     "/graphql",
     express.json({ limit: "1mb" }),
-    expressMiddleware(apollo, { context: async ({ req }) => buildContext(req) }),
+    expressMiddleware(apollo, { context: async ({ req, res }) => buildContext(req, res) }),
   );
 
   // Listen only once /graphql is mounted, so nothing gets a 404 during startup.
