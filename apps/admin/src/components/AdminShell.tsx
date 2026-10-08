@@ -1,26 +1,15 @@
 import { Link } from "@tanstack/react-router";
-import {
-  Coins,
-  LayoutDashboard,
-  ListChecks,
-  type LucideIcon,
-  Repeat,
-  ShieldAlert,
-  Tags,
-  Wallet,
-} from "lucide-react";
+import { CloudOff, LayoutDashboard, type LucideIcon, ShieldAlert, Wallet } from "lucide-react";
 import type { ReactNode } from "react";
+import { useOnline } from "#lib/use-online";
 
 const NAV: { to: string; label: string; icon: LucideIcon }[] = [
   { to: "/", label: "Overview", icon: LayoutDashboard },
   { to: "/accounts", label: "Accounts", icon: Wallet },
-  { to: "/categories", label: "Categories", icon: Tags },
-  { to: "/currencies", label: "Currencies", icon: Coins },
-  { to: "/habits", label: "Habits", icon: Repeat },
-  { to: "/task-lists", label: "Task lists", icon: ListChecks },
 ];
 
 export function AdminShell({ children }: { children: ReactNode }) {
+  const online = useOnline();
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
       <aside className="border-b bg-muted/40 md:w-56 md:shrink-0 md:border-r md:border-b-0">
@@ -48,6 +37,12 @@ export function AdminShell({ children }: { children: ReactNode }) {
           No sign-in yet: anyone who can open this page can change the data. Run it on this machine
           only.
         </p>
+        {!online && (
+          <p role="status" className="flex items-center gap-2 border-b bg-muted px-4 py-2 text-sm">
+            <CloudOff className="size-4 shrink-0" aria-hidden />
+            You're offline. Changes won't save until the connection is back.
+          </p>
+        )}
         <main id="main" className="mx-auto max-w-6xl px-4 py-6 md:px-8">
           {children}
         </main>

@@ -1,6 +1,6 @@
 import type { ApolloClient } from "@apollo/client";
 import { createRouter } from "@tanstack/react-router";
-import { PageSkeleton, RouteError } from "#components/RouteStatus";
+import { PageSkeleton, RouteError, RouteNotFound } from "#components/RouteStatus";
 import { apolloClient } from "#lib/apollo-client";
 import { routeTree } from "./routeTree.gen";
 
@@ -17,6 +17,8 @@ export const router = createRouter({
   defaultPreloadStaleTime: 0,
   defaultPendingComponent: PageSkeleton,
   defaultErrorComponent: RouteError,
+  // A loader's notFound() (a record that doesn't exist) shows the same 404.
+  defaultNotFoundComponent: RouteNotFound,
 });
 
 declare module "@tanstack/react-router" {

@@ -11,10 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountsRouteImport } from './routes/accounts'
-import { Route as CategoriesRouteImport } from './routes/categories'
-import { Route as CurrenciesRouteImport } from './routes/currencies'
-import { Route as HabitsRouteImport } from './routes/habits'
-import { Route as TaskListsRouteImport } from './routes/task-lists'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -26,86 +22,31 @@ const AccountsRoute = AccountsRouteImport.update({
   path: '/accounts',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CategoriesRoute = CategoriesRouteImport.update({
-  id: '/categories',
-  path: '/categories',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CurrenciesRoute = CurrenciesRouteImport.update({
-  id: '/currencies',
-  path: '/currencies',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HabitsRoute = HabitsRouteImport.update({
-  id: '/habits',
-  path: '/habits',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TaskListsRoute = TaskListsRouteImport.update({
-  id: '/task-lists',
-  path: '/task-lists',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accounts': typeof AccountsRoute
-  '/categories': typeof CategoriesRoute
-  '/currencies': typeof CurrenciesRoute
-  '/habits': typeof HabitsRoute
-  '/task-lists': typeof TaskListsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accounts': typeof AccountsRoute
-  '/categories': typeof CategoriesRoute
-  '/currencies': typeof CurrenciesRoute
-  '/habits': typeof HabitsRoute
-  '/task-lists': typeof TaskListsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/accounts': typeof AccountsRoute
-  '/categories': typeof CategoriesRoute
-  '/currencies': typeof CurrenciesRoute
-  '/habits': typeof HabitsRoute
-  '/task-lists': typeof TaskListsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/accounts'
-    | '/categories'
-    | '/currencies'
-    | '/habits'
-    | '/task-lists'
+  fullPaths: '/' | '/accounts'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/accounts'
-    | '/categories'
-    | '/currencies'
-    | '/habits'
-    | '/task-lists'
-  id:
-    | '__root__'
-    | '/'
-    | '/accounts'
-    | '/categories'
-    | '/currencies'
-    | '/habits'
-    | '/task-lists'
+  to: '/' | '/accounts'
+  id: '__root__' | '/' | '/accounts'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountsRoute: typeof AccountsRoute
-  CategoriesRoute: typeof CategoriesRoute
-  CurrenciesRoute: typeof CurrenciesRoute
-  HabitsRoute: typeof HabitsRoute
-  TaskListsRoute: typeof TaskListsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -124,44 +65,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/categories': {
-      id: '/categories'
-      path: '/categories'
-      fullPath: '/categories'
-      preLoaderRoute: typeof CategoriesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/currencies': {
-      id: '/currencies'
-      path: '/currencies'
-      fullPath: '/currencies'
-      preLoaderRoute: typeof CurrenciesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/habits': {
-      id: '/habits'
-      path: '/habits'
-      fullPath: '/habits'
-      preLoaderRoute: typeof HabitsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/task-lists': {
-      id: '/task-lists'
-      path: '/task-lists'
-      fullPath: '/task-lists'
-      preLoaderRoute: typeof TaskListsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountsRoute: AccountsRoute,
-  CategoriesRoute: CategoriesRoute,
-  CurrenciesRoute: CurrenciesRoute,
-  HabitsRoute: HabitsRoute,
-  TaskListsRoute: TaskListsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

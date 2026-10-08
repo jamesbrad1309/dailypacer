@@ -1,6 +1,7 @@
 import { useQuery } from "@apollo/client/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "#components/PageHeader";
+import { PageSkeleton } from "#components/RouteStatus";
 import { Card, CardContent, CardHeader, CardTitle } from "#components/ui/card";
 import {
   Table,
@@ -29,8 +30,10 @@ const AREAS: { area: AdminOverview["tables"][number]["area"]; label: string }[] 
 ];
 
 function OverviewPage() {
-  const { data } = useQuery<{ adminOverview: AdminOverview }>(ADMIN_OVERVIEW_QUERY);
-  if (!data) return null;
+  const { data, error } = useQuery<{ adminOverview: AdminOverview }>(ADMIN_OVERVIEW_QUERY);
+  // A failed refetch: hand it to the route's error page (RouteError).
+  if (error) throw error;
+  if (!data) return <PageSkeleton />;
   const { tables, database, server } = data.adminOverview;
   return (
     <>

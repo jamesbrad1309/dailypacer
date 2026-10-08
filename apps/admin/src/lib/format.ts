@@ -30,9 +30,3 @@ export function formatUptime(seconds: number): string {
   const parts = [days && `${days}d`, (days || hours) && `${hours}h`, `${minutes}m`];
   return parts.filter(Boolean).join(" ");
 }
-
-/** CREDIT_CARD → "Credit card". */
-export function humanize(value: string): string {
-  const words = value.toLowerCase().replaceAll("_", " ");
-  return words.charAt(0).toUpperCase() + words.slice(1);
-}

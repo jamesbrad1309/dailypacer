@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@apollo/client/react";
 import { createFileRoute, stripSearchParams } from "@tanstack/react-router";
 import { z } from "zod";
 import { ActionError, EmptyRow, PageHeader } from "#components/PageHeader";
+import { PageSkeleton } from "#components/RouteStatus";
 import { Badge } from "#components/ui/badge";
 import { Button } from "#components/ui/button";
 import {
@@ -45,18 +46,36 @@ const TYPE_LABELS: Record<AccountType, string> = {
   INVESTMENT: "Investment",
 };
 
+/**
+ * Types money is spent from: only these can be quick log's default (the API's
+ * SPENDABLE_TYPES, apps/api/src/finance/account-metrics.util.ts).
+ */
+const SPENDABLE: AccountType[] = ["CURRENT", "SAVINGS", "CREDIT_CARD", "CASH"];
+
 const refetch = { refetchQueries: ["AdminAccounts"], awaitRefetchQueries: true };
 
 function AccountsPage() {
   const { view } = Route.useSearch();
-  const { data } = useQuery<{ accounts: AdminAccount[]; archivedAccounts: AdminAccount[] }>(
+  const {
+    data,
+    error: loadError,
+    refetch: reload,
+  } = useQuery<{ accounts: AdminAccount[]; archivedAccounts: AdminAccount[] }>(
     ADMIN_ACCOUNTS_QUERY,
   );
   const [archive] = useMutation(ARCHIVE_ACCOUNT_MUTATION, refetch);
   const [unarchive] = useMutation(UNARCHIVE_ACCOUNT_MUTATION, refetch);
   const [setDefault] = useMutation(SET_DEFAULT_ACCOUNT_MUTATION, refetch);
-  const { run, pending, error } = useAction();
-  if (!data) return null;
+  const { run, pending, error, dismiss } = useAction();
+  // A failed refetch: hand it to the route's error page (RouteError).
+  if (loadError) throw loadError;
+  if (!data) return <PageSkeleton />;
+
+  /** Runs an action; when the account turns out to be gone, shows the list as it is now. */
+  async function act(key: string, action: () => Promise<unknown>) {
+    const failure = await run(key, action);
+    if (failure?.kind === "not-found") await reload().catch(() => undefined);
+  }
   const rows = view === "active" ? data.accounts : data.archivedAccounts;
 
   return (
@@ -73,7 +92,7 @@ function AccountsPage() {
         ]}
         current={view}
       />
-      <ActionError error={error} />
+      <ActionError error={error} onDismiss={dismiss} />
       <Table>
         <TableHeader>
           <TableRow>
@@ -117,13 +136,13 @@ function AccountsPage() {
               </TableCell>
               <TableCell>{formatDate(account.openingBalanceDate)}</TableCell>
               <TableCell className="space-x-2 text-right">
-                {view === "active" && !account.isDefault && (
+                {view === "active" && !account.isDefault && SPENDABLE.includes(account.type) && (
                   <Button
                     size="sm"
                     variant="ghost"
                     disabled={pending !== null}
                     onClick={() =>
-                      run(`default:${account.id}`, () =>
+                      act(`default:${account.id}`, () =>
                         setDefault({ variables: { id: account.id } }),
                       )
                     }
@@ -136,7 +155,7 @@ function AccountsPage() {
                   variant="outline"
                   disabled={pending !== null}
                   onClick={() =>
-                    run(`archive:${account.id}`, () =>
+                    act(`archive:${account.id}`, () =>
                       (view === "active" ? archive : unarchive)({ variables: { id: account.id } }),
                     )
                   }

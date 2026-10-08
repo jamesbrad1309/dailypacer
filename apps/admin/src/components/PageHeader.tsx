@@ -1,4 +1,7 @@
 import type { ReactNode } from "react";
+import { ErrorPanel } from "#components/ErrorPanel";
+import { Button } from "#components/ui/button";
+import type { DescribedError } from "#lib/errors";
 
 export function PageHeader({
   title,
@@ -20,16 +23,25 @@ export function PageHeader({
   );
 }
 
-/** The last failed action's message, until the next one runs. */
-export function ActionError({ error }: { error: string | null }) {
+/** The last failed action, explained, until the next one runs or it's dismissed. */
+export function ActionError({
+  error,
+  onDismiss,
+}: {
+  error: DescribedError | null;
+  onDismiss: () => void;
+}) {
   if (!error) return null;
   return (
-    <p
-      role="alert"
-      className="mb-4 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
-    >
-      {error}
-    </p>
+    <ErrorPanel
+      compact
+      error={error}
+      actions={
+        <Button size="sm" variant="outline" onClick={onDismiss}>
+          Dismiss
+        </Button>
+      }
+    />
   );
 }
 

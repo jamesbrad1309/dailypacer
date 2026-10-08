@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDate, formatMoney, formatUptime, humanize } from "./format";
+import { formatDate, formatMoney, formatUptime } from "./format";
 
 describe("formatMoney", () => {
   it("reads minor units in the currency's own digits", () => {
@@ -22,12 +22,5 @@ describe("formatUptime", () => {
     expect(formatUptime(3_660)).toBe("1h 1m");
     expect(formatUptime(93_784)).toBe("1d 2h 3m");
     expect(formatUptime(86_400)).toBe("1d 0h 0m");
-  });
-});
-
-describe("humanize", () => {
-  it("turns an enum value into a label", () => {
-    expect(humanize("CREDIT_CARD")).toBe("Credit card");
-    expect(humanize("in_progress")).toBe("In progress");
   });
 });
