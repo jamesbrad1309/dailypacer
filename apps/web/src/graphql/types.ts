@@ -51,6 +51,8 @@ export interface Habit {
   /** Lowercased labels, see lib/tags.ts. */
   tags: string[];
   icon: string | null;
+  /** A hex from lib/colors.ts: the card's accent and the heatmap's fill. */
+  color: string | null;
   unit: string | null;
   targetValue: number | null;
   /** "HH:mm" (24h), or null for "anytime today" — see components/DayCalendar.tsx. */

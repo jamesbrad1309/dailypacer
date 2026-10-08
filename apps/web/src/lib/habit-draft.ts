@@ -10,6 +10,10 @@ import { formatTags } from "#lib/tags";
 /** A habit's fields as the create and edit forms hold them: text, as typed. */
 export interface HabitDraft {
   name: string;
+  /** An emoji, or "" for none. */
+  icon: string;
+  /** A hex from lib/colors.ts, or null for none. */
+  color: string | null;
   description: string;
   /** Comma-separated, as typed; parseTags turns it into a list. */
   tags: string;
@@ -52,6 +56,8 @@ export function habitDraftReducer(draft: HabitDraft, action: HabitDraftAction): 
 
 export const BLANK_HABIT_DRAFT: HabitDraft = {
   name: "",
+  icon: "",
+  color: null,
   description: "",
   tags: "",
   unit: "",
@@ -69,6 +75,8 @@ export const BLANK_HABIT_DRAFT: HabitDraft = {
 export function habitDraftFrom(habit: Habit): HabitDraft {
   return {
     name: habit.name,
+    icon: habit.icon ?? "",
+    color: habit.color,
     description: habit.description ?? "",
     tags: formatTags(habit.tags),
     unit: habit.unit ?? "",

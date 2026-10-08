@@ -209,6 +209,8 @@ export const habits: typeof en = {
     title: "Thói quen mới",
   },
   edit: {
+    icon: "Biểu tượng",
+    useIcon: "Dùng {{icon}}",
     title: "Sửa thói quen",
     name: "Tên",
     unit: "Đơn vị",

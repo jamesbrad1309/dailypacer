@@ -189,6 +189,7 @@ async function importFixture(app: App, fixture: DemoFixture, today: string) {
         description: h.description ?? undefined,
         tags: h.tags ?? [],
         icon: h.icon ?? undefined,
+        color: h.color ?? undefined,
         unit: h.unit ?? undefined,
         targetValue: h.targetValue ?? undefined,
         startTime: h.startTime ?? undefined,

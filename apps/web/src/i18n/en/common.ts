@@ -30,4 +30,17 @@ export const common = {
   daysOverdue_one: "{{count}} day overdue",
   daysOverdue_other: "{{count}} days overdue",
   percentOfMonthGone: "{{percent}}% of the month gone",
+  color: "Colour",
+  noColor: "No colour",
+  colors: {
+    red: "Red",
+    orange: "Orange",
+    amber: "Amber",
+    green: "Green",
+    teal: "Teal",
+    blue: "Blue",
+    purple: "Purple",
+    pink: "Pink",
+    gray: "Grey",
+  },
 };

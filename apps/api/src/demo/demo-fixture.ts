@@ -102,6 +102,8 @@ export interface DemoHabit {
   description?: string | null;
   tags?: string[];
   icon?: string | null;
+  /** "#rrggbb" (habits/dto/create-habit.dto.ts). */
+  color?: string | null;
   unit?: string | null;
   targetValue?: number | null;
   startTime?: string | null;

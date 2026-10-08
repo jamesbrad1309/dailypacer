@@ -204,6 +204,8 @@ export const habits = {
     title: "New habit",
   },
   edit: {
+    icon: "Icon",
+    useIcon: "Use {{icon}}",
     title: "Edit habit",
     name: "Name",
     unit: "Unit",

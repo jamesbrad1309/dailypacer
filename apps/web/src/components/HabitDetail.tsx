@@ -175,7 +175,7 @@ export function HabitDetail({ habitId }: { habitId: string }) {
             </Button>
           </div>
           <div className="flex flex-1 items-center justify-center">
-            <HeatmapGrid days={habit.heatmap} size="lg" mood={mood} />
+            <HeatmapGrid days={habit.heatmap} size="lg" mood={mood} color={habit.color} />
           </div>
           {mood ? (
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">

@@ -7,6 +7,7 @@ const HABIT_FIELDS = gql`
     description
     tags
     icon
+    color
     unit
     targetValue
     startTime
