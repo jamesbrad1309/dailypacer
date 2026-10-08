@@ -31,4 +31,17 @@ export const common: typeof en = {
   daysOverdue_one: "quá hạn {{count}} ngày",
   daysOverdue_other: "quá hạn {{count}} ngày",
   percentOfMonthGone: "đã qua {{percent}}% tháng",
+  color: "Màu",
+  noColor: "Không màu",
+  colors: {
+    red: "Đỏ",
+    orange: "Cam",
+    amber: "Vàng hổ phách",
+    green: "Xanh lá",
+    teal: "Xanh mòng két",
+    blue: "Xanh dương",
+    purple: "Tím",
+    pink: "Hồng",
+    gray: "Xám",
+  },
 };

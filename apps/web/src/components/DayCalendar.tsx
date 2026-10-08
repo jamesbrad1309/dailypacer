@@ -26,9 +26,14 @@ function HabitBlock({ habit, top }: { habit: Habit; top: number }) {
         "absolute right-2 left-16 flex items-center justify-between gap-2 rounded-md border px-3 py-1.5 text-sm shadow-sm",
         done ? "border-emerald-500 bg-emerald-500/10" : "bg-card",
       )}
-      style={{ top }}
+      style={{ top, ...(habit.color && !done && { borderLeft: `4px solid ${habit.color}` }) }}
     >
       <div>
+        {habit.icon && (
+          <span aria-hidden className="mr-1.5">
+            {habit.icon}
+          </span>
+        )}
         <span className="font-medium">{habit.name}</span>
         <span className="ml-2 text-xs text-muted-foreground">{habit.startTime}</span>
       </div>
@@ -57,6 +62,11 @@ function AnytimeRow({ habit, next }: { habit: Habit; next?: boolean }) {
           done && habit.polarity !== "AVOID" && "text-muted-foreground line-through",
         )}
       >
+        {habit.icon && (
+          <span aria-hidden className="mr-1.5">
+            {habit.icon}
+          </span>
+        )}
         {habit.name}
         {next && <span className="ml-2 text-xs text-primary">{t("habits.routines.next")}</span>}
       </label>

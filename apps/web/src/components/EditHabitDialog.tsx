@@ -2,6 +2,8 @@ import { useMutation } from "@apollo/client/react";
 import { Settings } from "lucide-react";
 import { useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ColorPicker } from "#components/ColorPicker";
+import { EmojiField } from "#components/EmojiField";
 import { HabitCategories } from "#components/HabitCategories";
 import { HabitExtraFields } from "#components/HabitExtraFields";
 import { ScheduleEditor } from "#components/ScheduleEditor";
@@ -56,6 +58,8 @@ export function EditHabitDialog({ habit }: { habit: Habit }) {
         id: habit.id,
         input: {
           name: name.trim() || habit.name,
+          icon: draft.icon.trim() || null,
+          color: draft.color,
           description: description.trim() || null,
           tags: parseTags(tags),
           unit: unit.trim() || null,
@@ -94,6 +98,9 @@ export function EditHabitDialog({ habit }: { habit: Habit }) {
             <Label htmlFor="edit-name">{t("habits.edit.name")}</Label>
             <Input id="edit-name" value={name} onChange={(e) => set("name", e.target.value)} />
           </div>
+
+          <EmojiField value={draft.icon} onChange={(value) => set("icon", value)} />
+          <ColorPicker value={draft.color} onChange={(value) => set("color", value)} />
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="edit-description">{t("habits.edit.description")}</Label>

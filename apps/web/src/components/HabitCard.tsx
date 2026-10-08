@@ -65,7 +65,10 @@ export function HabitCard({ habit, onTagClick }: Props) {
   const daysLeft = habit.endDate ? daysBetween(todayIsoDate(), habit.endDate) + 1 : null;
 
   return (
-    <Card className={cn(habit.paused && "opacity-60")}>
+    <Card
+      className={cn(habit.paused && "opacity-60", habit.color && "border-l-4")}
+      style={habit.color ? { borderLeftColor: habit.color } : undefined}
+    >
       <CardHeader className="flex-row items-start justify-between space-y-0">
         <div className="min-w-0">
           <CardTitle className="text-base">
@@ -75,6 +78,11 @@ export function HabitCard({ habit, onTagClick }: Props) {
               title={t("habits.detail.open", { name: habit.name })}
               className="hover:underline"
             >
+              {habit.icon && (
+                <span aria-hidden className="mr-1.5">
+                  {habit.icon}
+                </span>
+              )}
               {habit.name}
             </Link>
           </CardTitle>
@@ -240,7 +248,7 @@ export function HabitCard({ habit, onTagClick }: Props) {
           }}
         />
 
-        <HeatmapGrid days={habit.heatmap} />
+        <HeatmapGrid days={habit.heatmap} color={habit.color} />
 
         <p className="text-xs text-muted-foreground">
           {t("habits.card.best", { count: habit.longestStreak })} ·{" "}

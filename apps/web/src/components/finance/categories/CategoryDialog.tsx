@@ -1,7 +1,8 @@
 import { useMutation } from "@apollo/client/react";
-import { Archive, ArchiveRestore, Check } from "lucide-react";
+import { Archive, ArchiveRestore } from "lucide-react";
 import { type FormEvent, useReducer } from "react";
 import { useTranslation } from "react-i18next";
+import { ColorPicker } from "#components/ColorPicker";
 import { Button } from "#components/ui/button";
 import {
   Dialog,
@@ -20,8 +21,6 @@ import {
 } from "#graphql/finance";
 import type { Category } from "#graphql/types";
 import { useCategoryName } from "#hooks/useCategoryName";
-import { CATEGORY_COLORS } from "#lib/categories";
-import { cn } from "#lib/utils";
 
 const selectClass =
   "flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60";
@@ -195,27 +194,7 @@ function CategoryForm({
           </div>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <p id="category-color" className="text-sm font-medium">
-            {t("finance.categoriesPage.color")}
-          </p>
-          <div role="radiogroup" aria-labelledby="category-color" className="flex flex-wrap gap-2">
-            <ColorSwatch
-              label={t("finance.categoriesPage.noColor")}
-              selected={state.color === null}
-              onSelect={() => set("color", null)}
-            />
-            {CATEGORY_COLORS.map((color) => (
-              <ColorSwatch
-                key={color.key}
-                hex={color.hex}
-                label={t(`finance.categoriesPage.colors.${color.key}`)}
-                selected={state.color?.toLowerCase() === color.hex}
-                onSelect={() => set("color", color.hex)}
-              />
-            ))}
-          </div>
-        </div>
+        <ColorPicker value={state.color} onChange={(hex) => set("color", hex)} />
 
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-2">
@@ -313,43 +292,5 @@ function CategoryForm({
         )}
       </form>
     </DialogContent>
-  );
-}
-
-/** A native radio (visually hidden) with the colour as its face, so arrow keys move between swatches. */
-function ColorSwatch({
-  hex,
-  label,
-  selected,
-  onSelect,
-}: {
-  hex?: string;
-  label: string;
-  selected: boolean;
-  onSelect: () => void;
-}) {
-  return (
-    <label title={label} className="relative cursor-pointer">
-      <input
-        type="radio"
-        name="category-color"
-        className="peer sr-only"
-        checked={selected}
-        onChange={onSelect}
-        aria-label={label}
-      />
-      <span
-        aria-hidden
-        className={cn(
-          "flex size-8 items-center justify-center rounded-full border peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2",
-          selected && "ring-2 ring-foreground ring-offset-2 ring-offset-background",
-          !hex &&
-            "bg-[repeating-linear-gradient(45deg,transparent_0_4px,var(--color-muted)_4px_8px)]",
-        )}
-        style={hex ? { backgroundColor: hex } : undefined}
-      >
-        {selected && <Check className={cn("size-4", hex ? "text-white" : "text-foreground")} />}
-      </span>
-    </label>
   );
 }
