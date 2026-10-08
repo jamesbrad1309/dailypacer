@@ -68,8 +68,9 @@ Run from the repo root:
 
 | Command         | What it does                         |
 | --------------- | ------------------------------------ |
-| `pnpm dev`      | Web + BFF + API in watch mode        |
+| `pnpm dev`      | Web + admin + BFF + API in watch mode |
 | `pnpm dev:web`  | Web only                             |
+| `pnpm dev:admin` | Admin dashboard only (`127.0.0.1:5174`, [docs](docs/admin/dashboard.md)) |
 | `pnpm dev:bff`  | BFF only                             |
 | `pnpm dev:api`  | API only                             |
 | `pnpm build`    | Build all apps                       |

@@ -21,7 +21,9 @@ Four application containers, each doing one job:
 
 In local dev there's no gateway. Vite's dev server proxies `/graphql` and `/uploads` to the
 BFF on `localhost:4000` (`apps/web/vite.config.ts`), and the BFF calls the API
-on `localhost:3000`.
+on `localhost:3000`. The admin dashboard (`apps/admin`, `127.0.0.1:5174`)
+proxies `/graphql` to the same BFF; it has no container yet
+([admin/dashboard.md](../admin/dashboard.md)).
 
 ## Why a separate BFF service
 

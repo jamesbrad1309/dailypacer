@@ -8,7 +8,8 @@ BFF (backend) · one pnpm workspace · native TypeScript `#` import aliases (no
 alias plugin) · Biome + oxlint for linting/formatting · Docker + a one-command
 quick start.
 
-The app is `apps/web` (React + Vite), `apps/bff` (GraphQL BFF: Express +
+The app is `apps/web` (React + Vite), `apps/admin` (an internal dashboard on
+the same stack), `apps/bff` (GraphQL BFF: Express +
 Apollo) and `apps/api` (NestJS REST + Prisma), behind an nginx gateway in
 Docker. These docs cover the design decisions and setup behind it.
 Each file below is a short, standalone read.
@@ -61,6 +62,11 @@ Each file below is a short, standalone read.
 - [TypeScript `#` import aliases](shared/typescript-import-aliases.md) — the native alias mechanism, no plugin
 - [Linting & formatting: Biome + oxlint](tooling/linting-formatting.md)
 - [pnpm workspace config](tooling/pnpm-workspace.md)
+
+**Admin**
+- [Admin dashboard](admin/dashboard.md) — `apps/admin`: the web app's stack on the same BFF, local only, no sign-in yet
+- [Admin use cases](admin/use-cases.md) — what the admin does and what's next, with build status + impact score
+- [Multi-user plan](admin/multi-user-plan.md) — planned: users, sign-in, per-user data, in phases
 
 **Infra**
 - [Docker setup](infra/docker.md) — multi-stage builds for the monorepo
