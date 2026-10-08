@@ -68,14 +68,34 @@ enum HabitFinanceSource {
   SAVINGS_GOAL
 }
 
+"""What a custom field holds; its value is always a string in that shape."""
+enum HabitFieldType {
+  TEXT
+  """A number, e.g. "12.5"."""
+  NUMBER
+  """Yes or no: "true" or "false"."""
+  BOOLEAN
+  """One of the field's options."""
+  SELECT
+  """YYYY-MM-DD."""
+  DATE
+}
+
 type HabitCustomField {
   label: String!
+  type: HabitFieldType!
+  """"" when not filled in."""
   value: String!
+  """SELECT only: the choices, in order. Empty for every other type."""
+  options: [String!]!
 }
 
 input HabitCustomFieldInput {
   label: String!
+  type: HabitFieldType = TEXT
   value: String!
+  """SELECT only."""
+  options: [String!]
 }
 
 """How a habit went on a day."""

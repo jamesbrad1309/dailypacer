@@ -5,6 +5,14 @@
  * build output. Dates arrive as ISO strings; entry dates as "YYYY-MM-DD".
  */
 
+/** A habit's own field; `type` is missing on fields saved before types existed (text). */
+export interface ApiCustomField {
+  label: string;
+  type?: string;
+  value: string;
+  options?: string[];
+}
+
 export interface ApiHabit {
   id: string;
   name: string;
@@ -16,7 +24,7 @@ export interface ApiHabit {
   targetValue: number | null;
   startTime: string | null;
   schedule: unknown;
-  metadata: Record<string, unknown> & { fields?: { label: string; value: string }[] };
+  metadata: Record<string, unknown> & { fields?: ApiCustomField[] };
   /** "build" | "avoid" */
   polarity: string;
   endDate: string | null;
