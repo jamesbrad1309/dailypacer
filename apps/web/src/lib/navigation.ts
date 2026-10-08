@@ -1,5 +1,6 @@
 import {
   Award,
+  Bell,
   CalendarClock,
   CalendarDays,
   CalendarRange,
@@ -43,7 +44,7 @@ export interface NavItem {
   /** Active only on this exact path, not its children (for section index pages). */
   exact?: boolean;
   /** A live count next to the label: "toReview" is finance's uncategorised inbox. */
-  badge?: "toReview";
+  badge?: "toReview" | "notifications";
   /** The key after `g` that goes here ("g h"); see lib/shortcuts.ts. */
   go?: string;
 }
@@ -57,7 +58,10 @@ export interface NavGroup {
 export const NAV_GROUPS: NavGroup[] = [
   {
     label: "overview",
-    items: [{ label: "progress", icon: TrendingUp, to: "/progress", go: "p" }],
+    items: [
+      { label: "progress", icon: TrendingUp, to: "/progress", go: "p" },
+      { label: "notifications", icon: Bell, to: "/notifications", go: "i", badge: "notifications" },
+    ],
   },
   {
     label: "habits",

@@ -939,3 +939,34 @@ export interface TaskProgressWeek {
 export interface TaskProgressData {
   taskProgress: { weeks: TaskProgressWeek[]; overdueNow: number };
 }
+
+/** What a notification is about: the inbox's filters. */
+export type NotificationReason = "TASK" | "MONEY" | "HABIT" | "ACHIEVEMENT";
+export type NotificationView = "INBOX" | "UNREAD" | "SAVED" | "DONE";
+
+/** An inbox item; words come from `kind` and `params` (lib/notifications.ts). */
+export interface AppNotification {
+  id: string;
+  kind: string;
+  reason: NotificationReason;
+  params: Record<string, unknown>;
+  link: string | null;
+  /** ISO timestamp: when it arrived or last came back. */
+  surfacedAt: string;
+  unread: boolean;
+  done: boolean;
+  saved: boolean;
+}
+
+export interface NotificationsData {
+  notifications: { items: AppNotification[]; nextCursor: string | null };
+}
+
+export interface NotificationCounts {
+  inbox: number;
+  unread: number;
+  task: number;
+  money: number;
+  habit: number;
+  achievement: number;
+}

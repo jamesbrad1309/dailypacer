@@ -8,6 +8,7 @@ import { QuickLogSheet } from "#components/finance/quick-log/QuickLogSheet";
 import { Celebration } from "#components/layout/Celebration";
 import { CommandPalette } from "#components/layout/CommandPalette";
 import { GlobalShortcuts } from "#components/layout/GlobalShortcuts";
+import { NotificationBell } from "#components/layout/NotificationBell";
 import { ShortcutsHelp } from "#components/layout/ShortcutsHelp";
 import { Sidebar } from "#components/layout/Sidebar";
 import { Toaster } from "#components/layout/Toaster";
@@ -105,6 +106,7 @@ export function AppShell({ actions, children }: Props) {
           <div className="ml-auto flex items-center gap-2">
             {actions}
             <PaletteButton />
+            <NotificationBell />
             <span className="hidden text-sm text-muted-foreground xl:inline">{today}</span>
             <LanguageSwitch />
             <Button

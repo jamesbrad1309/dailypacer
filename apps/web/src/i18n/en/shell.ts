@@ -11,6 +11,7 @@ export const shell = {
       comingSoon: "Coming soon",
     },
     progress: "Progress",
+    notifications: "Notifications",
     tasksToday: "Today",
     tasksLists: "Lists",
     dashboard: "Dashboard",
@@ -36,6 +37,10 @@ export const shell = {
   },
   pages: {
     progress: { title: "Progress", subtitle: "How your habits, tasks and mood are going." },
+    notifications: {
+      title: "Notifications",
+      subtitle: "What needs you across tasks, money and habits.",
+    },
     tasksToday: { title: "Today's tasks", subtitle: "What you plan to get done today." },
     tasksLists: { title: "Lists", subtitle: "Your to-do lists, each with its own key prefix." },
     taskBoard: { title: "Board", subtitle: "Drag tasks between your list's columns." },

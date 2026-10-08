@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LogRouteImport } from './routes/log'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as FinanceIndexRouteImport } from './routes/finance/index'
 import { Route as FinanceAccountsRouteImport } from './routes/finance/accounts'
@@ -44,6 +45,11 @@ const IndexRoute = IndexRouteImport.update({
 const LogRoute = LogRouteImport.update({
   id: '/log',
   path: '/log',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProgressRoute = ProgressRouteImport.update({
@@ -170,6 +176,7 @@ const TasksListsListIdRoute = TasksListsListIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/log': typeof LogRoute
+  '/notifications': typeof NotificationsRoute
   '/progress': typeof ProgressRoute
   '/finance/accounts': typeof FinanceAccountsRoute
   '/finance/budgets': typeof FinanceBudgetsRoute
@@ -198,6 +205,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/log': typeof LogRoute
+  '/notifications': typeof NotificationsRoute
   '/progress': typeof ProgressRoute
   '/finance/accounts': typeof FinanceAccountsRoute
   '/finance/budgets': typeof FinanceBudgetsRoute
@@ -227,6 +235,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/log': typeof LogRoute
+  '/notifications': typeof NotificationsRoute
   '/progress': typeof ProgressRoute
   '/finance/accounts': typeof FinanceAccountsRoute
   '/finance/budgets': typeof FinanceBudgetsRoute
@@ -257,6 +266,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/log'
+    | '/notifications'
     | '/progress'
     | '/finance/accounts'
     | '/finance/budgets'
@@ -285,6 +295,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/log'
+    | '/notifications'
     | '/progress'
     | '/finance/accounts'
     | '/finance/budgets'
@@ -313,6 +324,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/log'
+    | '/notifications'
     | '/progress'
     | '/finance/accounts'
     | '/finance/budgets'
@@ -342,6 +354,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LogRoute: typeof LogRoute
+  NotificationsRoute: typeof NotificationsRoute
   ProgressRoute: typeof ProgressRoute
   FinanceAccountsRoute: typeof FinanceAccountsRoute
   FinanceBudgetsRoute: typeof FinanceBudgetsRoute
@@ -382,6 +395,13 @@ declare module '@tanstack/react-router' {
       path: '/log'
       fullPath: '/log'
       preLoaderRoute: typeof LogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/progress': {
@@ -558,6 +578,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LogRoute: LogRoute,
+  NotificationsRoute: NotificationsRoute,
   ProgressRoute: ProgressRoute,
   FinanceAccountsRoute: FinanceAccountsRoute,
   FinanceBudgetsRoute: FinanceBudgetsRoute,
