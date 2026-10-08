@@ -1,3 +1,4 @@
+import { auth } from "#i18n/en/auth";
 import { commands } from "#i18n/en/commands";
 import { common } from "#i18n/en/common";
 import { finance } from "#i18n/en/finance";
@@ -19,4 +20,5 @@ export const en = {
   todos,
   progress,
   notifications,
+  auth,
 };

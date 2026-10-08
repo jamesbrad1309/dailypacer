@@ -984,3 +984,21 @@ export interface NotificationCounts {
   habit: number;
   achievement: number;
 }
+
+export type UserRole = "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
+export type UserStatus = "ACTIVE" | "PENDING" | "DISABLED";
+
+/** The signed-in user (Query.me) and what the access rules let them do. */
+export interface Me {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  status: UserStatus;
+  abilities: {
+    write: boolean;
+    openAdmin: boolean;
+    manageUsers: boolean;
+    assignableRoles: UserRole[];
+  };
+}

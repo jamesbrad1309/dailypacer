@@ -1,4 +1,5 @@
 import type { en } from "#i18n/en/index";
+import { auth } from "#i18n/vi/auth";
 import { commands } from "#i18n/vi/commands";
 import { common } from "#i18n/vi/common";
 import { finance } from "#i18n/vi/finance";
@@ -19,4 +20,5 @@ export const vi: typeof en = {
   todos,
   progress,
   notifications,
+  auth,
 };

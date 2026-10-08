@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as LogRouteImport } from './routes/log'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as ProgressRouteImport } from './routes/progress'
+import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as FinanceIndexRouteImport } from './routes/finance/index'
 import { Route as FinanceAccountsRouteImport } from './routes/finance/accounts'
 import { Route as FinanceBudgetsRouteImport } from './routes/finance/budgets'
@@ -55,6 +57,16 @@ const NotificationsRoute = NotificationsRouteImport.update({
 const ProgressRoute = ProgressRouteImport.update({
   id: '/progress',
   path: '/progress',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignInRoute = SignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignUpRoute = SignUpRouteImport.update({
+  id: '/sign-up',
+  path: '/sign-up',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FinanceIndexRoute = FinanceIndexRouteImport.update({
@@ -178,6 +190,8 @@ export interface FileRoutesByFullPath {
   '/log': typeof LogRoute
   '/notifications': typeof NotificationsRoute
   '/progress': typeof ProgressRoute
+  '/sign-in': typeof SignInRoute
+  '/sign-up': typeof SignUpRoute
   '/finance/accounts': typeof FinanceAccountsRoute
   '/finance/budgets': typeof FinanceBudgetsRoute
   '/finance/categories': typeof FinanceCategoriesRoute
@@ -207,6 +221,8 @@ export interface FileRoutesByTo {
   '/log': typeof LogRoute
   '/notifications': typeof NotificationsRoute
   '/progress': typeof ProgressRoute
+  '/sign-in': typeof SignInRoute
+  '/sign-up': typeof SignUpRoute
   '/finance/accounts': typeof FinanceAccountsRoute
   '/finance/budgets': typeof FinanceBudgetsRoute
   '/finance/categories': typeof FinanceCategoriesRoute
@@ -237,6 +253,8 @@ export interface FileRoutesById {
   '/log': typeof LogRoute
   '/notifications': typeof NotificationsRoute
   '/progress': typeof ProgressRoute
+  '/sign-in': typeof SignInRoute
+  '/sign-up': typeof SignUpRoute
   '/finance/accounts': typeof FinanceAccountsRoute
   '/finance/budgets': typeof FinanceBudgetsRoute
   '/finance/categories': typeof FinanceCategoriesRoute
@@ -268,6 +286,8 @@ export interface FileRouteTypes {
     | '/log'
     | '/notifications'
     | '/progress'
+    | '/sign-in'
+    | '/sign-up'
     | '/finance/accounts'
     | '/finance/budgets'
     | '/finance/categories'
@@ -297,6 +317,8 @@ export interface FileRouteTypes {
     | '/log'
     | '/notifications'
     | '/progress'
+    | '/sign-in'
+    | '/sign-up'
     | '/finance/accounts'
     | '/finance/budgets'
     | '/finance/categories'
@@ -326,6 +348,8 @@ export interface FileRouteTypes {
     | '/log'
     | '/notifications'
     | '/progress'
+    | '/sign-in'
+    | '/sign-up'
     | '/finance/accounts'
     | '/finance/budgets'
     | '/finance/categories'
@@ -356,6 +380,8 @@ export interface RootRouteChildren {
   LogRoute: typeof LogRoute
   NotificationsRoute: typeof NotificationsRoute
   ProgressRoute: typeof ProgressRoute
+  SignInRoute: typeof SignInRoute
+  SignUpRoute: typeof SignUpRoute
   FinanceAccountsRoute: typeof FinanceAccountsRoute
   FinanceBudgetsRoute: typeof FinanceBudgetsRoute
   FinanceCategoriesRoute: typeof FinanceCategoriesRoute
@@ -409,6 +435,20 @@ declare module '@tanstack/react-router' {
       path: '/progress'
       fullPath: '/progress'
       preLoaderRoute: typeof ProgressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-in': {
+      id: '/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-up': {
+      id: '/sign-up'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof SignUpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/finance/': {
@@ -580,6 +620,8 @@ const rootRouteChildren: RootRouteChildren = {
   LogRoute: LogRoute,
   NotificationsRoute: NotificationsRoute,
   ProgressRoute: ProgressRoute,
+  SignInRoute: SignInRoute,
+  SignUpRoute: SignUpRoute,
   FinanceAccountsRoute: FinanceAccountsRoute,
   FinanceBudgetsRoute: FinanceBudgetsRoute,
   FinanceCategoriesRoute: FinanceCategoriesRoute,

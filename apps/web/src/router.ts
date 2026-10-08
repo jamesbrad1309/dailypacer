@@ -41,5 +41,7 @@ declare module "@tanstack/react-router" {
    */
   interface StaticDataRouteOption {
     page?: keyof typeof shell.pages;
+    /** Render without the app shell (sign-in, sign-up). */
+    bare?: boolean;
   }
 }

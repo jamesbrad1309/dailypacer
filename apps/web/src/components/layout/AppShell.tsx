@@ -1,6 +1,6 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useMatches } from "@tanstack/react-router";
-import { Command, Menu, Moon, PanelLeftClose, PanelLeftOpen, Sun } from "lucide-react";
+import { Command, Eye, Menu, Moon, PanelLeftClose, PanelLeftOpen, Sun } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { QuickLogButton } from "#components/finance/quick-log/QuickLogButton";
@@ -12,7 +12,9 @@ import { NotificationBell } from "#components/layout/NotificationBell";
 import { ShortcutsHelp } from "#components/layout/ShortcutsHelp";
 import { Sidebar } from "#components/layout/Sidebar";
 import { Toaster } from "#components/layout/Toaster";
+import { UserMenu } from "#components/layout/UserMenu";
 import { Button } from "#components/ui/button";
+import { useMe } from "#hooks/useMe";
 import { useStoredState } from "#hooks/useStoredState";
 import { useTheme } from "#hooks/useTheme";
 import { currentLanguage, LANGUAGES, type Language, setLanguage } from "#i18n/i18n";
@@ -120,8 +122,10 @@ export function AppShell({ actions, children }: Props) {
             >
               {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
             </Button>
+            <UserMenu />
           </div>
         </header>
+        <ReadOnlyBanner />
 
         <main
           id="main"
@@ -140,6 +144,22 @@ export function AppShell({ actions, children }: Props) {
       <ShortcutsHelp />
       <GlobalShortcuts />
     </div>
+  );
+}
+
+/** Viewers see everything but can't change it; say so up front instead of after a failed save. */
+function ReadOnlyBanner() {
+  const { t } = useTranslation();
+  const me = useMe();
+  if (!me || me.abilities.write) return null;
+  return (
+    <p
+      role="status"
+      className="flex shrink-0 items-center gap-2 border-b bg-muted px-4 py-2 text-sm text-muted-foreground"
+    >
+      <Eye className="size-4 shrink-0" aria-hidden />
+      {t("auth.readOnly")}
+    </p>
   );
 }
 
@@ -194,7 +214,7 @@ function PaletteButton() {
 }
 
 /** EN | VI: switches the whole app, and is remembered. */
-function LanguageSwitch() {
+export function LanguageSwitch() {
   const { t } = useTranslation();
   const active = currentLanguage();
   return (
