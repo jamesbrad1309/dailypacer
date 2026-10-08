@@ -178,6 +178,7 @@ async function exportFixture(prisma: PrismaClient, today: string): Promise<DemoF
           description: h.description,
           tags: h.tags,
           icon: h.icon,
+          color: h.color,
           unit: h.unit,
           targetValue: h.targetValue,
           startTime: h.startTime,
