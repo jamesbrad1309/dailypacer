@@ -50,7 +50,7 @@ removed (2026-10-08) to keep the focus; the web app still manages those.
 |  | ✅ | **The shell itself crashed** | 2 | Root `errorComponent` and `AppErrorBoundary` show a full-page `AppCrash` with Try again / Reload |
 | **Users & access** | ✅ | **Users list**: name, email, role, status, last sign-in; pending sign-ups first | 5 | `/users`. `Query.users` → `GET /users` (`users:list`) |
 |  | ✅ | **Add a user** with a role and a password; active at once | 4 | `createUser`. Admins can give member or viewer, owners any role |
-|  | ✅ | **Approve or decline** a sign-up | 4 | `updateUser(status)`. Sign-ups wait as pending viewers |
+|  | ✅ | **Approve or decline** a pending account | 2 | `updateUser(status)`. Sign-ups no longer wait (they're signed straight in); this covers accounts left pending from before |
 |  | ✅ | **Turn a user off / on** (blocks sign-in, ends their sessions, keeps data) | 4 | `updateUser(status: DISABLED)` |
 |  | ✅ | **Change someone's role** | 4 | A select per row, listing only roles you may give |
 |  | ✅ | **Reset someone's password** (signs them out everywhere) | 3 | `resetUserPassword` |

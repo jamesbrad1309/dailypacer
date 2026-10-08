@@ -30,7 +30,7 @@ improves UX · `2` edge case / power-user · `1` speculative.
 | Cross-module (habits × finance) | 5 | 0 | — |
 | **To-do lists** | 13 | 0 | — |
 | **Notifications** | 4 | 0 | — |
-| **Accounts & access** | 7 | 1 | Forgot password by email (3) |
+| **Accounts & access** | 8 | 1 | Forgot password by email (3) |
 | **Finance** (separate doc) | 60 | 0 | — (habits integration built), see [finance/use-cases.md](../finance/use-cases.md) |
 
 ## Use cases
@@ -138,7 +138,8 @@ People and approvals are managed in the admin
 | Status | Use case | Impact | Notes |
 | :----: | -------- | :----: | ----- |
 | ✅ | **Sign in with email and password**, and come back to the page I was on | 5 | `/sign-in?redirect=`; httpOnly cookie session for 30 days, sliding. Wrong passwords are throttled |
-| ✅ | **Sign up**, then wait for an admin's approval | 4 | `/sign-up` creates a pending viewer. The first account of an empty database becomes the owner instead |
+| ✅ | **Sign up** and start straight away | 5 | `/sign-up`: name, email, password (show/hide). Signed in as a member with my own empty data; the first person becomes the owner |
+| ✅ | **Get set up** in three skippable steps | 4 | `/welcome`: language and main currency, money accounts, starter habits. Resumes where I left off on any device; "Set-up guide" in the account menu reopens it ([auth.md](../backend/auth.md#onboarding)) |
 | ✅ | **Roles decide what I may do**: owner, admin, member, viewer | 5 | The ABAC policy in the API; viewers get a read-only banner and a toast saying why a change was refused |
 | ✅ | **Sign out**, and **change my password** (signs out my other devices) | 4 | The account menu in the app bar |
 | ✅ | **A session that ends mid-use** sends me to sign in, then back | 3 | Expired, signed out elsewhere, or turned off by an admin |

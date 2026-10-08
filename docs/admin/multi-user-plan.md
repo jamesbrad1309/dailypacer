@@ -21,7 +21,7 @@ budgets), organisations/teams, billing.
 | How people sign in | Email magic link · passkeys · password · external OIDC (Auth0, Clerk, Keycloak) | **Decided: email and password** (built). Magic links and passkeys can come later |
 | Where the session lives | httpOnly cookie set by the BFF · bearer token in the SPA | **Decided: cookie** (built). The SPA never holds a token |
 | How the API learns who's calling | Trust an `x-user-id` header from the BFF on the internal network · BFF forwards a signed token the API verifies | **Decided: the BFF forwards the session token**, which the API looks up (built), so a stray request to the API can't pick a user |
-| Who can sign up | Admins only · open · both | **Decided: both**, with self sign-ups waiting for approval while data is shared |
+| Who can sign up | Admins only · open · both | **Decided: both.** Open sign-up is a normal one (signed straight in, own empty data); admins can still add people |
 | Scoping in the API | Pass `userId` through every service call · request-scoped context (AsyncLocalStorage) plus a Prisma client extension that adds `where: { userId }` | **Decided: context + extension** (built, `ownership.ts`), with explicit `userId` in raw SQL |
 | Per-user or shared | Exchange rates and service logos | Shared (market data and a cache); everything else per user |
 
@@ -40,8 +40,8 @@ budgets), organisations/teams, billing.
 - The first owner comes from `OWNER_EMAIL`/`OWNER_PASSWORD`, or is the first
   person to sign up in an empty database.
 - Admin: Users list, add, approve, turn off, change role, reset password.
-- (Until phase 3 everyone shared one dataset, which is why sign-ups wait for
-  approval; they still do.)
+- (Until phase 3 everyone shared one dataset, so sign-ups waited for an
+  admin's approval. With per-user data they're signed straight in.)
 
 ### 2. Ownership columns ✅ built
 

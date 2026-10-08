@@ -49,7 +49,7 @@ admin) only decide where to send people; the API enforces everything.
 | `admin:open`, `users:list` | ✅ | ✅ | — | — |
 | `users:create` | any role | member, viewer | — | — |
 | `user:change-role`, `user:change-status`, `user:reset-password`, `user:update` | anyone but themself | members and viewers | — | — |
-| `self:change-password` | ✅ | ✅ | ✅ | ✅ |
+| `self:change-password`, `self:update` (your onboarding and settings) | ✅ | ✅ | ✅ | ✅ |
 
 Notes:
 - Because no one can change their own role or status, there's always at
@@ -64,10 +64,11 @@ Notes:
 
 ## Accounts
 
-- **Sign-up** (`/sign-up` in the web app) creates a **pending viewer**, who
-  can't sign in until an owner or admin approves them on the admin's Users
-  page. **Exception:** the first person to sign up becomes the owner and is
-  signed straight in.
+- **Sign-up** (`/sign-up` in the web app) is a normal one: name, email,
+  password (8+ characters, with a show/hide toggle), and you're signed
+  straight in as a **member** with your own empty data, then go to
+  onboarding ([below](#onboarding)). The first person to sign up becomes the
+  owner instead.
 - **First owner from the environment:** with `OWNER_EMAIL` and
   `OWNER_PASSWORD` set, the API makes that owner on start if there's no
   active owner yet (or promotes the existing account with that email).
@@ -85,6 +86,24 @@ Notes:
 - **Reset password** (admin) sets a new one and ends all their sessions.
   **Change password** (yourself, from the web app's account menu) needs
   the current one and ends your other sessions.
+
+## Onboarding
+
+After signing up, the web app walks a new person through three steps at
+`/welcome`: **Basics** (language, main currency), **Money** (add accounts
+with today's balance) and **Habits** (pick starters from the templates).
+
+- Every step can be skipped, and "Finish later" leaves for the app. The step
+  they're on is saved (`User.onboardingStep`) as they move, so the next
+  visit (a new tab, or signing in on another device) resumes there.
+  "Finish later" lasts for the browser tab (`sessionStorage`).
+- Finishing sets `User.onboardedAt`; until then the root route sends them
+  to `/welcome`. People who existed before onboarding, and anyone who
+  takes over the unclaimed owner's data, count as onboarded.
+- "Set-up guide" in the account menu reopens it at any time.
+- API: `POST /auth/onboarding { step }` or `{ done: true }` (`self:update`,
+  allowed to every active user); GraphQL `Me.onboarding` and
+  `updateOnboarding(step, done)`. Steps: `src/auth/onboarding.ts`.
 
 ## Per-user data
 
@@ -171,6 +190,7 @@ banner. The admin shows a 403 page to signed-in members and viewers.
 | -------- | ------ |
 | `POST /auth/sign-in`, `POST /auth/sign-up` | public |
 | `GET /auth/me`, `POST /auth/sign-out` | any signed-in user |
+| `POST /auth/onboarding` | `self:update` |
 | `POST /auth/password` | `self:change-password` |
 | `GET /users`, `POST /users` | `users:list`, `users:create` |
 | `PATCH /users/:id`, `POST /users/:id/password` | decided per target in `UsersService` |
