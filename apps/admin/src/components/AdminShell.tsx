@@ -1,18 +1,23 @@
 import { Link } from "@tanstack/react-router";
-import { CloudOff, LayoutDashboard, type LucideIcon, ShieldAlert, Wallet } from "lucide-react";
+import { CloudOff, LayoutDashboard, type LucideIcon, Users, Wallet } from "lucide-react";
 import type { ReactNode } from "react";
+import { SignOutButton } from "#components/SignOutButton";
+import { Badge } from "#components/ui/badge";
+import { useMe } from "#lib/use-me";
 import { useOnline } from "#lib/use-online";
 
 const NAV: { to: string; label: string; icon: LucideIcon }[] = [
   { to: "/", label: "Overview", icon: LayoutDashboard },
   { to: "/accounts", label: "Accounts", icon: Wallet },
+  { to: "/users", label: "Users", icon: Users },
 ];
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const online = useOnline();
+  const me = useMe();
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
-      <aside className="border-b bg-muted/40 md:w-56 md:shrink-0 md:border-r md:border-b-0">
+      <aside className="flex flex-col border-b bg-muted/40 md:w-56 md:shrink-0 md:border-r md:border-b-0">
         <div className="px-4 py-4">
           <p className="font-semibold">DailyPacer</p>
           <p className="text-xs text-muted-foreground">Admin</p>
@@ -30,13 +35,18 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </Link>
           ))}
         </nav>
+        {me && (
+          <div className="mt-auto hidden border-t px-4 py-3 md:block">
+            <p className="truncate text-sm font-medium">{me.name}</p>
+            <p className="truncate text-xs text-muted-foreground">{me.email}</p>
+            <Badge variant="secondary" className="mt-2">
+              {me.role.charAt(0) + me.role.slice(1).toLowerCase()}
+            </Badge>
+            <SignOutButton className="mt-2 -ml-2 w-full justify-start" />
+          </div>
+        )}
       </aside>
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-2 border-b bg-status-warning/15 px-4 py-2 text-sm">
-          <ShieldAlert className="size-4 shrink-0" aria-hidden />
-          No sign-in yet: anyone who can open this page can change the data. Run it on this machine
-          only.
-        </p>
         {!online && (
           <p role="status" className="flex items-center gap-2 border-b bg-muted px-4 py-2 text-sm">
             <CloudOff className="size-4 shrink-0" aria-hidden />

@@ -25,4 +25,9 @@ declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router;
   }
+
+  interface StaticDataRouteOption {
+    /** Render without the admin shell (sign-in). */
+    bare?: boolean;
+  }
 }

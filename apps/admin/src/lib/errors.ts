@@ -18,6 +18,12 @@ export type ErrorKind =
   | "schema-mismatch"
   /** This page's code couldn't load: the admin was rebuilt, or its server stopped. */
   | "stale-build"
+  /** No session (signed out, expired, disabled): sign in again. */
+  | "signed-out"
+  /** Signed in, but the access rules say no. */
+  | "forbidden"
+  /** Too many wrong passwords. */
+  | "too-many-attempts"
   | "not-found"
   | "invalid-input"
   | "conflict"
@@ -67,6 +73,21 @@ const COPY: Record<ErrorKind, { title: string; hint: string; retryable: boolean 
     hint: "The admin may have been updated or stopped. Reload the page; if it doesn't come back, start it with `pnpm dev:admin`.",
     retryable: false,
   },
+  "signed-out": {
+    title: "You're signed out",
+    hint: "Your session ended. Sign in again to continue.",
+    retryable: false,
+  },
+  forbidden: {
+    title: "You don't have access to that",
+    hint: "Ask an owner if you need it.",
+    retryable: false,
+  },
+  "too-many-attempts": {
+    title: "Too many attempts",
+    hint: "Wait 15 minutes and try again.",
+    retryable: false,
+  },
   "not-found": {
     title: "Not found",
     hint: "It may have been deleted. The list has been refreshed.",
@@ -98,6 +119,9 @@ function kindOf(error: unknown, online: boolean): ErrorKind {
   if (CombinedGraphQLErrors.is(error)) {
     const codes = error.errors.map((e) => e.extensions?.code);
     if (codes.includes("UPSTREAM_UNAVAILABLE")) return "api-unreachable";
+    if (codes.includes("UNAUTHENTICATED")) return "signed-out";
+    if (codes.includes("FORBIDDEN")) return "forbidden";
+    if (codes.includes("TOO_MANY_REQUESTS")) return "too-many-attempts";
     if (codes.includes("GRAPHQL_VALIDATION_FAILED")) return "schema-mismatch";
     if (codes.includes("NOT_FOUND")) return "not-found";
     if (codes.includes("BAD_USER_INPUT")) return "invalid-input";
@@ -143,9 +167,10 @@ export function describeError(
 ): DescribedError {
   const kind = kindOf(error, online);
   const copy = COPY[kind];
-  // Validation and clash messages come from the API and are written for people.
+  // These messages come from the API and are written for people ("Only an owner can…").
   const hint =
-    (kind === "invalid-input" || kind === "conflict") && CombinedGraphQLErrors.is(error)
+    ["invalid-input", "conflict", "forbidden", "signed-out"].includes(kind) &&
+    CombinedGraphQLErrors.is(error)
       ? error.errors.map((e) => e.message).join(" ")
       : copy.hint;
   return { kind, title: copy.title, hint, details: detailsOf(error), retryable: copy.retryable };

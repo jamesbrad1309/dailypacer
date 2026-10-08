@@ -34,6 +34,18 @@ describe("describeError", () => {
     expect(describeError(serverError(500)).kind).toBe("server");
   });
 
+  it("tells signed-out from forbidden, with the API's reason", () => {
+    expect(describeError(graphQLError("UNAUTHENTICATED")).kind).toBe("signed-out");
+    expect(describeError(graphQLError("TOO_MANY_REQUESTS")).kind).toBe("too-many-attempts");
+    expect(
+      describeError(graphQLError("FORBIDDEN", "Only an owner can manage owners and admins.")),
+    ).toMatchObject({
+      kind: "forbidden",
+      hint: "Only an owner can manage owners and admins.",
+      retryable: false,
+    });
+  });
+
   it("shows the API's own words for input problems", () => {
     const error = graphQLError("BAD_USER_INPUT", "An account's type can't change");
     expect(describeError(error)).toMatchObject({

@@ -28,3 +28,31 @@ export interface AdminAccount {
   openingBalanceDate: string;
   archivedAt: string | null;
 }
+
+export type UserRole = "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
+export type UserStatus = "ACTIVE" | "PENDING" | "DISABLED";
+
+export interface AdminMe {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  abilities: { openAdmin: boolean; manageUsers: boolean; assignableRoles: UserRole[] };
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  status: UserStatus;
+  lastSignInAt: string | null;
+  createdAt: string;
+  isSelf: boolean;
+  permissions: {
+    update: boolean;
+    changeRole: boolean;
+    changeStatus: boolean;
+    resetPassword: boolean;
+  };
+}
