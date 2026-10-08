@@ -31,6 +31,10 @@
       "types": "./src/todos/*.ts",
       "default": "./dist/todos/*.js"
     },
+    "#notifications/*": {
+      "types": "./src/notifications/*.ts",
+      "default": "./dist/notifications/*.js"
+    },
     "#common/*": {
       "types": "./src/common/*.ts",
       "default": "./dist/common/*.js"

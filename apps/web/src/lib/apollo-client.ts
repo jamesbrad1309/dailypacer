@@ -15,6 +15,16 @@ export const apolloClient = new ApolloClient({
               return { ...incoming, items: [...existing.items, ...incoming.items] };
             },
           },
+          // One entry whatever the clock: the bell syncs with it, the sidebar reads the same counts.
+          notificationCounts: { keyArgs: false },
+          // The same for the inbox, per view and reason; `clock` only syncs first.
+          notifications: {
+            keyArgs: ["view", "reason"],
+            merge(existing, incoming, { args }) {
+              if (!existing || !args?.after) return incoming;
+              return { ...incoming, items: [...existing.items, ...incoming.items] };
+            },
+          },
         },
       },
     },

@@ -8,6 +8,7 @@ import { FinanceModule } from "#finance/finance.module";
 import { HabitEntriesModule } from "#habit-entries/habit-entries.module";
 import { HabitsModule } from "#habits/habits.module";
 import { JournalModule } from "#journal/journal.module";
+import { NotificationsModule } from "#notifications/notifications.module";
 import { TodosModule } from "#todos/todos.module";
 
 @Module({
@@ -25,6 +26,7 @@ import { TodosModule } from "#todos/todos.module";
     JournalModule,
     FinanceModule,
     TodosModule,
+    NotificationsModule,
     AdminModule,
   ],
   controllers: [HealthController],

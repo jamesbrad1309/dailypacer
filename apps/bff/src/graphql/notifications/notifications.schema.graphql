@@ -1,0 +1,80 @@
+"""What a notification is about: the inbox's filters."""
+enum NotificationReason {
+  """Tasks due or overdue, tasks waiting in the Inbox."""
+  TASK
+  """Money to categorise, charges to confirm, budgets, card payments, goals."""
+  MONEY
+  """A habit due past its start time, a streak at risk or at a milestone."""
+  HABIT
+  """Badges, level ups and challenges won."""
+  ACHIEVEMENT
+}
+
+"""Which part of the inbox, as on GitHub."""
+enum NotificationView {
+  INBOX
+  UNREAD
+  SAVED
+  DONE
+}
+
+"""An inbox item. The web app words it from `kind` and `params`, in the user's language."""
+type Notification {
+  id: ID!
+  """"task.overdue", "money.budget", "habit.streakAtRisk", "achievement.unlocked"…"""
+  kind: String!
+  reason: NotificationReason!
+  """What the message names: a task's title, a category, an amount. Shape depends on `kind`."""
+  params: JSON!
+  """In-app path it opens."""
+  link: String
+  """When it arrived or last came back (ISO timestamp): the inbox's order."""
+  surfacedAt: String!
+  unread: Boolean!
+  done: Boolean!
+  saved: Boolean!
+}
+
+type NotificationPage {
+  items: [Notification!]!
+  nextCursor: String
+}
+
+type NotificationCounts {
+  """Notifications in the inbox (not done)."""
+  inbox: Int!
+  """Unread in the inbox: the bell's number."""
+  unread: Int!
+  task: Int!
+  money: Int!
+  habit: Int!
+  achievement: Int!
+}
+
+"""The user's local day and time: notifications are brought up to date with them first."""
+input NotificationClock {
+  """YYYY-MM-DD."""
+  today: String!
+  """HH:mm, 24h."""
+  time: String!
+}
+
+extend type Query {
+  """Newest first. With `clock`, the inbox is synced with what's true now before it's read."""
+  notifications(
+    view: NotificationView = INBOX
+    reason: NotificationReason
+    first: Int = 30
+    after: String
+    clock: NotificationClock
+  ): NotificationPage!
+  """Unread counts for the bell and the filters; synced first when `clock` is given."""
+  notificationCounts(clock: NotificationClock): NotificationCounts!
+}
+
+extend type Mutation {
+  """Set or clear read, done and saved on several at once. Done also marks them read."""
+  markNotifications(ids: [ID!]!, read: Boolean, done: Boolean, saved: Boolean): [Notification!]!
+  """Marks every unread notification in the inbox read, or one reason's. Returns how many."""
+  markAllNotificationsRead(reason: NotificationReason): Int!
+}

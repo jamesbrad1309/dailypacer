@@ -19,7 +19,7 @@ import { myShare, type Share } from "#finance/split-with.util";
 const log = scopedLogger("TransactionsService");
 
 /** No category and not split: what "To review" and "uncategorised" mean. */
-const UNCATEGORISED: Prisma.TransactionWhereInput = {
+export const UNCATEGORISED: Prisma.TransactionWhereInput = {
   categoryId: null,
   transferId: null,
   splits: { none: {} },

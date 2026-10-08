@@ -7,7 +7,7 @@ import { NAV_GROUPS } from "#lib/navigation";
  * `keys` is tinykeys syntax: `$mod` is ⌘ on a Mac and Ctrl elsewhere, and a
  * space separates the keys of a sequence ("g h").
  */
-export type ShortcutGroup = "general" | "goTo" | "journal" | "palette";
+export type ShortcutGroup = "general" | "goTo" | "journal" | "notifications" | "palette";
 
 export interface Shortcut {
   id: string;
@@ -106,7 +106,21 @@ const GO_TO: Shortcut[] = NAV_GROUPS.flatMap((group) =>
   ),
 );
 
-export const SHORTCUTS: Shortcut[] = [...GENERAL, ...GO_TO, ...JOURNAL, ...PALETTE];
+/** Handled by the notifications list itself, on the focused notification. */
+const NOTIFICATIONS: Shortcut[] = [
+  { id: "notificationDone", keys: ["e"], label: "commands.shortcuts.notificationDone" },
+  { id: "notificationRead", keys: ["Shift+I"], label: "commands.shortcuts.notificationRead" },
+  { id: "notificationUnread", keys: ["Shift+U"], label: "commands.shortcuts.notificationUnread" },
+  { id: "notificationSave", keys: ["s"], label: "commands.shortcuts.notificationSave" },
+].map((s) => ({ ...s, group: "notifications" as const, pageOnly: true }));
+
+export const SHORTCUTS: Shortcut[] = [
+  ...GENERAL,
+  ...GO_TO,
+  ...JOURNAL,
+  ...NOTIFICATIONS,
+  ...PALETTE,
+];
 
 export function shortcutById(id: string): Shortcut | undefined {
   return SHORTCUTS.find((s) => s.id === id);
