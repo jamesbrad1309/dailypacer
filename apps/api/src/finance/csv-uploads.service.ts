@@ -12,6 +12,7 @@ import {
 import type { Prisma } from "@prisma/client";
 import { parse } from "csv-parse/sync";
 import { PrismaService } from "#common/database/prisma.service";
+import { currentUserId } from "#common/database/request-context";
 import { scopedLogger } from "#common/logger/logger";
 import { applyMapping, type CsvMapping, type CsvProblem, guessMapping } from "#finance/csv.util";
 import { MAX_IMPORT_ROWS } from "#finance/dto/import.dto";
@@ -104,6 +105,7 @@ export class CsvUploadsService implements OnModuleInit, OnModuleDestroy {
     const records = this.parse(content);
     if (records.length === 0) throw new BadRequestException("The file has no rows");
     const id = randomUUID();
+    await mkdir(this.userDir(), { recursive: true, mode: 0o700 });
     await writeFile(this.pathOf(id), content, { mode: 0o600 });
 
     // Reuse the account's last mapping only for the same export format
@@ -187,15 +189,19 @@ export class CsvUploadsService implements OnModuleInit, OnModuleDestroy {
     log.info({ uploadId: id }, "csv upload deleted");
   }
 
-  /** Deletes uploads nobody finished. */
+  /** Deletes uploads nobody finished, in every user's folder. */
   async sweep(): Promise<void> {
     try {
       const now = Date.now();
-      for (const name of await readdir(UPLOAD_DIR)) {
-        const path = join(UPLOAD_DIR, name);
-        if (now - (await stat(path)).mtimeMs > MAX_AGE_MS) {
-          await rm(path, { force: true });
-          log.info({ file: name }, "abandoned csv upload deleted");
+      for (const user of await readdir(UPLOAD_DIR)) {
+        const dir = join(UPLOAD_DIR, user);
+        if (!(await stat(dir)).isDirectory()) continue;
+        for (const name of await readdir(dir)) {
+          const path = join(dir, name);
+          if (now - (await stat(path)).mtimeMs > MAX_AGE_MS) {
+            await rm(path, { force: true });
+            log.info({ file: name }, "abandoned csv upload deleted");
+          }
         }
       }
     } catch (err) {
@@ -203,9 +209,14 @@ export class CsvUploadsService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /** Each user's uploads live in their own folder: someone else's upload id is simply not found. */
+  private userDir(): string {
+    return join(UPLOAD_DIR, currentUserId());
+  }
+
   private pathOf(id: string): string {
     if (!UUID.test(id)) throw new BadRequestException("Invalid upload id");
-    return join(UPLOAD_DIR, `${id}.csv`);
+    return join(this.userDir(), `${id}.csv`);
   }
 
   private parse(content: Buffer): string[][] {

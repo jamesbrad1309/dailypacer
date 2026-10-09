@@ -3,7 +3,6 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
-  type OnModuleInit,
 } from "@nestjs/common";
 import { type Category, Prisma } from "@prisma/client";
 import { PrismaService } from "#common/database/prisma.service";
@@ -244,7 +243,7 @@ const DEFAULT_CATEGORIES: {
 export const STARTER_CATEGORY_NAMES = DEFAULT_CATEGORIES.slice(0, 6).map((c) => c.name);
 
 @Injectable()
-export class CategoriesService implements OnModuleInit {
+export class CategoriesService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
@@ -252,11 +251,7 @@ export class CategoriesService implements OnModuleInit {
    * sure of on every start. The default categories only go into an empty
    * table, so a user's edits are never overwritten.
    */
-  async onModuleInit(): Promise<void> {
-    await this.adjustmentCategory();
-    await this.seedDefaults();
-  }
-
+  /** A new user's starting categories (UserSetupService); does nothing once they have any. */
   async seedDefaults(): Promise<void> {
     const existing = await this.prisma.category.count({ where: { isSystem: false } });
     if (existing > 0) return;

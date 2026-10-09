@@ -34,6 +34,11 @@ services:
       DATABASE_URL: postgres://dailypacer:dailypacer@postgres:5432/dailypacer
       API_PORT: "3000"
       NODE_ENV: production
+      # First run: creates this owner if there's none (docs/backend/auth.md).
+      # Unset, the first person to sign up becomes the owner.
+      OWNER_EMAIL: ${OWNER_EMAIL:-}
+      OWNER_PASSWORD: ${OWNER_PASSWORD:-}
+      OWNER_NAME: ${OWNER_NAME:-}
     expose: ["3000"]
     depends_on:
       postgres:
@@ -54,6 +59,8 @@ services:
       BFF_PORT: "4000"
       API_URL: http://api:3000
       NODE_ENV: production
+      # "auto": Secure session cookie only when the request came over HTTPS.
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-auto}
     expose: ["4000"]
     # Loopback only: for Vite's dev proxy (./start.sh), not for other machines.
     ports: ["127.0.0.1:4000:4000"]

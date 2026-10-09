@@ -85,9 +85,18 @@ logger and id. For every call it:
 | API response | GraphQL `extensions.code` | Message to client |
 | ------------ | ------------------------- | ----------------- |
 | 400 (zod validation) | `BAD_USER_INPUT` (+ `issues`: field paths and messages) | the API's message |
+| 401 | `UNAUTHENTICATED` (+ `reason`) | the API's message: not signed in, or wrong password |
+| 403 | `FORBIDDEN` (+ `reason`) | the API's message: the access rules said no |
 | 404 | `NOT_FOUND` | the API's message |
+| 409 | `CONFLICT` (+ `reason`) | the API's message |
+| 429 | `TOO_MANY_REQUESTS` (+ `reason`) | the API's message |
 | 5xx / unexpected | `UPSTREAM_ERROR` | "Upstream API error" (internal details stay in logs) |
 | connection refused / timeout | `UPSTREAM_UNAVAILABLE` | "The API is unavailable" |
+
+`reason` is a stable code clients translate (`WRONG_CREDENTIALS`,
+`ACCOUNT_PENDING`, `READ_ONLY`…; the list is in [auth.md](auth.md)). Every
+call also forwards the browser's session as `Authorization: Bearer`; see
+[auth.md](auth.md).
 
 ## The API contract
 

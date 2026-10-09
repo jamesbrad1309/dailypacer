@@ -590,10 +590,26 @@ export class TodosService {
     return { openCount, doneCount };
   }
 
-  private async inbox() {
+  private inbox() {
+    return this.ensureInbox();
+  }
+
+  /** The user's Inbox, made on first use: every user has one (TASK-1, TASK-2…). */
+  async ensureInbox() {
     const inbox = await this.prisma.todoList.findFirst({ where: { isInbox: true } });
-    if (!inbox) throw new NotFoundException("Inbox list missing: run the migrations");
-    return inbox;
+    if (inbox) return inbox;
+    const prefix = (await this.takenPrefixes()).has("TASK") ? "INBOX" : "TASK";
+    const created = await this.prisma.todoList.create({
+      data: {
+        name: "Inbox",
+        prefix,
+        isInbox: true,
+        position: 0,
+        columns: { create: [...DEFAULT_COLUMNS] },
+      },
+    });
+    log.info({ listId: created.id }, "inbox created");
+    return created;
   }
 
   private async takenPrefixes(): Promise<Set<string>> {

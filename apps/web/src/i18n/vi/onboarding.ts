@@ -1,0 +1,46 @@
+import type { onboarding as en } from "#i18n/en/onboarding";
+
+/** Các bước thiết lập sau khi đăng ký (/welcome). */
+export const onboarding: typeof en = {
+  title: "Chào mừng, {{name}}",
+  subtitle: "Ba bước nhanh để DailyPacer là của bạn. Có thể bỏ qua bất kỳ bước nào.",
+  stepOf: "Bước {{current}} / {{total}}",
+  steps: { PREFERENCES: "Cơ bản", ACCOUNTS: "Tiền", HABITS: "Thói quen" },
+  later: "Để sau",
+  back: "Quay lại",
+  skip: "Bỏ qua",
+  continue: "Tiếp tục",
+  saving: "Đang lưu…",
+  preferences: {
+    title: "Ngôn ngữ và tiền tệ",
+    body: "Chọn ngôn ngữ bạn đọc dễ nhất, và loại tiền dùng để hiển thị tổng.",
+    language: "Ngôn ngữ",
+    currency: "Tiền tệ chính",
+    currencyHint: "Bạn có thể thêm tiền tệ khác sau; mỗi tài khoản giữ loại tiền của nó.",
+  },
+  accounts: {
+    title: "Tài khoản tiền của bạn",
+    body: "Thêm các tài khoản bạn chi tiêu, với số dư hôm nay. Số dư thay đổi theo mỗi khoản chi bạn ghi.",
+    added: "Đã thêm",
+    none: "Chưa có tài khoản nào.",
+    type: "Loại",
+    name: "Tên",
+    balance: "Số dư hôm nay",
+    owedBalance: "Số nợ hôm nay",
+    add: "Thêm tài khoản",
+    adding: "Đang thêm…",
+    nameRequired: "Hãy đặt tên.",
+    balanceInvalid: "Nhập một số tiền, ví dụ 250 hoặc 1.204,50.",
+  },
+  habits: {
+    title: "Thói quen để bắt đầu",
+    body: "Chạm vào những thói quen bạn muốn xây dựng. Có thể sửa sau.",
+    selected_one: "Đã chọn {{count}}",
+    selected_other: "Đã chọn {{count}}",
+    finish: "Thêm thói quen và hoàn tất",
+    finishNone: "Hoàn tất",
+  },
+  done: "Xong rồi. Chào mừng bạn đến với DailyPacer!",
+  error: "Chưa lưu được. Hãy thử lại.",
+  menu: "Hướng dẫn thiết lập",
+};

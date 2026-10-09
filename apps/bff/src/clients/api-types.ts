@@ -84,6 +84,53 @@ export interface ApiDashboardStats {
   activeStreakCount: number;
 }
 
+export interface ApiAdminOverview {
+  tables: { area: string; table: string; rows: number }[];
+  database: { migrations: number; latestMigration: string | null; latestAppliedAt: string | null };
+  server: { nodeVersion: string; uptimeSeconds: number; startedAt: string };
+}
+
+export type ApiUserRole = "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
+export type ApiUserStatus = "ACTIVE" | "PENDING" | "DISABLED";
+
+export interface ApiMe {
+  id: string;
+  email: string;
+  name: string;
+  role: ApiUserRole;
+  status: ApiUserStatus;
+  abilities: {
+    write: boolean;
+    openAdmin: boolean;
+    manageUsers: boolean;
+    assignableRoles: ApiUserRole[];
+  };
+  onboarding: { step: string | null; completedAt: string | null };
+}
+
+export interface ApiSession {
+  token: string;
+  expiresAt: string;
+  user: ApiMe;
+}
+
+export interface ApiUser {
+  id: string;
+  email: string;
+  name: string;
+  role: ApiUserRole;
+  status: ApiUserStatus;
+  lastSignInAt: string | null;
+  createdAt: string;
+  isSelf: boolean;
+  permissions: {
+    update: boolean;
+    changeRole: boolean;
+    changeStatus: boolean;
+    resetPassword: boolean;
+  };
+}
+
 export type ApiJournalEntryKind = "ACTION" | "FEELING" | "EVENT";
 
 export interface ApiJournalEntry {

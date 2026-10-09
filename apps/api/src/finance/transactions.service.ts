@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { type Account, Prisma, type Transaction, type TransactionSplit } from "@prisma/client";
 import { PrismaService } from "#common/database/prisma.service";
+import { currentUserId } from "#common/database/request-context";
+import { clientIdKey } from "#common/database/user-keys";
 import { scopedLogger } from "#common/logger/logger";
 import { fromIsoDate, toIsoDate } from "#finance/calendar.util";
 import type {
@@ -87,9 +89,10 @@ function afterCursor({ date, createdAt, id }: Cursor): Prisma.TransactionWhereIn
   };
 }
 
-/** `SELECT … FOR UPDATE`: the rows, locked until the surrounding transaction ends. */
+/** `SELECT … FOR UPDATE`: the user's matching rows, locked until the surrounding transaction ends. */
 function lockTransactions(tx: Prisma.TransactionClient, where: Prisma.Sql) {
-  return tx.$queryRaw<Transaction[]>`SELECT * FROM "transactions" WHERE ${where} FOR UPDATE`;
+  return tx.$queryRaw<Transaction[]>`
+    SELECT * FROM "transactions" WHERE "userId" = ${currentUserId()} AND (${where}) FOR UPDATE`;
 }
 
 @Injectable()
@@ -149,17 +152,18 @@ export class TransactionsService {
     return transaction;
   }
 
-  /** The "To review" inbox: uncategorised (non-transfer) or pending transactions. */
   /** Every tag in use, most used first, for the tag filter. */
   async tagCounts(): Promise<{ tag: string; count: number }[]> {
     const rows = await this.prisma.$queryRaw<{ tag: string; count: bigint }[]>`
       SELECT tag, count(*) AS count
       FROM "transactions", unnest("tags") AS tag
+      WHERE "userId" = ${currentUserId()}
       GROUP BY tag
       ORDER BY count DESC, tag`;
     return rows.map((row) => ({ tag: row.tag, count: Number(row.count) }));
   }
 
+  /** The "To review" inbox: uncategorised (non-transfer) or pending transactions. */
   toReviewCount(): Promise<number> {
     return this.prisma.transaction.count({ where: TO_REVIEW });
   }
@@ -303,7 +307,7 @@ export class TransactionsService {
   async createTransfer(input: CreateTransferInput): Promise<Transaction[]> {
     if (input.clientId) {
       const existing = await this.prisma.transaction.findUnique({
-        where: { clientId: input.clientId },
+        where: clientIdKey(input.clientId),
       });
       if (existing?.transferId) {
         return this.prisma.transaction.findMany({

@@ -68,8 +68,9 @@ Run from the repo root:
 
 | Command         | What it does                         |
 | --------------- | ------------------------------------ |
-| `pnpm dev`      | Web + BFF + API in watch mode        |
+| `pnpm dev`      | Web + admin + BFF + API in watch mode |
 | `pnpm dev:web`  | Web only                             |
+| `pnpm dev:admin` | Admin dashboard only (`127.0.0.1:5174`, [docs](docs/admin/dashboard.md)) |
 | `pnpm dev:bff`  | BFF only                             |
 | `pnpm dev:api`  | API only                             |
 | `pnpm build`    | Build all apps                       |
@@ -97,6 +98,8 @@ pnpm --filter api prisma:studio    # browse the database
 | `WEB_PORT`     | `5173`                                              |
 | `BFF_URL`      | `http://localhost:4000` (where Vite's dev proxy sends `/graphql`; set it in the shell, e.g. `BFF_URL=http://localhost:8080 pnpm dev:web`) |
 | `NODE_ENV`     | `development`                                       |
+| `OWNER_EMAIL`, `OWNER_PASSWORD`, `OWNER_NAME` | unset. With both of the first two set, the API creates that owner on start if there's none ([auth](docs/backend/auth.md)) |
+| `SESSION_COOKIE_SECURE` | `auto` (the BFF's session cookie is Secure only over HTTPS) |
 | `LOG_LEVEL`    | `debug` in dev, `info` in prod                      |
 
 ## Layout

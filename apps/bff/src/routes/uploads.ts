@@ -1,6 +1,7 @@
 import { Readable } from "node:stream";
 import type { Request, Response } from "express";
 import { env } from "#common/config/env";
+import { authHeaders } from "#common/session-cookie";
 
 /** Matches the API's upload limit and the gateway's client_max_body_size. */
 const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
@@ -32,6 +33,7 @@ export async function uploadTransactionsCsv(req: Request, res: Response): Promis
       headers: {
         "content-type": contentType,
         "x-request-id": String(req.id ?? ""),
+        ...authHeaders(req),
       },
       body: Readable.toWeb(req) as ReadableStream,
       // Required by fetch to send a streamed body.

@@ -1,0 +1,126 @@
+"""
+Sign-in and people. Sessions are an httpOnly cookie the BFF sets; the API
+checks every call against the access rules (ABAC, docs/backend/auth.md).
+Errors: UNAUTHENTICATED (not signed in), FORBIDDEN (the rules say no; the
+message says why), TOO_MANY_REQUESTS (too many wrong passwords).
+"""
+enum UserRole {
+  """Everything, including managing admins and other owners."""
+  OWNER
+  """Manages members and viewers, opens the admin dashboard."""
+  ADMIN
+  """Full use of the app."""
+  MEMBER
+  """Read-only in the app."""
+  VIEWER
+}
+
+enum UserStatus {
+  ACTIVE
+  """Signed up on their own, waiting for an admin's approval."""
+  PENDING
+  """Turned off by an admin: can't sign in."""
+  DISABLED
+}
+
+"""What the signed-in user may do, for showing and hiding things. The API enforces it either way."""
+type Abilities {
+  """Change the app's data (everyone but viewers)."""
+  write: Boolean!
+  openAdmin: Boolean!
+  manageUsers: Boolean!
+  """Roles this user may give others."""
+  assignableRoles: [UserRole!]!
+}
+
+type Me {
+  id: ID!
+  email: String!
+  name: String!
+  role: UserRole!
+  status: UserStatus!
+  abilities: Abilities!
+  onboarding: Onboarding!
+}
+
+"""
+The set-up steps after signing up: preferences (language, main currency),
+accounts, habits. Each can be skipped; `step` is where they left off.
+"""
+type Onboarding {
+  """PREFERENCES, ACCOUNTS or HABITS; null before the first step is saved or once done."""
+  step: OnboardingStep
+  """ISO timestamp; null until finished, which shows onboarding on their next visit."""
+  completedAt: String
+}
+
+enum OnboardingStep {
+  PREFERENCES
+  ACCOUNTS
+  HABITS
+}
+
+"""What the signed-in user may do to this user."""
+type UserPermissions {
+  update: Boolean!
+  changeRole: Boolean!
+  changeStatus: Boolean!
+  resetPassword: Boolean!
+}
+
+type User {
+  id: ID!
+  email: String!
+  name: String!
+  role: UserRole!
+  status: UserStatus!
+  lastSignInAt: String
+  createdAt: String!
+  """The signed-in user themself."""
+  isSelf: Boolean!
+  permissions: UserPermissions!
+}
+
+input SignUpInput {
+  email: String!
+  name: String!
+  password: String!
+}
+
+input CreateUserInput {
+  email: String!
+  name: String!
+  password: String!
+  role: UserRole!
+}
+
+"""Only the fields sent change."""
+input UpdateUserInput {
+  name: String
+  role: UserRole
+  status: UserStatus
+}
+
+extend type Query {
+  """Null when not signed in (or the session has ended)."""
+  me: Me
+  """Owners and admins: pending sign-ups first."""
+  users: [User!]!
+}
+
+extend type Mutation {
+  """Sets the session cookie."""
+  signIn(email: String!, password: String!): Me!
+  """Signs up and in: everyone gets their own empty data and goes to onboarding."""
+  signUp(input: SignUpInput!): Me!
+  """Saves the onboarding step they're on, or finishes it with done: true."""
+  updateOnboarding(step: OnboardingStep, done: Boolean): Me!
+  """Ends the session and clears the cookie."""
+  signOut: Boolean!
+  """Signs out your other sessions."""
+  changePassword(currentPassword: String!, newPassword: String!): Boolean!
+  createUser(input: CreateUserInput!): User!
+  updateUser(id: ID!, input: UpdateUserInput!): User!
+  """Sets someone's password and signs them out everywhere."""
+  resetUserPassword(id: ID!, password: String!): Boolean!
+}

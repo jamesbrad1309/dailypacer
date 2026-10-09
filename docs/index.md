@@ -8,7 +8,8 @@ BFF (backend) · one pnpm workspace · native TypeScript `#` import aliases (no
 alias plugin) · Biome + oxlint for linting/formatting · Docker + a one-command
 quick start.
 
-The app is `apps/web` (React + Vite), `apps/bff` (GraphQL BFF: Express +
+The app is `apps/web` (React + Vite), `apps/admin` (an internal dashboard on
+the same stack), `apps/bff` (GraphQL BFF: Express +
 Apollo) and `apps/api` (NestJS REST + Prisma), behind an nginx gateway in
 Docker. These docs cover the design decisions and setup behind it.
 Each file below is a short, standalone read.
@@ -56,12 +57,18 @@ Each file below is a short, standalone read.
 - [Prisma & data access](backend/prisma-and-data-access.md) — schema, migrations, `PrismaService`, JSON/Date gotchas
 - [Logging](backend/logging.md) — pino (Node's zap), HTTP/GraphQL/service-level logs, the `name` field gotcha
 - [Notifications inbox](backend/notifications.md) — GitHub-style in-app inbox: what makes a notification, the sync, read/done/saved
+- [Sign-in & access rules](backend/auth.md) — email/password, cookie sessions, roles and the ABAC policy, what each role may do
 - [Email & notifications](backend/email-and-notifications.md) — planned: Resend + pg-boss queue, provider comparison, deliverability
 
 **Cross-cutting**
 - [TypeScript `#` import aliases](shared/typescript-import-aliases.md) — the native alias mechanism, no plugin
 - [Linting & formatting: Biome + oxlint](tooling/linting-formatting.md)
 - [pnpm workspace config](tooling/pnpm-workspace.md)
+
+**Admin**
+- [Admin dashboard](admin/dashboard.md) — `apps/admin`: the web app's stack on the same BFF, owners and admins only
+- [Admin use cases](admin/use-cases.md) — what the admin does and what's next, with build status + impact score
+- [Multi-user plan](admin/multi-user-plan.md) — users and sign-in built; per-user data planned, in phases
 
 **Infra**
 - [Docker setup](infra/docker.md) — multi-stage builds for the monorepo

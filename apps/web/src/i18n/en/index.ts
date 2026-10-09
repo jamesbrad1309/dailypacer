@@ -1,9 +1,11 @@
+import { auth } from "#i18n/en/auth";
 import { commands } from "#i18n/en/commands";
 import { common } from "#i18n/en/common";
 import { finance } from "#i18n/en/finance";
 import { habits } from "#i18n/en/habits";
 import { journal } from "#i18n/en/journal";
 import { notifications } from "#i18n/en/notifications";
+import { onboarding } from "#i18n/en/onboarding";
 import { progress } from "#i18n/en/progress";
 import { shell } from "#i18n/en/shell";
 import { todos } from "#i18n/en/todos";
@@ -19,4 +21,6 @@ export const en = {
   todos,
   progress,
   notifications,
+  auth,
+  onboarding,
 };

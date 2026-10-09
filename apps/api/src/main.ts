@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
 import type { NestExpressApplication } from "@nestjs/platform-express";
 import type { Env } from "#common/config/env";
+import { runRequest } from "#common/database/request-context";
 import { httpLogger, logger } from "#common/logger/logger";
 import { NestPinoLogger } from "#common/logger/nest-logger.adapter";
 import { AppModule } from "./app.module";
@@ -19,6 +20,10 @@ async function bootstrap() {
   // BFF's x-request-id so one user action can be followed across both
   // services' logs (see common/logger/logger.ts).
   app.use(httpLogger);
+
+  // Each request gets its own context; AuthGuard puts the signed-in user in
+  // it, and every database query is scoped to that user (ownership.ts).
+  app.use((_req: unknown, _res: unknown, next: () => void) => runRequest(next));
 
   // On SIGTERM/SIGINT (`docker compose stop`, redeploys) close the HTTP
   // server and run onModuleDestroy (PrismaService disconnects) instead of

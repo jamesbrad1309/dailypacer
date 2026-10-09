@@ -8,9 +8,24 @@ import "./index.css";
 import "#i18n/i18n";
 import { apolloClient } from "#lib/apollo-client";
 import { redirectLegacyHash } from "#lib/legacy-hash";
+import { setSessionEndedHandler } from "#lib/session";
 import { router } from "./router";
 
 redirectLegacyHash();
+
+// A request came back "not signed in" mid-use (session expired, signed out
+// elsewhere, account disabled): drop cached data and go to sign-in, then back.
+setSessionEndedHandler(() => {
+  const here = router.state.location;
+  if (here.pathname === "/sign-in" || here.pathname === "/sign-up") return;
+  void apolloClient.clearStore().then(() =>
+    router.navigate({
+      to: "/sign-in",
+      search: { redirect: here.href, ended: true },
+      replace: true,
+    }),
+  );
+});
 
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("#root element not found");

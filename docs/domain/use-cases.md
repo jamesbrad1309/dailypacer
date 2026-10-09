@@ -30,6 +30,7 @@ improves UX · `2` edge case / power-user · `1` speculative.
 | Cross-module (habits × finance) | 5 | 0 | — |
 | **To-do lists** | 13 | 0 | — |
 | **Notifications** | 4 | 0 | — |
+| **Accounts & access** | 8 | 1 | Forgot password by email (3) |
 | **Finance** (separate doc) | 60 | 0 | — (habits integration built), see [finance/use-cases.md](../finance/use-cases.md) |
 
 ## Use cases
@@ -128,10 +129,28 @@ A GitHub-style inbox across the whole app; see
 | ✅ | **Filter by what it's about** | 3 | Tasks, Money, Habits, Achievements, each with its unread count |
 | ✅ | **Stale notifications clear themselves** | 3 | Ongoing ones (task overdue, money to review…) are marked done once no longer true; a change (due today → overdue, more to review) brings one back unread |
 
+## Accounts & access
+
+Signing in, and what each person may do; see [auth.md](../backend/auth.md).
+People and approvals are managed in the admin
+([admin/use-cases.md](../admin/use-cases.md)).
+
+| Status | Use case | Impact | Notes |
+| :----: | -------- | :----: | ----- |
+| ✅ | **Sign in with email and password**, and come back to the page I was on | 5 | `/sign-in?redirect=`; httpOnly cookie session for 30 days, sliding. Wrong passwords are throttled |
+| ✅ | **Sign up** and start straight away | 5 | `/sign-up`: name, email, password (show/hide). Signed in as a member with my own empty data; the first person becomes the owner |
+| ✅ | **Get set up** in three skippable steps | 4 | `/welcome`: language and main currency, money accounts, starter habits. Resumes where I left off on any device; "Set-up guide" in the account menu reopens it ([auth.md](../backend/auth.md#onboarding)) |
+| ✅ | **Roles decide what I may do**: owner, admin, member, viewer | 5 | The ABAC policy in the API; viewers get a read-only banner and a toast saying why a change was refused |
+| ✅ | **Sign out**, and **change my password** (signs out my other devices) | 4 | The account menu in the app bar |
+| ✅ | **A session that ends mid-use** sends me to sign in, then back | 3 | Expired, signed out elsewhere, or turned off by an admin |
+| ✅ | **Signing in and up in Vietnamese** | 2 | `auth` dictionary; API errors carry a `reason` code the app translates |
+| ✅ | **My own data**: I see and change only mine | 5 | Every query is scoped to the signed-in user ([auth.md](../backend/auth.md#per-user-data)); new accounts start with the default categories, GBP and an Inbox |
+| ⬜ | **Forgot password** by email | 3 | Needs email ([email-and-notifications.md](../backend/email-and-notifications.md)); today an admin resets it |
+
 ## Explicitly out of scope for v1
 
-- Multi-user auth/accounts — every habit is implicitly single-user for now
-  (no `User` entity, no login).
+- Sharing data between people (a household budget, a shared list): each
+  person's data is their own ([auth.md](../backend/auth.md)).
 - Email and push reminders. In-app notifications are built, see
   [Notifications inbox](../backend/notifications.md).
 - Per-check-in custom fields (the EAV model in the data-model doc): typed

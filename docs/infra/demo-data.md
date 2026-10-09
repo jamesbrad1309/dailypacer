@@ -71,3 +71,9 @@ everything else on stderr:
 - streak freezes, challenges, routines and rewards
 - payee rules and quick-log presets
 - task dependencies and custom board columns
+
+People and sessions: the fixture holds no accounts or passwords. Data is
+per user, so both commands work on one person's: `--user=email`, else the
+owner (on a fresh database, the unclaimed owner the first sign-up claims;
+see [auth.md](../backend/auth.md)). The import refuses a user who already
+has data.

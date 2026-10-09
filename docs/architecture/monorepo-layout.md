@@ -8,6 +8,7 @@ how they talk to each other.
 dailypacer/
 ├── apps/
 │   ├── web/                 # React + Vite + TS + shadcn/ui
+│   ├── admin/               # internal admin dashboard, same stack as web (local only)
 │   ├── bff/                 # Express + Apollo Server: GraphQL for the frontend
 │   └── api/                 # NestJS REST API + Prisma: domain logic, DB access
 ├── packages/

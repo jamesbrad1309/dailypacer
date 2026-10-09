@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "#common/database/prisma.service";
+import { currentUserId } from "#common/database/request-context";
 import { shiftMonth } from "#finance/budget-math.util";
 import { BudgetsService } from "#finance/budgets.service";
 import { toIsoDate } from "#finance/calendar.util";
@@ -69,7 +70,8 @@ export class LifeLevelService {
     const [row] = await this.prisma.$queryRaw<{ weeks: bigint }[]>`
       SELECT count(DISTINCT date_trunc('week', "date")) AS weeks
       FROM "transactions"
-      WHERE "source" = ANY(${LOGGED_SOURCES}) AND "date" <= ${today}::date`;
+      WHERE "userId" = ${currentUserId()}
+        AND "source" = ANY(${LOGGED_SOURCES}) AND "date" <= ${today}::date`;
     return Number(row?.weeks ?? 0);
   }
 }
