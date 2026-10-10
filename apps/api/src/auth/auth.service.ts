@@ -41,48 +41,49 @@ export class AuthService implements OnModuleInit {
   ) {}
 
   /**
-   * First run: with OWNER_EMAIL and OWNER_PASSWORD set and no active owner
-   * yet, make that owner, so a fresh deployment can be signed into. Data
-   * from before accounts existed belongs to the unclaimed owner the
-   * migration made; this claims it.
+   * Every start: make sure the OWNER_EMAIL owner (admin@dailypacer.local by
+   * default) exists, so the app can always be signed into. A missing one is
+   * created, taking over the unclaimed owner (data from before accounts) if
+   * it's still there. An existing one keeps its password and role, unless
+   * there's no active owner, when it's made one again.
    */
   async onModuleInit() {
     const email = this.config.get("OWNER_EMAIL", { infer: true });
     const password = this.config.get("OWNER_PASSWORD", { infer: true });
     if (!email || !password) return;
-    if (await this.prisma.user.count({ where: { role: "OWNER", status: "ACTIVE" } })) return;
     const parsedEmail = emailSchema.safeParse(email);
     const parsedPassword = passwordSchema.safeParse(password);
     if (!parsedEmail.success || !parsedPassword.success) {
       log.error("OWNER_EMAIL or OWNER_PASSWORD is invalid; no owner created");
       return;
     }
+    const existing = await this.prisma.user.findUnique({ where: { email: parsedEmail.data } });
+    if (existing) {
+      if (await this.prisma.user.count({ where: { role: "OWNER", status: "ACTIVE" } })) return;
+      await this.prisma.user.update({
+        where: { id: existing.id },
+        data: { role: "OWNER", status: "ACTIVE" },
+      });
+      await this.setup.provision(existing.id);
+      log.info({ email: parsedEmail.data }, "owner restored from OWNER_EMAIL");
+      return;
+    }
     const owner = {
       email: parsedEmail.data,
-      name: this.config.get("OWNER_NAME", { infer: true }) ?? "Owner",
+      name: this.config.get("OWNER_NAME", { infer: true }),
       passwordHash: await hashPassword(parsedPassword.data),
       role: "OWNER" as const,
       status: "ACTIVE" as const,
+      // An admin account: no onboarding.
+      onboardedAt: new Date(),
     };
-    const existing = await this.prisma.user.findUnique({ where: { email: owner.email } });
     const unclaimed = await this.prisma.user.findUnique({ where: { email: UNCLAIMED_EMAIL } });
-    const user = existing
-      ? await this.prisma.user.update({
-          where: { id: existing.id },
-          data: { role: "OWNER", status: "ACTIVE" },
-        })
-      : unclaimed
-        ? // Taking over data from before accounts: nothing to set up.
-          await this.prisma.user.update({
-            where: { id: unclaimed.id },
-            data: { ...owner, onboardedAt: new Date() },
-          })
-        : await this.prisma.user.create({ data: owner });
+    const user = unclaimed
+      ? // Taking over data from before accounts.
+        await this.prisma.user.update({ where: { id: unclaimed.id }, data: owner })
+      : await this.prisma.user.create({ data: owner });
     await this.setup.provision(user.id);
-    log.info(
-      { email: owner.email, claimed: !existing && Boolean(unclaimed) },
-      "owner set from OWNER_EMAIL",
-    );
+    log.info({ email: owner.email, claimed: Boolean(unclaimed) }, "owner created from OWNER_EMAIL");
   }
 
   async signIn(input: SignInInput) {
