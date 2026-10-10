@@ -48,11 +48,12 @@ pnpm quickstart
 
 ## First sign-in
 
-The app needs an account. Either set `OWNER_EMAIL` and `OWNER_PASSWORD` in
-`.env` (the API makes that owner on start), or open the app and sign up:
-the first person becomes the owner, and takes over any data from before
-accounts existed. Everyone after that is signed straight in with their own
-empty data and walked through a short set-up. See [auth.md](../backend/auth.md).
+The API makes an owner on every start if it doesn't exist: sign in as
+`admin@dailypacer.local` with `dailypaceradmin123` (in the app or the admin
+dashboard). It takes over any data from before accounts existed. Change it
+with `OWNER_EMAIL`, `OWNER_PASSWORD` and `OWNER_NAME` in `.env`. Anyone else
+signs up and is walked through a short set-up with their own empty data.
+See [auth.md](../backend/auth.md).
 
 ## `.env.example`
 
