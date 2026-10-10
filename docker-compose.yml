@@ -34,11 +34,11 @@ services:
       DATABASE_URL: postgres://dailypacer:dailypacer@postgres:5432/dailypacer
       API_PORT: "3000"
       NODE_ENV: production
-      # First run: creates this owner if there's none (docs/backend/auth.md).
-      # Unset, the first person to sign up becomes the owner.
-      OWNER_EMAIL: ${OWNER_EMAIL:-}
-      OWNER_PASSWORD: ${OWNER_PASSWORD:-}
-      OWNER_NAME: ${OWNER_NAME:-}
+      # Every start: creates this owner if the account doesn't exist
+      # (docs/backend/auth.md). Override for anything reachable by others.
+      OWNER_EMAIL: ${OWNER_EMAIL:-admin@dailypacer.local}
+      OWNER_PASSWORD: ${OWNER_PASSWORD:-dailypaceradmin123}
+      OWNER_NAME: ${OWNER_NAME:-Admin}
     expose: ["3000"]
     depends_on:
       postgres:

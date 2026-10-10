@@ -77,14 +77,19 @@ Notes:
   password (8+ characters, with a show/hide toggle), and you're signed
   straight in as a **member** with your own empty data, then go to
   onboarding ([below](#onboarding)). The first person to sign up becomes the
-  owner instead.
-- **First owner from the environment:** with `OWNER_EMAIL` and
-  `OWNER_PASSWORD` set, the API makes that owner on start if there's no
-  active owner yet (or promotes the existing account with that email).
+  owner instead (only when there's no account yet, so in practice the admin
+  below is always first).
+- **The admin account:** on every start the API makes sure the
+  `OWNER_EMAIL` owner exists: by default `admin@dailypacer.local` with
+  password `dailypaceradmin123`. A missing one is created (skipping
+  onboarding); an existing one keeps its password, and is made an active
+  owner again only if there's no other active owner. Set `OWNER_EMAIL`,
+  `OWNER_PASSWORD` and `OWNER_NAME` to change it, and do for anything
+  reachable by others.
 - **The unclaimed owner:** data from before accounts existed belongs to a
   placeholder owner (`owner@unclaimed.invalid`, can't sign in, hidden from
-  the Users page) made by the per-user migration. The first sign-up, or
-  `OWNER_EMAIL`, claims it, data and all.
+  the Users page) made by the per-user migration. The admin account claims
+  it, data and all, when it's created.
 - **Every new user starts with** the default categories, GBP as main
   currency and an Inbox list (`UserSetupService`); sign-in also fills in
   anything missing for older accounts.

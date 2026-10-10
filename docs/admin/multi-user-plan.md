@@ -37,8 +37,9 @@ budgets), organisations/teams, billing.
   admin; the admin is owners and admins only.
 - The access rules are an ABAC policy in the API (`src/auth/policy.ts`),
   enforced on every route by a global guard.
-- The first owner comes from `OWNER_EMAIL`/`OWNER_PASSWORD`, or is the first
-  person to sign up in an empty database.
+- The first owner comes from `OWNER_EMAIL`/`OWNER_PASSWORD`, which default to
+  `admin@dailypacer.local` / `dailypaceradmin123` and are made on every start
+  if missing.
 - Admin: Users list, add, approve, turn off, change role, reset password.
 - (Until phase 3 everyone shared one dataset, so sign-ups waited for an
   admin's approval. With per-user data they're signed straight in.)
